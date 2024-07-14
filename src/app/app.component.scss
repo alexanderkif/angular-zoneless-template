@@ -1,0 +1,15 @@
+:host {
+  --header-height: 3rem;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background-color: aliceblue;
+}
+
+.main {
+  flex: 1;
+  max-width: 1200px;
+  margin: var(--header-height) auto 0 auto;
+}

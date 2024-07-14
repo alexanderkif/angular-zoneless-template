@@ -1,0 +1,43 @@
+.user-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--header-height);
+  height: var(--header-height);
+  padding: 0;
+  border-radius: 50%;
+  background-color: lightsalmon;
+  border: none;
+  word-break: break-all;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
+ul, li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-menu-list {
+  position: fixed;
+  top: calc(var(--header-height) + 0.5rem);
+  right: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: lightsalmon;
+  border: none;
+  overflow: hidden;
+
+  li {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    min-width: 8rem;
+
+    &:hover {
+      background-color: chocolate;
+      color: #fff;
+    }
+  }
+}

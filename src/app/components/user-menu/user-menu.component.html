@@ -1,0 +1,8 @@
+<button class="user-menu" (click)="toggleMenu()">avatar</button>
+@if(showMenu) {
+  <ul class="user-menu-list" (click)="toggleMenu()">
+    <li>Profile</li>
+    <li>Settings</li>
+    <li>Exit</li>
+  </ul>
+}

@@ -1,0 +1,13 @@
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8rem;
+  height: var(--header-height);
+  border-radius: 0.3rem;
+  background-color: coral;
+
+  @media screen and (max-width: 600px) {
+    width: 4rem;
+  }
+}

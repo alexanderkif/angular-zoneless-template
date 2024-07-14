@@ -1,0 +1,20 @@
+.post {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: antiquewhite;
+
+  .title {
+    color: green;
+  }
+
+  .user {
+    color: blue;
+    font-size: small;
+  }
+
+  .text {
+    color: burlywood;
+  }
+}
