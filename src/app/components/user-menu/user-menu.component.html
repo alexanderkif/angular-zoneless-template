@@ -1,6 +1,6 @@
-<button class="user-menu" (click)="toggleMenu()">avatar</button>
+<button class="user-menu" (click)="toggleMenu($event)">avatar</button>
 @if(showMenu) {
-  <ul class="user-menu-list" (click)="toggleMenu()">
+  <ul class="user-menu-list" (click)="toggleMenu($event)">
     <li>Profile</li>
     <li>Settings</li>
     <li>Exit</li>

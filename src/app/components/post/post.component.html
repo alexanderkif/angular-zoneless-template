@@ -1,5 +1,5 @@
 @if(post){
-  <article class="post">
+  <article class="post" (click)="openDetails(post.id)">
     <h1 class="title">{{post.title}}</h1>
     <!-- <span class="user">{{post.userId}}</span> -->
     <p class="text">{{post.body}}</p>

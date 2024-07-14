@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-user-menu',
@@ -10,9 +10,12 @@ import { Component } from '@angular/core';
 export class UserMenuComponent {
   public showMenu = false;
 
-  toggleMenu() {
+  @HostListener('document:click') closeMenu() {
+    this.showMenu = false;
+  }
+
+  toggleMenu(e: Event) {
+    e.stopPropagation();
     this.showMenu = !this.showMenu;
-    console.log('showMenu', this.showMenu);
-    
   }
 }
