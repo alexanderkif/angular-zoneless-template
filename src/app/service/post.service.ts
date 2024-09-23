@@ -12,8 +12,8 @@ export class PostService {
 
   constructor(private http: HttpClient) { }
 
-  getPosts(): Observable<Post[]> {
-    return this.http.get<Post[]>(`${postsBaseURL}/posts`);
+  getPosts(limit: number = 50): Observable<Post[]> {
+    return this.http.get<Post[]>(`${postsBaseURL}/posts?_limit=${limit}`);
   }
 
   getPost(id: string): Observable<Post> {

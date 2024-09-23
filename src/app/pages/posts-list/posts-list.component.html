@@ -1,6 +1,9 @@
 <section class="posts">
-  <!-- <app-post [post]="(posts$ | async)?.[0]"></app-post> -->
-  @for (post of posts$ | async; track post.id) {
-    <app-post [post]="post"></app-post>
+  @if(isLoading()) {
+  <h1>Loading posts...</h1>
+  }
+  <h1>{{ postsLength() }} posts</h1>
+  @for (post of posts(); track post.id) {
+  <app-post [post]="post"></app-post>
   }
 </section>
