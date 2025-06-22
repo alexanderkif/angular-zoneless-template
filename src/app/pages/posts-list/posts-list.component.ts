@@ -11,11 +11,10 @@ import {
 import { selectPostsLength } from '../../store/posts/posts.selector';
 
 @Component({
-  selector: 'app-posts-list',
-  standalone: true,
-  imports: [CommonModule, PostComponent],
-  templateUrl: './posts-list.component.html',
-  styleUrl: './posts-list.component.scss',
+    selector: 'app-posts-list',
+    imports: [CommonModule, PostComponent],
+    templateUrl: './posts-list.component.html',
+    styleUrl: './posts-list.component.scss'
 })
 export class PostsListComponent implements OnInit {
   readonly posts = this.postStore.selectSignal(selectPosts);
