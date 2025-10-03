@@ -38,7 +38,7 @@ const postsReducer = createReducer(
 );
 
 export const postsFeature = createFeature({
-  name: 'posts',
+  name: 'postsSlice',
   reducer: postsReducer,
 });
 

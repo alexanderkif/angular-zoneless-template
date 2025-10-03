@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PostComponent } from '../../components/post/post.component';
 import { Store } from '@ngrx/store';
@@ -14,14 +14,15 @@ import { selectPostsLength } from '../../store/posts/posts.selector';
     selector: 'app-posts-list',
     imports: [CommonModule, PostComponent],
     templateUrl: './posts-list.component.html',
-    styleUrl: './posts-list.component.scss'
+    styleUrl: './posts-list.component.css'
 })
 export class PostsListComponent implements OnInit {
+  private postStore = inject(Store<PostState>);
   readonly posts = this.postStore.selectSignal(selectPosts);
   readonly isLoading = this.postStore.selectSignal(selectIsLoading);
   readonly postsLength = this.postStore.selectSignal(selectPostsLength);
 
-  constructor(private postStore: Store<PostState>) {}
+  constructor() {}
 
   ngOnInit(): void {
     this.postStore.dispatch(PostsUserActions.loadPosts({ limit: 1 }));

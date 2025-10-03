@@ -1,22 +1,21 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Post } from '../types/post';
 
-const postsBaseURL = 'https://jsonplaceholder.typicode.com';
+export const postsBaseURL = 'https://jsonplaceholder.typicode.com';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PostService {
-
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getPosts(limit: number = 50): Observable<Post[]> {
     return this.http.get<Post[]>(`${postsBaseURL}/posts?_limit=${limit}`);
   }
 
-  getPost(id: string): Observable<Post> {
-    return this.http.get<Post>(`${postsBaseURL}/posts/${id}`);
+  getPost(id: string | null): Observable<Post | null> {
+    return id ? this.http.get<Post>(`${postsBaseURL}/posts/${id}`) : of(null);
   }
 }

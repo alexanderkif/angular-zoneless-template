@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
     selector: 'app-post',
     imports: [],
     templateUrl: './post.component.html',
-    styleUrl: './post.component.scss'
+    styleUrl: './post.component.css'
 })
 export class PostComponent {
   @Input() post?: Post;

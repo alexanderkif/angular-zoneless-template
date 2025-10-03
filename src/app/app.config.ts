@@ -1,21 +1,23 @@
-import { ApplicationConfig, isDevMode } from '@angular/core';
+import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { loggingInterceptor } from './interceptors/loggingInterceptor';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideEffects } from '@ngrx/effects';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
-import { postsFeature } from './store/posts/posts.reducer';
-import { provideEffects } from '@ngrx/effects';
+import { loggingInterceptor } from './interceptors/loggingInterceptor';
 import { PostsEffects } from './store/posts/posts.effects';
+import { postsFeature } from './store/posts/posts.reducer';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZonelessChangeDetection(),
     provideRouter(routes),
-    provideClientHydration(),
-    provideHttpClient(withInterceptors([loggingInterceptor])),
+    provideClientHydration(withEventReplay()),
+    provideHttpClient(withFetch(),withInterceptors([loggingInterceptor])),
     provideStore(),
     provideState(postsFeature),
     provideStoreDevtools({

@@ -7,7 +7,7 @@ import { UserMenuComponent } from "../user-menu/user-menu.component";
     selector: 'app-header',
     imports: [PanelComponent, LogoComponent, UserMenuComponent],
     templateUrl: './header.component.html',
-    styleUrl: './header.component.scss'
+    styleUrl: './header.component.css'
 })
 export class HeaderComponent {
 

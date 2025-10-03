@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
     selector: 'app-panel',
     imports: [RouterModule],
     templateUrl: './panel.component.html',
-    styleUrl: './panel.component.scss'
+    styleUrl: './panel.component.css'
 })
 export class PanelComponent {
 
