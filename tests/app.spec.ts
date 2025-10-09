@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('App Navigation', () => {
-  const url = 'http://localhost:4200/';
+  const url = '/';
 
   test('should display navigation links', async ({ page }) => {
     await page.goto(url);

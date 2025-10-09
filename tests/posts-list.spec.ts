@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Posts list page', () => {
-  const url = 'http://localhost:4200/posts';
+  const url = '/posts';
   const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
 
   test('should show posts list', async ({ page }) => {
