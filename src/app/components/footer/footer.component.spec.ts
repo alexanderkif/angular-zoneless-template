@@ -16,7 +16,7 @@ describe('FooterComponent', () => {
     
     fixture = TestBed.createComponent(FooterComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {

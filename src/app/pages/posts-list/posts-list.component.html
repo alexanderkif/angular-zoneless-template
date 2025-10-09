@@ -1,9 +1,12 @@
 <section class="posts">
-  @if(isLoading()) {
-  <h1>Loading posts...</h1>
-  }
-  <h1>{{ postsLength() }} posts</h1>
-  @for (post of posts(); track post.id) {
-  <app-post [post]="post"></app-post>
+  @if (isLoading()) {
+    <h1>Loading posts...</h1>
+  } @else if (postsLength() === 0) {
+    <h1>No posts found</h1>
+  } @else {
+    <h1>{{ postsLength() }} posts</h1>
+    @for (post of posts(); track post.id) {
+      <app-post [post]="post"></app-post>
+    }
   }
 </section>

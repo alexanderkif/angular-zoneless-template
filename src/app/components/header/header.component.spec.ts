@@ -21,7 +21,7 @@ describe('HeaderComponent', () => {
 
     fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {

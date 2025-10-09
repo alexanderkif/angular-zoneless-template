@@ -21,7 +21,7 @@ describe('PanelComponent', () => {
 
     fixture = TestBed.createComponent(PanelComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {

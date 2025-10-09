@@ -1,8 +1,8 @@
 <section class="post-details">
   @if(post$ | async; as post) {
-    <h1>{{ post.title }}</h1>
-    <p>{{ post.body }}</p>
+    <h1 class="post-details__title">{{ post.title }}</h1>
+    <p class="post-details__body">{{ post.body }}</p>
   } @else {
-    <p>No post found</p>
+    <p class="post-details__body">No post found</p>
   }
 </section>

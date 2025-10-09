@@ -14,7 +14,6 @@ export class PostComponent {
   constructor(private router: Router) {}
 
   openDetails(id: number) {
-    console.log('openDetails', id);
     this.router.navigate([`/posts/${id}`]);
   }
 }

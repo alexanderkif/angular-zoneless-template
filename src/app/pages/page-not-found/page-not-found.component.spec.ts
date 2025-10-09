@@ -16,7 +16,7 @@ describe('PageNotFoundComponent', () => {
     
     fixture = TestBed.createComponent(PageNotFoundComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {

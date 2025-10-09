@@ -16,7 +16,7 @@ describe('UserMenuComponent', () => {
     
     fixture = TestBed.createComponent(UserMenuComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {

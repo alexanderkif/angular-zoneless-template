@@ -32,7 +32,7 @@ describe('PostsListComponent', () => {
 
     fixture = TestBed.createComponent(PostsListComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   afterEach(() => {
@@ -44,6 +44,7 @@ describe('PostsListComponent', () => {
   });
 
   it('should dispatch loadPosts with limit 1 on init', () => {
+    component.ngOnInit();
     expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ limit: 1 }));
   });
 

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { afterNextRender, Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FooterComponent } from './components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';
@@ -11,6 +11,10 @@ import { HeaderComponent } from './components/header/header.component';
 })
 export class App {
   protected readonly title = signal('angular-test-app');
+
+  constructor() {
+    afterNextRender(() => console.log('AppComponent constructor !!!'));
+  }
 
   ngOnInit(): void {
     console.log('AppComponent ngOnInit !');

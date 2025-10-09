@@ -19,7 +19,7 @@ describe('PostComponent', () => {
     fixture = TestBed.createComponent(PostComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {

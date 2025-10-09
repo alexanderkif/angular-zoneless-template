@@ -32,7 +32,7 @@ describe('PostDetailsComponent', () => {
 
     fixture = TestBed.createComponent(PostDetailsComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.whenStable();
   });
 
   it('should create', () => {
@@ -40,6 +40,7 @@ describe('PostDetailsComponent', () => {
   });
 
   it('should fetch post details on init', (done) => {
+    component.ngOnInit();
     component.post$.subscribe((post) => {
       expect(post).toEqual({ id: 1, title: 'Test', body: 'Body', userId: 1 });
       done();

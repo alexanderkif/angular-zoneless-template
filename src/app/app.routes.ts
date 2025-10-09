@@ -1,28 +1,31 @@
 import { Routes } from '@angular/router';
-import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
-import { PostDetailsComponent } from './pages/post-details/post-details.component';
-import { AboutComponent } from './pages/about/about.component';
-import { HomeComponent } from './pages/home/home.component';
-import { PostsListComponent } from './pages/posts-list/posts-list.component';
 
 export const routes: Routes = [
   {
     path: 'posts',
-    component: PostsListComponent,
-    pathMatch: 'full'
+    loadComponent: () =>
+      import('./pages/posts-list/posts-list.component').then((m) => m.PostsListComponent),
+    pathMatch: 'full',
   },
   {
     path: 'posts/:id',
-    component: PostDetailsComponent
+    loadComponent: () =>
+      import('./pages/post-details/post-details.component').then((m) => m.PostDetailsComponent),
   },
   {
     path: 'about',
-    component: AboutComponent
+    loadComponent: () => import('./pages/about/about.component').then((m) => m.AboutComponent),
   },
   {
     path: '',
-    component: HomeComponent,
-    pathMatch: 'full'
+    loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent),
+    pathMatch: 'full',
   },
-  { path: '**', component: PageNotFoundComponent },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./pages/page-not-found/page-not-found.component').then(
+        (m) => m.PageNotFoundComponent
+      ),
+  },
 ];
