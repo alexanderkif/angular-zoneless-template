@@ -1,8 +1,14 @@
-<button class="user-menu" (click)="toggleMenu($event)">avatar</button>
+<button class="user-menu__button" (click)="toggleMenu($event)">avatar</button>
 @if(showMenu) {
-  <ul class="user-menu-list" (click)="toggleMenu($event)">
-    <li>Profile</li>
-    <li>Settings</li>
-    <li>Exit</li>
-  </ul>
+  <div class="user-menu__list" (click)="toggleMenu($event)">
+    <div class="user-menu__name">{{ userName() }}</div>
+    <ul>
+      @if (userName() === GUEST) {
+        <li id="login">Login</li>
+      } @else {
+        <li id="settings">Settings</li>
+        <li id="exit">Exit</li>
+      }
+    </ul>
+  </div>
 }

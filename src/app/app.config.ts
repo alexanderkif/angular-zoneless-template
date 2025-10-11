@@ -1,4 +1,9 @@
-import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  isDevMode,
+  provideBrowserGlobalErrorListeners,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -8,8 +13,8 @@ import { provideEffects } from '@ngrx/effects';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { loggingInterceptor } from './interceptors/loggingInterceptor';
-import { PostsEffects } from './store/posts/posts.effects';
-import { postsFeature } from './store/posts/posts.reducer';
+import { usersFeature } from './store/users/users.reducer';
+import { UsersEffects } from './store/users/users.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,9 +22,10 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
-    provideHttpClient(withFetch(),withInterceptors([loggingInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([loggingInterceptor])),
     provideStore(),
-    provideState(postsFeature),
+    provideState(usersFeature),
+    provideEffects([UsersEffects]),
     provideStoreDevtools({
       maxAge: 25, // Retains last 25 states
       logOnly: !isDevMode(), // Restrict extension to log-only mode
@@ -28,6 +34,5 @@ export const appConfig: ApplicationConfig = {
       // traceLimit: 75, // maximum stack trace frames to be stored (in case trace option was provided as true)
       // connectInZone: true // If set to true, the connection is established within the Angular zone
     }),
-    provideEffects([PostsEffects]),
   ],
 };

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { PostsEffects } from './posts.effects';
 import { PostService } from '../../service/post.service';
 import { PostsApiActions, PostsUserActions } from './actions/';

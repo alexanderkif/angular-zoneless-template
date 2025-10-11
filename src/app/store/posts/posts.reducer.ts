@@ -29,7 +29,7 @@ const postsReducer = createReducer(
     isLoading: false,
     error: errorMsg,
   })),
-  on(PostsUserActions.reset, (state) => ({
+  on(PostsUserActions.clearPosts, (state) => ({
     ...state,
     posts: [],
     isLoading: false,

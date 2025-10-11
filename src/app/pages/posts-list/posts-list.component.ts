@@ -3,18 +3,14 @@ import { CommonModule } from '@angular/common';
 import { PostComponent } from '../../components/post/post.component';
 import { Store } from '@ngrx/store';
 import { PostsUserActions } from '../../store/posts/actions';
-import {
-  PostState,
-  selectIsLoading,
-  selectPosts,
-} from '../../store/posts/posts.reducer';
+import { PostState, selectIsLoading, selectPosts } from '../../store/posts/posts.reducer';
 import { selectPostsLength } from '../../store/posts/posts.selector';
 
 @Component({
-    selector: 'app-posts-list',
-    imports: [CommonModule, PostComponent],
-    templateUrl: './posts-list.component.html',
-    styleUrl: './posts-list.component.css'
+  selector: 'app-posts-list',
+  imports: [CommonModule, PostComponent],
+  templateUrl: './posts-list.component.html',
+  styleUrl: './posts-list.component.css',
 })
 export class PostsListComponent implements OnInit {
   private postStore = inject(Store<PostState>);
@@ -25,6 +21,7 @@ export class PostsListComponent implements OnInit {
   constructor() {}
 
   ngOnInit(): void {
+    this.postStore.dispatch(PostsUserActions.clearPosts());
     this.postStore.dispatch(PostsUserActions.loadPosts({ limit: 1 }));
 
     setTimeout(() => {

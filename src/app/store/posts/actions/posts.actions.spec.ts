@@ -21,8 +21,8 @@ describe('Posts Actions', () => {
     expect(action.limit).toBe(5);
   });
 
-  it('should create reset action', () => {
-    const action = PostsUserActions.reset();
-    expect(action.type).toBe('[Posts Page] Reset');
+  it('should create clearPosts action', () => {
+    const action = PostsUserActions.clearPosts();
+    expect(action.type).toBe('[Posts Page] Clear posts');
   });
 });

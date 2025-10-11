@@ -1,4 +1,8 @@
 import { Routes } from '@angular/router';
+import { provideEffects } from '@ngrx/effects';
+import { provideState } from '@ngrx/store';
+import { PostsEffects } from './store/posts/posts.effects';
+import { postsFeature } from './store/posts/posts.reducer';
 
 export const routes: Routes = [
   {
@@ -6,6 +10,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/posts-list/posts-list.component').then((m) => m.PostsListComponent),
     pathMatch: 'full',
+    providers: [provideState(postsFeature), provideEffects([PostsEffects])],
   },
   {
     path: 'posts/:id',

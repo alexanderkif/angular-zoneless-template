@@ -23,10 +23,7 @@ describe('postsSlice reducer', () => {
   it('should set posts and isLoading false on loadPostsSuccess', () => {
     const posts: Post[] = [{ id: 1, title: 'Test', body: 'Body', userId: 1 }];
     const action = PostsApiActions.loadPostsSuccess({ posts });
-    const state = postsFeature.reducer(
-      { ...postsSlice, isLoading: true },
-      action
-    );
+    const state = postsFeature.reducer({ ...postsSlice, isLoading: true }, action);
     expect(state.posts).toEqual(posts);
     expect(state.isLoading).toBeFalse();
     expect(state.error).toBe('');
@@ -34,10 +31,7 @@ describe('postsSlice reducer', () => {
 
   it('should set error and isLoading false on loadPostsFailure', () => {
     const action = PostsApiActions.loadPostsFailure({ errorMsg: 'Failed' });
-    const state = postsFeature.reducer(
-      { ...postsSlice, isLoading: true },
-      action
-    );
+    const state = postsFeature.reducer({ ...postsSlice, isLoading: true }, action);
     expect(state.error).toBe('Failed');
     expect(state.isLoading).toBeFalse();
     expect(state.posts).toEqual([]);
@@ -49,7 +43,7 @@ describe('postsSlice reducer', () => {
       error: 'Some error',
       isLoading: true,
     };
-    const action = PostsUserActions.reset();
+    const action = PostsUserActions.clearPosts();
     const state = postsFeature.reducer(prevState, action);
     expect(state).toEqual(postsSlice);
   });

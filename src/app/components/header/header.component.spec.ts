@@ -4,6 +4,8 @@ import { HeaderComponent } from './header.component';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { usersSlice } from '../../store/users/users.reducer.spec';
+import { provideMockStore } from '@ngrx/store/testing';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
@@ -16,6 +18,7 @@ describe('HeaderComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
         { provide: HttpClient, useValue: {} },
+        provideMockStore({ initialState: { usersSlice } }),
       ],
     }).compileComponents();
 

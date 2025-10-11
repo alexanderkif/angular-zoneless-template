@@ -1,4 +1,4 @@
-.user-menu {
+.user-menu__button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,13 +14,14 @@
   outline: inherit;
 }
 
-ul, li {
+ul,
+li {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.user-menu-list {
+.user-menu__list {
   position: fixed;
   top: calc(var(--header-height) + 0.5rem);
   right: 0.5rem;
@@ -28,17 +29,24 @@ ul, li {
   background-color: lightsalmon;
   border: none;
   overflow: hidden;
-  cursor: pointer;
 
+  .user-menu__name {
+    background-color: maroon;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .user-menu__name,
   li {
     display: flex;
     align-items: center;
     padding: 1rem;
     min-width: 8rem;
+  }
 
-    &:hover {
-      background-color: chocolate;
-      color: #fff;
-    }
+  li:hover {
+    background-color: chocolate;
+    color: #fff;
+    cursor: pointer;
   }
 }

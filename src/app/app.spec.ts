@@ -2,6 +2,8 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { ActivatedRoute } from '@angular/router';
+import { provideMockStore } from '@ngrx/store/testing';
+import { usersSlice } from './store/users/users.reducer.spec';
 
 describe('App', () => {
   let component: App;
@@ -13,6 +15,7 @@ describe('App', () => {
       providers: [
         provideZonelessChangeDetection(),
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
+        provideMockStore({ initialState: { usersSlice } }),
       ],
     }).compileComponents();
 
@@ -42,10 +45,10 @@ describe('App', () => {
 
   it('should call lifecycle hooks', async () => {
     const consoleSpy = spyOn(console, 'log');
-    
+
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(consoleSpy).toHaveBeenCalledWith('AppComponent constructor !!!');
-    
+
     component.ngOnInit();
     expect(consoleSpy).toHaveBeenCalledWith('AppComponent ngOnInit !');
 
