@@ -19,7 +19,7 @@ const postsReducer = createReducer(
   on(PostsUserActions.loadPosts, (state) => ({ ...state, isLoading: true })),
   on(PostsApiActions.loadPostsSuccess, (state, { posts }) => ({
     ...state,
-    posts,
+    posts: [...state.posts, ...posts],
     isLoading: false,
     error: '',
   })),

@@ -25,11 +25,11 @@ export class PostsListComponent implements OnInit {
     this.postStore.dispatch(PostsUserActions.loadPosts({ limit: 1 }));
 
     setTimeout(() => {
-      this.postStore.dispatch(PostsUserActions.loadPosts({ limit: 3 }));
+      this.postStore.dispatch(PostsUserActions.loadPosts({ start: 1, limit: 2 }));
     }, 3000);
 
     setTimeout(() => {
-      this.postStore.dispatch(PostsUserActions.loadPosts({ limit: 5 }));
+      this.postStore.dispatch(PostsUserActions.loadPosts({ start: 3, limit: 2 }));
     }, 5000);
   }
 }

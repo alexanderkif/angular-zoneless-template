@@ -33,8 +33,9 @@ describe('PostService', () => {
                   : of(null);
               }
               if (url.includes('/posts?_limit=')) {
-                const limit = +url.split('/posts?_limit=')[1] || 50;
-                return of(mockPosts.slice(0, limit));
+                const limit = +url.split('/posts?_limit=')[1].split('&')[0];
+                const start = +url.split('&_start=')[1] || 0;
+                return of(mockPosts.slice(start, limit + start));
               }
               return of(null);
             },
@@ -52,14 +53,15 @@ describe('PostService', () => {
   describe('getPosts', () => {
     it('should fetch posts with a custom limit', () => {
       const limit = getRandomInt(1, mockPosts.length);
+      const start = getRandomInt(0, mockPosts.length - limit);
 
-      service.getPosts(limit).subscribe((posts) => {
-        expect(posts).toEqual(mockPosts.slice(0, limit));
+      service.getPosts(start, limit).subscribe((posts) => {
+        expect(posts).toEqual(mockPosts.slice(start, limit + start));
       });
     });
     it('should fetch posts with the default limit', () => {
       service.getPosts().subscribe((posts) => {
-        expect(posts).toEqual(mockPosts.slice(0, 50));
+        expect(posts).toEqual(mockPosts.slice(0, 5));
       });
     });
   });

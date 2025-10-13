@@ -11,8 +11,8 @@ export const postsBaseURL = 'https://jsonplaceholder.typicode.com';
 export class PostService {
   constructor(private http: HttpClient) {}
 
-  getPosts(limit: number = 50): Observable<Post[]> {
-    return this.http.get<Post[]>(`${postsBaseURL}/posts?_limit=${limit}`);
+  getPosts(start: number = 0, limit: number = 5): Observable<Post[]> {
+    return this.http.get<Post[]>(`${postsBaseURL}/posts?_limit=${limit}&_start=${start}`);
   }
 
   getPost(id: string | null): Observable<Post | null> {

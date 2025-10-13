@@ -48,7 +48,7 @@ describe('PostsListComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ limit: 1 }));
   });
 
-  it('should dispatch loadPosts with limit 3 after 3 seconds', (done) => {
+  it('should dispatch loadPosts with start 1 and limit 2 after 3 seconds', (done) => {
     const setTimeoutSpy = spyOn(window, 'setTimeout').and.callFake(((
       handler: TimerHandler,
       timeout?: number,
@@ -64,13 +64,13 @@ describe('PostsListComponent', () => {
 
     component.ngOnInit();
 
-    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ limit: 3 }));
+    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ start: 1, limit: 2 }));
 
     setTimeoutSpy.and.callThrough();
     done();
   });
 
-  it('should dispatch loadPosts with limit 5 after 5 seconds', () => {
+  it('should dispatch loadPosts with start 3 and limit 2 after 5 seconds', (done) => {
     const setTimeoutSpy = spyOn(window, 'setTimeout').and.callFake(((
       handler: TimerHandler,
       timeout?: number,
@@ -86,8 +86,9 @@ describe('PostsListComponent', () => {
 
     component.ngOnInit();
 
-    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ limit: 5 }));
+    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ start: 3, limit: 2 }));
 
     setTimeoutSpy.and.callThrough();
+    done();
   });
 });

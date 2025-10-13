@@ -13,7 +13,7 @@ export class PostsEffects {
     this.actions$.pipe(
       ofType(PostsUserActions.loadPosts),
       exhaustMap((payload) =>
-        this.postService.getPosts(payload.limit).pipe(
+        this.postService.getPosts(payload.start, payload.limit).pipe(
           map((posts) => PostsApiActions.loadPostsSuccess({ posts })),
           catchError((error: { message: string }) =>
             of(PostsApiActions.loadPostsFailure({ errorMsg: error.message }))
