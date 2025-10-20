@@ -1,6 +1,8 @@
 import {
   ApplicationConfig,
+  inject,
   isDevMode,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -10,11 +12,12 @@ import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideEffects } from '@ngrx/effects';
-import { provideStore, provideState } from '@ngrx/store';
+import { provideStore, provideState, Store } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { loggingInterceptor } from './interceptors/loggingInterceptor';
 import { usersFeature } from './store/users/users.reducer';
 import { UsersEffects } from './store/users/users.effects';
+import { initUser } from './store/users/actions/users.user.actions';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,6 +29,10 @@ export const appConfig: ApplicationConfig = {
     provideStore(),
     provideState(usersFeature),
     provideEffects([UsersEffects]),
+    provideAppInitializer(() => {
+      const store = inject(Store);
+      store.dispatch(initUser());
+    }),
     provideStoreDevtools({
       maxAge: 25, // Retains last 25 states
       logOnly: !isDevMode(), // Restrict extension to log-only mode

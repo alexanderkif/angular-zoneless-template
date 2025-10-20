@@ -7,6 +7,7 @@ import { UsersEffects } from './users.effects';
 import { UsersApiActions, UsersUserActions } from './actions';
 import { hot, cold } from 'jasmine-marbles';
 import { mockUser } from '../../types/user';
+import { initUser } from './actions/users.user.actions';
 
 describe('UsersEffects', () => {
   let actions$: Observable<any>;
@@ -30,6 +31,39 @@ describe('UsersEffects', () => {
 
   it('should be created', () => {
     expect(effects).toBeTruthy();
+  });
+
+  it('should dispatch getUserSuccess if user exists in localStorage', () => {
+    spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(mockUser));
+
+    actions$ = hot('-a', { a: initUser() });
+    const expected = cold('-b', {
+      b: UsersApiActions.getUserSuccess({ user: mockUser }),
+    });
+
+    expect(effects.initUser$).toBeObservable(expected);
+  });
+
+  it('should dispatch fallback action if no user in localStorage', () => {
+    spyOn(localStorage, 'getItem').and.returnValue(null);
+
+    actions$ = hot('-a', { a: initUser() });
+    const expected = cold('-b', {
+      b: { type: '[User] User not found in LocalStorage' },
+    });
+
+    expect(effects.initUser$).toBeObservable(expected);
+  });
+
+  it('should dispatch fallback action if JSON.parse fails', () => {
+    spyOn(localStorage, 'getItem').and.returnValue('invalid-json');
+
+    actions$ = hot('-a', { a: initUser() });
+    const expected = cold('-b', {
+      b: { type: '[User] User not found in LocalStorage' },
+    });
+
+    expect(effects.initUser$).toBeObservable(expected);
   });
 
   it('should dispatch getUserSuccess on successful getUser', () => {

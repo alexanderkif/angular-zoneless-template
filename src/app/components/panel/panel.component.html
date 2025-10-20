@@ -1,7 +1,13 @@
 <nav>
   <ul>
-    <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a></li>
-    <li><a routerLink="/posts" routerLinkActive="active">Posts</a></li>
+    <li>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        >Home</a
+      >
+    </li>
+    <li>
+      <a routerLink="/posts" routerLinkActive="active" [class.disabled-link]="isGuest()">Posts</a>
+    </li>
     <li><a routerLink="/about" routerLinkActive="active">About</a></li>
   </ul>
 </nav>

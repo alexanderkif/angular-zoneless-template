@@ -1,4 +1,4 @@
-import { selectUserName } from './users.selector';
+import { selectIsGuest, selectUserName } from './users.selector';
 import { GUEST } from '../../types/user';
 
 describe('selectUserName', () => {
@@ -31,5 +31,15 @@ describe('selectUserName', () => {
 
     const result = selectUserName.projector(mockState.user);
     expect(result).toBe(GUEST);
+  });
+
+  it('should return true if user name is GUEST', () => {
+    const result = selectIsGuest.projector(GUEST);
+    expect(result).toBeTruthy();
+  });
+
+  it('should return false if user name is not GUEST', () => {
+    const result = selectIsGuest.projector('UserName');
+    expect(result).toBeFalsy();
   });
 });

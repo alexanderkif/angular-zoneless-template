@@ -2,7 +2,12 @@ import { mockUser } from '../../../types/user';
 import * as UsersApiActions from './users.api.actions';
 import * as UsersUserActions from './users.user.actions';
 
-describe('Posts Actions', () => {
+describe('Users Actions', () => {
+  it('should create initUser action', () => {
+    const action = UsersUserActions.initUser();
+    expect(action.type).toBe('[User] Init User');
+  });
+
   it('should create getUser action', () => {
     const action = UsersUserActions.getUser({ id: 1 });
     expect(action.type).toBe('[Users] Get user');

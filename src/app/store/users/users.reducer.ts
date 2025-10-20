@@ -17,19 +17,28 @@ const initialState: UserState = {
 const usersReducer = createReducer(
   initialState,
   on(UsersUserActions.getUser, (state) => ({ ...state, isLoading: true })),
-  on(UsersApiActions.getUserSuccess, (state, { user }) => ({
-    ...state,
-    user,
-    isLoading: false,
-    error: '',
-  })),
-  on(UsersApiActions.getUserFailure, (state, { errorMsg }) => ({
-    ...state,
-    user: null,
-    isLoading: false,
-    error: errorMsg,
-  })),
-  on(UsersUserActions.exitUser, (state) => ({ ...state, ...initialState }))
+  on(UsersApiActions.getUserSuccess, (state, { user }) => {
+    localStorage.setItem('user', JSON.stringify(user));
+    return {
+      ...state,
+      user,
+      isLoading: false,
+      error: '',
+    };
+  }),
+  on(UsersApiActions.getUserFailure, (state, { errorMsg }) => {
+    localStorage.removeItem('user');
+    return {
+      ...state,
+      user: null,
+      isLoading: false,
+      error: errorMsg,
+    };
+  }),
+  on(UsersUserActions.exitUser, (state) => {
+    localStorage.removeItem('user');
+    return { ...state, ...initialState };
+  })
 );
 
 export const usersFeature = createFeature({

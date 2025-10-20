@@ -3,6 +3,7 @@ import { catchError, exhaustMap, map, of } from 'rxjs';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { UserService } from '../../service/user.service';
 import { UsersApiActions, UsersUserActions } from './actions';
+import { initUser } from './actions/users.user.actions';
 
 @Injectable()
 export class UsersEffects {
@@ -24,6 +25,23 @@ export class UsersEffects {
           )
         )
       )
+    )
+  );
+
+  initUser$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(initUser),
+      map(() => {
+        try {
+          const raw = localStorage.getItem('user');
+          if (!raw) throw new Error('No user in storage');
+
+          const user = JSON.parse(raw);
+          return UsersApiActions.getUserSuccess({ user });
+        } catch {
+          return { type: '[User] User not found in LocalStorage' };
+        }
+      })
     )
   );
 }
