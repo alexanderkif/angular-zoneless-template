@@ -1,11 +1,22 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Posts list page', () => {
-  const url = '/posts';
-  const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+  const BASE_URL = '/';
+  const POSTS_URL = '/posts';
+  const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.getByRole('button', { name: 'avatar' }).click();
+    const loginButton = page.getByText('Login');
+
+    if (await loginButton.isVisible()) {
+      await loginButton.click();
+    }
+  });
 
   test('should show posts list', async ({ page }) => {
-    await page.route(`${apiUrl}?_limit=1`, async (route) => {
+    await page.route(`${API_URL}?_limit=1`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -13,7 +24,7 @@ test.describe('Posts list page', () => {
       });
     });
 
-    await page.route(`${apiUrl}?_limit=3`, async (route) => {
+    await page.route(`${API_URL}?_limit=3`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -25,7 +36,7 @@ test.describe('Posts list page', () => {
       });
     });
 
-    await page.route(`${apiUrl}?_limit=5`, async (route) => {
+    await page.route(`${API_URL}?_limit=5`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -39,8 +50,8 @@ test.describe('Posts list page', () => {
       });
     });
 
-    await page.goto(url);
-    await expect(page).toHaveURL(url);
+    await page.goto(POSTS_URL);
+    await expect(page).toHaveURL(POSTS_URL);
 
     await expect(page.locator('app-post')).toHaveCount(1);
     await expect(page.locator('app-post')).toHaveCount(3);
@@ -48,8 +59,8 @@ test.describe('Posts list page', () => {
   });
 
   test('should navigate to Post Details page', async ({ page }) => {
-    await page.goto(url);
-    await expect(page).toHaveURL(url);
+    await page.goto(POSTS_URL);
+    await expect(page).toHaveURL(POSTS_URL);
 
     const firstPost = page.locator('app-post').first();
     await firstPost.waitFor({ state: 'visible', timeout: 2000 });
