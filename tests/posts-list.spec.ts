@@ -1,20 +1,9 @@
 import { test, expect } from '@playwright/test';
 
+const URL = '/posts';
+const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+
 test.describe('Posts list page', () => {
-  const BASE_URL = '/';
-  const POSTS_URL = '/posts';
-  const API_URL = 'https://jsonplaceholder.typicode.com/posts';
-
-  test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.getByRole('button', { name: 'avatar' }).click();
-    const loginButton = page.getByText('Login');
-
-    if (await loginButton.isVisible()) {
-      await loginButton.click();
-    }
-  });
-
   test('should show posts list', async ({ page }) => {
     await page.route(`${API_URL}?_limit=1`, async (route) => {
       await route.fulfill({
@@ -50,8 +39,8 @@ test.describe('Posts list page', () => {
       });
     });
 
-    await page.goto(POSTS_URL);
-    await expect(page).toHaveURL(POSTS_URL);
+    await page.goto(URL);
+    await expect(page).toHaveURL(URL);
 
     await expect(page.locator('app-post')).toHaveCount(1);
     await expect(page.locator('app-post')).toHaveCount(3);
@@ -59,8 +48,8 @@ test.describe('Posts list page', () => {
   });
 
   test('should navigate to Post Details page', async ({ page }) => {
-    await page.goto(POSTS_URL);
-    await expect(page).toHaveURL(POSTS_URL);
+    await page.goto(URL);
+    await expect(page).toHaveURL(URL);
 
     const firstPost = page.locator('app-post').first();
     await firstPost.waitFor({ state: 'visible', timeout: 2000 });
