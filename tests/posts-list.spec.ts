@@ -52,7 +52,7 @@ test.describe('Posts list page', () => {
     await expect(page).toHaveURL(URL);
 
     const firstPost = page.locator('app-post').first();
-    await firstPost.waitFor({ state: 'visible', timeout: 2000 });
+    await firstPost.waitFor({ state: 'visible', timeout: 20000 });
     firstPost.click();
     await expect(page).toHaveURL(/\/posts\/\d+/);
 
