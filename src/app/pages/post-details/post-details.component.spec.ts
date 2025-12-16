@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { PostService } from '../../service/post.service';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 describe('PostDetailsComponent', () => {
   let component: PostDetailsComponent;
@@ -27,7 +28,7 @@ describe('PostDetailsComponent', () => {
               of({ id: 1, title: 'Test', body: 'Body', userId: 1 }),
           },
         },
-      ],
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PostDetailsComponent);
@@ -39,11 +40,9 @@ describe('PostDetailsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should fetch post details on init', (done) => {
+  it('should fetch post details on init', async () => {
     component.ngOnInit();
-    component.post$.subscribe((post) => {
-      expect(post).toEqual({ id: 1, title: 'Test', body: 'Body', userId: 1 });
-      done();
-    });
+    const post = await firstValueFrom(component.post$);
+    expect(post).toEqual({ id: 1, title: 'Test', body: 'Body', userId: 1 });
   });
 });

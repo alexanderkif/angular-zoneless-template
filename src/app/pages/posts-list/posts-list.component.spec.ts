@@ -12,7 +12,7 @@ describe('PostsListComponent', () => {
   let component: PostsListComponent;
   let fixture: ComponentFixture<PostsListComponent>;
   let store: MockStore<PostState>;
-  let dispatchSpy: jasmine.Spy;
+  let dispatchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -20,11 +20,11 @@ describe('PostsListComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideMockStore({ initialState: { postsSlice } }),
-      ],
+      ]
     }).compileComponents();
 
     store = TestBed.inject(MockStore);
-    dispatchSpy = spyOn(store, 'dispatch');
+    dispatchSpy = vi.spyOn(store, 'dispatch');
 
     store.overrideSelector(selectPosts, []);
     store.overrideSelector(selectIsLoading, false);
@@ -36,7 +36,7 @@ describe('PostsListComponent', () => {
   });
 
   afterEach(() => {
-    dispatchSpy.calls.reset();
+    dispatchSpy.mockClear();
   });
 
   it('should create', () => {
@@ -48,8 +48,8 @@ describe('PostsListComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ limit: 1 }));
   });
 
-  it('should dispatch loadPosts with start 1 and limit 2 after 3 seconds', (done) => {
-    const setTimeoutSpy = spyOn(window, 'setTimeout').and.callFake(((
+  it('should dispatch loadPosts with start 1 and limit 2 after 3 seconds', async () => {
+    const setTimeoutSpy = vi.spyOn(window, 'setTimeout').mockImplementation(((
       handler: TimerHandler,
       timeout?: number,
       ...args: any[]
@@ -66,12 +66,11 @@ describe('PostsListComponent', () => {
 
     expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ start: 1, limit: 2 }));
 
-    setTimeoutSpy.and.callThrough();
-    done();
+    setTimeoutSpy.mockRestore();
   });
 
-  it('should dispatch loadPosts with start 3 and limit 2 after 5 seconds', (done) => {
-    const setTimeoutSpy = spyOn(window, 'setTimeout').and.callFake(((
+  it('should dispatch loadPosts with start 3 and limit 2 after 5 seconds', async () => {
+    const setTimeoutSpy = vi.spyOn(window, 'setTimeout').mockImplementation(((
       handler: TimerHandler,
       timeout?: number,
       ...args: any[]
@@ -88,7 +87,6 @@ describe('PostsListComponent', () => {
 
     expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ start: 3, limit: 2 }));
 
-    setTimeoutSpy.and.callThrough();
-    done();
+    setTimeoutSpy.mockRestore();
   });
 });

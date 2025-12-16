@@ -12,13 +12,13 @@ import { UserState } from '../store/users/users.reducer';
 import { GUEST } from '../types/user';
 
 describe('authGuard', () => {
-  let router: jasmine.SpyObj<Router>;
-  let store: jasmine.SpyObj<Store<UserState>>;
+  let router: { createUrlTree: ReturnType<typeof vi.fn> };
+  let store: { selectSignal: ReturnType<typeof vi.fn> };
   let injector: EnvironmentInjector;
 
   beforeEach(() => {
-    router = jasmine.createSpyObj('Router', ['createUrlTree']);
-    store = jasmine.createSpyObj('Store', ['selectSignal']);
+    router = { createUrlTree: vi.fn() };
+    store = { selectSignal: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [
@@ -32,17 +32,17 @@ describe('authGuard', () => {
   });
 
   it('should allow access if userName is not GUEST', () => {
-    store.selectSignal.and.returnValue(signal('John') as any);
+    store.selectSignal.mockReturnValue(signal('John') as any);
 
     const result = runInInjectionContext(injector, () => authGuard(null!, null!));
 
-    expect(result).toBeTrue();
+    expect(result).toBe(true);
   });
 
   it('should redirect to / if userName is GUEST', () => {
     const urlTree = {} as UrlTree;
-    router.createUrlTree.and.returnValue(urlTree);
-    store.selectSignal.and.returnValue(signal(GUEST) as any);
+    router.createUrlTree.mockReturnValue(urlTree);
+    store.selectSignal.mockReturnValue(signal(GUEST) as any);
 
     const result = runInInjectionContext(injector, () => authGuard(null!, null!));
 

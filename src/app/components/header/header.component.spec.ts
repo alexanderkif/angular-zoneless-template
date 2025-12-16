@@ -19,7 +19,7 @@ describe('HeaderComponent', () => {
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
         { provide: HttpClient, useValue: {} },
         provideMockStore({ initialState: { usersSlice } }),
-      ],
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HeaderComponent);

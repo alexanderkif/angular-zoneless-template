@@ -9,6 +9,7 @@ import { getRandomInt } from '../utils/utils';
 
 describe('PostService', () => {
   let service: PostService;
+  let httpClientMock: { get: ReturnType<typeof vi.fn> };
 
   const mockPosts: Post[] = [
     { id: 1, title: 'Post 1', body: 'Body 1', userId: 1 },
@@ -19,27 +20,29 @@ describe('PostService', () => {
   ];
 
   beforeEach(() => {
+    httpClientMock = {
+      get: vi.fn((url: string): Observable<Post | Post[] | null> => {
+        if (url.includes('/posts/')) {
+          const id = url.split('/posts/')[1] || null;
+          return id
+            ? of(mockPosts.find((post) => post.id.toString() === id) || null)
+            : of(null);
+        }
+        if (url.includes('/posts?_limit=')) {
+          const limit = +url.split('/posts?_limit=')[1].split('&')[0];
+          const start = +url.split('&_start=')[1] || 0;
+          return of(mockPosts.slice(start, limit + start));
+        }
+        return of(null);
+      }),
+    };
+
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
         {
           provide: HttpClient,
-          useValue: {
-            get: (url: string): Observable<Post | Post[] | null> => {
-              if (url.includes('/posts/')) {
-                const id = url.split('/posts/')[1] || null;
-                return id
-                  ? of(mockPosts.find((post) => post.id.toString() === id) || null)
-                  : of(null);
-              }
-              if (url.includes('/posts?_limit=')) {
-                const limit = +url.split('/posts?_limit=')[1].split('&')[0];
-                const start = +url.split('&_start=')[1] || 0;
-                return of(mockPosts.slice(start, limit + start));
-              }
-              return of(null);
-            },
-          },
+          useValue: httpClientMock,
         },
       ],
     });

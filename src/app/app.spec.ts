@@ -16,7 +16,7 @@ describe('App', () => {
         provideZonelessChangeDetection(),
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
         provideMockStore({ initialState: { usersSlice } }),
-      ],
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(App);
@@ -44,7 +44,7 @@ describe('App', () => {
   });
 
   it('should call lifecycle hooks', async () => {
-    const consoleSpy = spyOn(console, 'log');
+    const consoleSpy = vi.spyOn(console, 'log');
 
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(consoleSpy).toHaveBeenCalledWith('AppComponent constructor !!!');

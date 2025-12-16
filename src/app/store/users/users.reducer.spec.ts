@@ -17,14 +17,14 @@ describe('usersSlice reducer', () => {
   it('should set isLoading true on getUser', () => {
     const action = UsersUserActions.getUser({ id: 1 });
     const state = usersFeature.reducer(usersSlice, action);
-    expect(state.isLoading).toBeTrue();
+    expect(state.isLoading).toBe(true);
   });
 
   it('should set user and isLoading false on getUserSuccess', () => {
     const action = UsersApiActions.getUserSuccess({ user: mockUser });
     const state = usersFeature.reducer({ ...usersSlice, isLoading: true }, action);
     expect(state.user).toEqual(mockUser);
-    expect(state.isLoading).toBeFalse();
+    expect(state.isLoading).toBe(false);
     expect(state.error).toBe('');
   });
 
@@ -32,7 +32,7 @@ describe('usersSlice reducer', () => {
     const action = UsersApiActions.getUserFailure({ errorMsg: 'Failed' });
     const state = usersFeature.reducer({ ...usersSlice, isLoading: true }, action);
     expect(state.error).toBe('Failed');
-    expect(state.isLoading).toBeFalse();
+    expect(state.isLoading).toBe(false);
     expect(state.user).toEqual(null);
   });
 
@@ -44,6 +44,6 @@ describe('usersSlice reducer', () => {
     );
     expect(state.user).toBeNull();
     expect(state.error).toBe('');
-    expect(state.isLoading).toBeFalse();
+    expect(state.isLoading).toBe(false);
   });
 });

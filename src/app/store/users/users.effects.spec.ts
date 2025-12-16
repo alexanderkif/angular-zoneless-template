@@ -1,21 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { Observable } from 'rxjs';
+import { Observable, of, throwError, firstValueFrom } from 'rxjs';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { UserService } from '../../service/user.service';
 import { UsersEffects } from './users.effects';
 import { UsersApiActions, UsersUserActions } from './actions';
-import { hot, cold } from 'jasmine-marbles';
 import { mockUser } from '../../types/user';
-import { initUser } from './actions/users.user.actions';
 
 describe('UsersEffects', () => {
   let actions$: Observable<any>;
   let effects: UsersEffects;
-  let userService: jasmine.SpyObj<UserService>;
+  let userService: { getUser: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    userService = jasmine.createSpyObj('UserService', ['getUser']);
+    userService = { getUser: vi.fn() };
+    vi.clearAllMocks();
 
     TestBed.configureTestingModule({
       providers: [
@@ -33,69 +32,66 @@ describe('UsersEffects', () => {
     expect(effects).toBeTruthy();
   });
 
-  it('should dispatch getUserSuccess if user exists in localStorage', () => {
-    spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(mockUser));
+  it('should dispatch getUserSuccess if user exists in localStorage', async () => {
+    // Mock localStorage before effect subscribes
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockReturnValue(JSON.stringify(mockUser));
 
-    actions$ = hot('-a', { a: initUser() });
-    const expected = cold('-b', {
-      b: UsersApiActions.getUserSuccess({ user: mockUser }),
-    });
+    // Re-create the effects with the new mock
+    const localEffects = TestBed.inject(UsersEffects);
+    actions$ = of(UsersUserActions.initUser());
 
-    expect(effects.initUser$).toBeObservable(expected);
+    const result = await firstValueFrom(localEffects.initUser$);
+    expect(result).toEqual(UsersApiActions.getUserSuccess({ user: mockUser }));
+    
+    getItemSpy.mockRestore();
   });
 
-  it('should dispatch fallback action if no user in localStorage', () => {
-    spyOn(localStorage, 'getItem').and.returnValue(null);
+  it('should dispatch fallback action if no user in localStorage', async () => {
+    vi.spyOn(localStorage, 'getItem').mockReturnValue(null);
 
-    actions$ = hot('-a', { a: initUser() });
-    const expected = cold('-b', {
-      b: { type: '[User] User not found in LocalStorage' },
-    });
+    actions$ = of(UsersUserActions.initUser());
 
-    expect(effects.initUser$).toBeObservable(expected);
+    const result = await firstValueFrom(effects.initUser$);
+    expect(result).toEqual({ type: '[User] User not found in LocalStorage' });
   });
 
-  it('should dispatch fallback action if JSON.parse fails', () => {
-    spyOn(localStorage, 'getItem').and.returnValue('invalid-json');
+  it('should dispatch fallback action if JSON.parse fails', async () => {
+    vi.spyOn(localStorage, 'getItem').mockReturnValue('invalid-json');
 
-    actions$ = hot('-a', { a: initUser() });
-    const expected = cold('-b', {
-      b: { type: '[User] User not found in LocalStorage' },
-    });
+    actions$ = of(UsersUserActions.initUser());
 
-    expect(effects.initUser$).toBeObservable(expected);
+    const result = await firstValueFrom(effects.initUser$);
+    expect(result).toEqual({ type: '[User] User not found in LocalStorage' });
   });
 
-  it('should dispatch getUserSuccess on successful getUser', () => {
+  it('should dispatch getUserSuccess on successful getUser', async () => {
     const action = UsersUserActions.getUser({ id: mockUser.id });
-    const outcome = UsersApiActions.getUserSuccess({ user: mockUser });
 
-    actions$ = hot('-a', { a: action });
-    userService.getUser.and.returnValue(cold('-b|', { b: mockUser }));
+    actions$ = of(action);
+    userService.getUser.mockReturnValue(of(mockUser));
 
-    const expected = cold('--c', { c: outcome });
-    expect(effects.loadUsers$).toBeObservable(expected);
+    const result = await firstValueFrom(effects.loadUsers$);
+    expect(result).toEqual(UsersApiActions.getUserSuccess({ user: mockUser }));
   });
 
-  it('should dispatch getUserFailure on server error', () => {
+  it('should dispatch getUserFailure on server error', async () => {
     const error = { message: 'fail' };
     const action = UsersUserActions.getUser({ id: mockUser.id });
-    const outcome = UsersApiActions.getUserFailure({ errorMsg: 'fail' });
 
-    actions$ = hot('-a', { a: action });
-    userService.getUser.and.returnValue(cold('-#|', {}, error));
+    actions$ = of(action);
+    userService.getUser.mockReturnValue(throwError(() => error));
 
-    const expected = cold('--c', { c: outcome });
-    expect(effects.loadUsers$).toBeObservable(expected);
+    const result = await firstValueFrom(effects.loadUsers$);
+    expect(result).toEqual(UsersApiActions.getUserFailure({ errorMsg: 'fail' }));
   });
 
-  it('should dispatch getUserFailure on user not found', () => {
+  it('should dispatch getUserFailure on user not found', async () => {
     const action = UsersUserActions.getUser({ id: 999 });
-    const outcome = UsersApiActions.getUserFailure({ errorMsg: 'User not found' });
 
-    actions$ = hot('-a', { a: action });
-    userService.getUser.and.returnValue(cold('-b|', { b: null }));
-    const expected = cold('--c', { c: outcome });
-    expect(effects.loadUsers$).toBeObservable(expected);
+    actions$ = of(action);
+    userService.getUser.mockReturnValue(of(null));
+
+    const result = await firstValueFrom(effects.loadUsers$);
+    expect(result).toEqual(UsersApiActions.getUserFailure({ errorMsg: 'User not found' }));
   });
 });

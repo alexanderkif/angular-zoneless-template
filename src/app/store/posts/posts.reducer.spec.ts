@@ -17,7 +17,7 @@ describe('postsSlice reducer', () => {
   it('should set isLoading true on loadPosts', () => {
     const action = PostsUserActions.loadPosts({ limit: 10 });
     const state = postsFeature.reducer(postsSlice, action);
-    expect(state.isLoading).toBeTrue();
+    expect(state.isLoading).toBe(true);
   });
 
   it('should set posts and isLoading false on loadPostsSuccess', () => {
@@ -25,7 +25,7 @@ describe('postsSlice reducer', () => {
     const action = PostsApiActions.loadPostsSuccess({ posts });
     const state = postsFeature.reducer({ ...postsSlice, isLoading: true }, action);
     expect(state.posts).toEqual(posts);
-    expect(state.isLoading).toBeFalse();
+    expect(state.isLoading).toBe(false);
     expect(state.error).toBe('');
   });
 
@@ -33,7 +33,7 @@ describe('postsSlice reducer', () => {
     const action = PostsApiActions.loadPostsFailure({ errorMsg: 'Failed' });
     const state = postsFeature.reducer({ ...postsSlice, isLoading: true }, action);
     expect(state.error).toBe('Failed');
-    expect(state.isLoading).toBeFalse();
+    expect(state.isLoading).toBe(false);
     expect(state.posts).toEqual([]);
   });
 

@@ -6,19 +6,19 @@ import { provideZonelessChangeDetection } from '@angular/core';
 describe('PostComponent', () => {
   let component: PostComponent;
   let fixture: ComponentFixture<PostComponent>;
-  let router: jasmine.SpyObj<Router>;
+  let router: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const routerSpy = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [PostComponent],
-      providers: [provideZonelessChangeDetection(), { provide: Router, useValue: routerSpy }],
+      providers: [provideZonelessChangeDetection(), { provide: Router, useValue: routerSpy }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PostComponent);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    router = TestBed.inject(Router) as any;
     fixture.whenStable();
   });
 
