@@ -1,0 +1,30 @@
+<div class="verify-email-container">
+  <div class="verify-card">
+    @if (status() === 'loading') {
+      <div class="spinner"></div>
+      <h1>Verifying Email...</h1>
+      <p>Please wait while we verify your email address.</p>
+    }
+
+    @if (status() === 'success') {
+      <div class="success-icon">✓</div>
+      <h1>Email Verified!</h1>
+      <p>{{ message() }}</p>
+      <p class="redirect-message">Redirecting to homepage...</p>
+    }
+
+    @if (status() === 'error') {
+      <div class="error-icon">✗</div>
+      <h1>Verification Failed</h1>
+      <p class="error-message">{{ message() }}</p>
+      <div class="actions">
+        <button (click)="resendVerification()" class="btn-primary">
+          Request New Link
+        </button>
+        <a routerLink="/login" class="btn-secondary">
+          Go to Login
+        </a>
+      </div>
+    }
+  </div>
+</div>

@@ -1,17 +1,19 @@
 # Angular Zoneless Template
 
-Modern Angular 20 application template with **zoneless change detection**, server-side rendering (SSR), state management, and comprehensive testing setup.
+Modern Angular 20 application template with **zoneless change detection**, server-side rendering (SSR), **authentication (Email + OAuth)**, state management, and comprehensive testing setup.
 
 ##  Features
 
 - **Angular 20.3** - Latest stable version with zoneless architecture
 - **Server-Side Rendering (SSR)** - Angular Universal for improved SEO and performance
+- **Authentication** - Email + OAuth (GitHub, Google) with JWT & Supabase
 - **State Management** - NgRx Store with Effects for predictable state management
 - **Vitest** - Fast, modern test runner with native ESM support
 - **100% Test Coverage** - Comprehensive unit tests for all components, services, and logic
 - **Playwright** - End-to-end testing framework
 - **TypeScript 5.9** - Strict type checking
 - **Lazy Loading** - Route-based code splitting for optimal bundle size
+- **Signal Forms** - Modern Angular reactive forms
 
 ##  Tech Stack
 
@@ -25,6 +27,21 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 - **@ngrx/store 20.0.1** - State management
 - **@ngrx/effects 20.0.1** - Side effects
 - **@ngrx/store-devtools 20.0.1** - Redux DevTools integration
+
+### Authentication & Backend
+- **Supabase** - PostgreSQL database with authentication
+- **Vercel Functions** - Serverless API endpoints
+- **JWT** - Token-based authentication with refresh tokens (15m access, 7d refresh)
+- **Argon2id** - Modern password hashing (2025 OWASP recommendation)
+- **Rate Limiting** - Protection against brute force attacks (5 login/min, 3 register/min)
+- **Security Headers** - CSP, XSS protection, Frame Options, etc.
+- **OAuth** - GitHub and Google authentication
+- **Multi-Device Support** - Up to 5 concurrent sessions per user
+- **Session Management** - Auto-cleanup of expired tokens, device limit enforcement
+- **Email Verification** - Required for email registrations with Nodemailer + Gmail SMTP
+- **HttpOnly Cookies** - Secure token storage with SameSite=Lax
+- **Token Rotation** - Refresh tokens are rotated on every refresh
+- **Optimistic Logout** - Fire-and-forget logout for instant UX
 
 ### Testing
 - **Vitest 3.2.4** - Unit test runner with native ESM support
@@ -40,6 +57,32 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 ### Prerequisites
 - Node.js 20.11.1 or higher
 - npm 11.6.2 or higher
+- Supabase account (free tier available)
+
+### Quick Start
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Setup Supabase (cloud)
+# - Create project at https://supabase.com
+# - Copy .env.local and add your Supabase credentials
+# - Run SQL migration in Supabase Dashboard → SQL Editor:
+#   supabase/migrations/20241222_initial_schema.sql
+
+# 3. Setup Email
+# - Development: Verification links logged to console (mock mode)
+# - Production: Configure Gmail SMTP or use email service (Resend, SendGrid)
+# - See docs/EMAIL.md
+
+# 4. Start development
+npm run dev
+```
+
+Visit:
+- Frontend: http://localhost:4200
+- API: http://localhost:3000
 
 ### Installation
 
@@ -75,6 +118,28 @@ Build in watch mode for development:
 
 ```bash
 npm run watch
+```
+
+##  OAuth Setup (Optional)
+
+### GitHub
+1. Create OAuth App: https://github.com/settings/developers
+2. Set Homepage URL: `https://angular-zoneless-template.vercel.app`
+3. Set Callback URL: `https://angular-zoneless-template.vercel.app/api/auth/callback-github`
+4. Add credentials to `.env.local`:
+```env
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+```
+
+### Google
+1. Create OAuth Client: https://console.cloud.google.com
+2. Add Authorized origins: `https://angular-zoneless-template.vercel.app`
+3. Add Redirect URI: `https://angular-zoneless-template.vercel.app/api/auth/callback-google`
+4. Add credentials to `.env.local`:
+```env
+GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_client_secret
 ```
 
 ##  Testing
@@ -128,8 +193,38 @@ npx playwright test --ui
 ##  Project Structure
 
 ```
+api/                     # Vercel serverless functions
+  auth/                  # Auth endpoints
+    register.ts          # Email registration with verification email
+    login.ts             # Email login with session management
+    refresh.ts           # Token refresh with rotation
+    logout.ts            # Optimistic logout
+    verify-email.ts      # Email verification endpoint
+    resend-verification.ts # Resend verification email
+    github.ts            # GitHub OAuth initiation
+    google.ts            # Google OAuth initiation
+    callback-github.ts   # GitHub OAuth callback
+    callback-google.ts   # Google OAuth callback
+  user/                  # User endpoints
+    me.ts                # Get current user
+    sessions.ts          # Get active sessions
+    revoke-session.ts    # Revoke specific session
+  lib/                   # Shared utilities
+    cors.ts              # CORS configuration
+    password.ts          # Argon2id hashing
+    env.ts               # Environment validation with Zod
+    security.ts          # Rate limiting & security headers
+    session-manager.ts   # Session cleanup & device limit
+    email.ts             # Email sending with Nodemailer (Ethereal for dev)
 src/
  app/
+    store/               # NgRx state management
+       auth/             # Auth state (actions, reducer, effects, selectors)
+       posts/
+    services/            # Business logic services
+       auth.service.ts   # Authentication API service
+    service/             # Domain services
+       post.service.ts   # Post data service
     components/          # Reusable UI components
        footer/
        header/
@@ -139,40 +234,94 @@ src/
        post/
        user-menu/
     pages/               # Route components
+       login/            # Login page with Signal Forms
+       register/         # Registration page with email verification
+       verify-email/     # Email verification page
+       auth-callback/    # OAuth callback handler
        about/
        home/
        page-not-found/
        post-details/
        posts-list/
-    service/             # Business logic services
-       post.service.ts
-       user.service.ts
-    store/               # NgRx state management
-       posts/
-          actions/
-          posts.effects.ts
-          posts.reducer.ts
-          posts.selector.ts
-       users/
-           actions/
-           users.effects.ts
-           users.reducer.ts
-           users.selector.ts
     guards/              # Route guards
-       auth-guard.ts
+       auth.guard.ts     # Protect authenticated routes
     interceptors/        # HTTP interceptors
+       token-refresh.interceptor.ts # Auto token refresh
        loggingInterceptor.ts
     types/               # TypeScript interfaces
-       post.ts
-       user.ts
+       post.ts           # Post types
     utils/               # Utility functions
-       utils.ts
     app.config.ts        # App configuration
     app.config.server.ts # SSR configuration
     app.routes.ts        # Route definitions
     app.ts               # Root component
- test-setup.ts            # Vitest test configuration
- vitest.config.ts         # Vitest configuration
+supabase/
+  migrations/            # Database migrations
+    20241222_initial_schema.sql        # Complete schema: users, refresh_tokens, email verification
+ test-setup.ts           # Vitest test configuration
+ vitest.config.ts        # Vitest configuration
+```
+
+##  Session Management
+
+For detailed information, see [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md).
+
+### Multi-Device Strategy
+The authentication system supports **up to 5 concurrent sessions** per user:
+
+1. **On Login** (email/OAuth):
+   - Check active sessions count
+   - If ≥5 sessions → delete oldest session
+   - Create new refresh token
+   - Clean up expired tokens (fire-and-forget)
+
+2. **Token Lifetime**:
+   - Access token: 15 minutes
+   - Refresh token: 7 days
+   - Auto-refresh on API 401 errors
+
+3. **Session Cleanup**:
+   - Expired tokens removed on each login
+   - Token rotation on refresh (old token deleted)
+   - Fire-and-forget logout (instant UX)
+
+4. **Security Features**:
+   - HttpOnly cookies (XSS protection)
+   - SameSite=Lax (CSRF protection)
+   - Rate limiting (5 login/min, 3 register/min)
+   - Argon2id password hashing
+
+### Session Management API
+
+**Get Active Sessions:**
+```typescript
+GET /api/user/sessions
+// Returns: { sessions: [{id, createdAt, expiresAt}], total: number }
+```
+
+**Revoke Session:**
+```typescript
+DELETE /api/user/revoke-session?sessionId=xxx
+// Deletes specific session
+```
+
+### Why 5 Devices?
+- **Balance**: Security vs UX
+- **Use cases**: Phone, Laptop, Tablet, Work PC, Home PC
+- **2025 Best Practice**: Most apps allow 3-10 concurrent sessions
+
+### Alternative Strategies
+
+**Single Session** (highest security):
+```typescript
+// In session-manager.ts, change MAX_ACTIVE_SESSIONS to 1
+const MAX_ACTIVE_SESSIONS = 1;
+```
+
+**Unlimited Sessions** (best UX):
+```typescript
+// Remove session limit check in cleanupAndLimitSessions()
+// Only clean expired tokens
 ```
 
 ##  Configuration Files
@@ -208,9 +357,11 @@ loadComponent: () => import(`'./pages/home/home.component`')
 
 | Script | Description |
 |--------|-------------|
-| `npm start` | Start development server |
+| `npm run dev` | Start both API and Angular dev servers |
+| `npm run dev:api` | Start Vercel API only (port 3000) |
+| `npm run dev:ssr` | Start Angular SSR only (port 4200) |
+| `npm start` | Start Angular development server |
 | `npm run build` | Production build |
-| `npm run watch` | Build in watch mode |
 | `npm test` | Run unit tests once |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:ui` | Open test UI with coverage |
@@ -219,14 +370,26 @@ loadComponent: () => import(`'./pages/home/home.component`')
 
 ##  Deployment
 
-The application is configured for Server-Side Rendering:
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel deployment and environment variables.
 
+### Vercel Production Deploy
+
+1. Deploy to Vercel:
 ```bash
-npm run build
-npm run serve:ssr:angular-test-app
+vercel --prod
 ```
 
-This builds both client and server bundles and starts the SSR server.
+2. Add environment variables in Vercel Dashboard (Settings → Environment Variables):
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `JWT_SECRET`
+   - `JWT_REFRESH_SECRET`
+   - `SMTP_USER`, `SMTP_PASS`, `SMTP_HOST`, `SMTP_PORT` (for production email)
+   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (if using GitHub OAuth)
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (if using Google OAuth)
+
+3. Update OAuth callback URLs to production domain in GitHub/Google OAuth settings
 
 ##  Additional Resources
 

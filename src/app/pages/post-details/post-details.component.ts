@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { PostService } from '../../service/post.service';
+import { PostService } from '../../services/post.service';
 import { Observable, switchMap } from 'rxjs';
 import { Post } from '../../types/post';
 import { CommonModule } from '@angular/common';

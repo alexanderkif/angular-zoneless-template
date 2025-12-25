@@ -4,7 +4,6 @@ import { PanelComponent } from './panel.component';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { usersSlice } from '../../store/users/users.reducer.spec';
 import { provideMockStore } from '@ngrx/store/testing';
 
 describe('PanelComponent', () => {
@@ -18,7 +17,7 @@ describe('PanelComponent', () => {
         provideZonelessChangeDetection(),
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
         { provide: HttpClient, useValue: {} },
-        provideMockStore({ initialState: { usersSlice } }),
+        provideMockStore({ initialState: {} }),
       ]
     }).compileComponents();
 

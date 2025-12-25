@@ -6,12 +6,16 @@ export type PostState = {
   posts: Post[];
   error: string;
   isLoading: boolean;
+  offset: number;
+  limit: number;
 };
 
 const initialState: PostState = {
   posts: [],
   error: '',
   isLoading: false,
+  offset: 0,
+  limit: 3,
 };
 
 const postsReducer = createReducer(
@@ -20,18 +24,19 @@ const postsReducer = createReducer(
   on(PostsApiActions.loadPostsSuccess, (state, { posts }) => ({
     ...state,
     posts: [...state.posts, ...posts],
+    offset: state.offset + posts.length,
     isLoading: false,
     error: '',
   })),
   on(PostsApiActions.loadPostsFailure, (state, { errorMsg }) => ({
     ...state,
-    posts: [],
     isLoading: false,
     error: errorMsg,
   })),
   on(PostsUserActions.clearPosts, (state) => ({
     ...state,
     posts: [],
+    offset: 0,
     isLoading: false,
     error: '',
   }))
@@ -42,4 +47,4 @@ export const postsFeature = createFeature({
   reducer: postsReducer,
 });
 
-export const { selectPosts, selectError, selectIsLoading } = postsFeature;
+export const { selectPosts, selectError, selectIsLoading, selectOffset, selectLimit } = postsFeature;

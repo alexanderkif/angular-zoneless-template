@@ -1,4 +1,9 @@
-@if(post){
+@if(isLoading) {
+  <article class="post skeleton">
+    <h1 class="title">Loading...</h1>
+    <p class="text">Please wait while we fetch the content.</p>
+  </article>
+} @else if(post){
   <article class="post" (click)="openDetails(post.id)">
     <h1 class="title">{{post.title}}</h1>
     <!-- <span class="user">{{post.userId}}</span> -->

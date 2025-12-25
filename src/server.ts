@@ -6,6 +6,12 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { AsyncLocalStorage } from 'node:async_hooks';
+
+// Use AsyncLocalStorage to share request context without relying on DI
+// This is more robust for SSR when bundles are separated
+const requestStorage = new AsyncLocalStorage<any>();
+(globalThis as any).requestStorage = requestStorage;
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -39,12 +45,15 @@ app.use(
  * Handle all other requests by rendering the Angular application.
  */
 app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
-    .catch(next);
+  // Wrap the execution in AsyncLocalStorage
+  requestStorage.run(req, () => {
+    angularApp
+      .handle(req)
+      .then((response) =>
+        response ? writeResponseToNodeResponse(response, res) : next(),
+      )
+      .catch(next);
+  });
 });
 
 /**

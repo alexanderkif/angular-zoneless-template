@@ -1,5 +1,5 @@
 <section class="posts">
-  @if (postsLength() === 0) {
+  @if (postsLength() === 0 && !isLoading()) {
     <h1>No posts found</h1>
   } @else {
     <h1>{{ postsLength() }} posts</h1>
@@ -8,8 +8,8 @@
     }
   }
   @if (isLoading()) {
-    <div class="posts__loader-wrapper">
-      <h2>Loading posts...</h2>
-    </div>
+    <app-post [isLoading]="true"></app-post>
+  } @else {
+    <button class="posts__load-more" (click)="loadMore()">Load More</button>
   }
 </section>

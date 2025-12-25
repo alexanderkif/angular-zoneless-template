@@ -3,9 +3,26 @@ import { test, expect } from '@playwright/test';
 const URL = '/';
 
 test.describe('App Navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock user API to simulate logged in state
+    await page.route('**/api/user/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            name: 'Test User',
+          },
+        }),
+      });
+    });
+  });
+
   test('should display navigation links', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.getByText('logo')).toBeVisible();
+    await expect(page.getByLabel('Logo')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Posts' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'About' })).toBeVisible();

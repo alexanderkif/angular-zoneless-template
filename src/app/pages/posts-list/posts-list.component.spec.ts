@@ -5,7 +5,6 @@ import { PostsUserActions } from '../../store/posts/actions';
 import { PostState } from '../../store/posts/posts.reducer';
 import { selectPosts, selectIsLoading } from '../../store/posts/posts.reducer';
 import { selectPostsLength } from '../../store/posts/posts.selector';
-import { postsSlice } from '../../store/posts/posts.reducer.spec';
 import { provideZonelessChangeDetection } from '@angular/core';
 
 describe('PostsListComponent', () => {
@@ -19,7 +18,7 @@ describe('PostsListComponent', () => {
       imports: [PostsListComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideMockStore({ initialState: { postsSlice } }),
+        provideMockStore(),
       ]
     }).compileComponents();
 
@@ -43,50 +42,14 @@ describe('PostsListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should dispatch loadPosts with limit 1 on init', () => {
+  it('should dispatch clearPosts and loadPosts on init', () => {
     component.ngOnInit();
-    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ limit: 1 }));
+    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.clearPosts());
+    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts());
   });
 
-  it('should dispatch loadPosts with start 1 and limit 2 after 3 seconds', async () => {
-    const setTimeoutSpy = vi.spyOn(window, 'setTimeout').mockImplementation(((
-      handler: TimerHandler,
-      timeout?: number,
-      ...args: any[]
-    ): number => {
-      if (timeout === 3000) {
-        if (typeof handler === 'function') {
-          handler(...args);
-        }
-      }
-      return 0;
-    }) as typeof setTimeout);
-
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ start: 1, limit: 2 }));
-
-    setTimeoutSpy.mockRestore();
-  });
-
-  it('should dispatch loadPosts with start 3 and limit 2 after 5 seconds', async () => {
-    const setTimeoutSpy = vi.spyOn(window, 'setTimeout').mockImplementation(((
-      handler: TimerHandler,
-      timeout?: number,
-      ...args: any[]
-    ): number => {
-      if (timeout === 5000) {
-        if (typeof handler === 'function') {
-          handler(...args);
-        }
-      }
-      return 0;
-    }) as typeof setTimeout);
-
-    component.ngOnInit();
-
-    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts({ start: 3, limit: 2 }));
-
-    setTimeoutSpy.mockRestore();
+  it('should dispatch loadPosts on loadMore', () => {
+    component.loadMore();
+    expect(dispatchSpy).toHaveBeenCalledWith(PostsUserActions.loadPosts());
   });
 });

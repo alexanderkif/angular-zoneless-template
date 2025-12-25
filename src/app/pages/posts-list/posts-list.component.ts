@@ -22,14 +22,10 @@ export class PostsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.postStore.dispatch(PostsUserActions.clearPosts());
-    this.postStore.dispatch(PostsUserActions.loadPosts({ limit: 1 }));
+    this.postStore.dispatch(PostsUserActions.loadPosts());
+  }
 
-    setTimeout(() => {
-      this.postStore.dispatch(PostsUserActions.loadPosts({ start: 1, limit: 2 }));
-    }, 3000);
-
-    setTimeout(() => {
-      this.postStore.dispatch(PostsUserActions.loadPosts({ start: 3, limit: 2 }));
-    }, 5000);
+  loadMore(): void {
+    this.postStore.dispatch(PostsUserActions.loadPosts());
   }
 }

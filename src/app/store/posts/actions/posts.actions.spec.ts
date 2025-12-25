@@ -16,9 +16,8 @@ describe('Posts Actions', () => {
   });
 
   it('should create loadPosts action', () => {
-    const action = PostsUserActions.loadPosts({ limit: 5 });
+    const action = PostsUserActions.loadPosts();
     expect(action.type).toBe('[Posts Page] Load posts');
-    expect(action.limit).toBe(5);
   });
 
   it('should create clearPosts action', () => {

@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 })
 export class PostComponent {
   @Input() post?: Post;
+  @Input() isLoading = false;
 
   constructor(private router: Router) {}
 
