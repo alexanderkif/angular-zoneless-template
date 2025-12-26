@@ -5,6 +5,19 @@
     @if (error()) {
       <div class="error-message">
         {{ error() }}
+        @if (error()?.includes('Email not verified')) {
+          <div style="margin-top: 10px;">
+            <button type="button" (click)="resendVerification()" class="btn-secondary" style="width: 100%; font-size: 0.9rem;">
+              Resend Verification Email
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    @if (resendMessage()) {
+      <div class="success-message" style="padding: 1rem; background-color: var(--color-success-bg); border-radius: 0.5rem; color: white; margin-bottom: 1.5rem; text-align: center;">
+        {{ resendMessage() }}
       </div>
     }
 

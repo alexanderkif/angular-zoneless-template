@@ -1,6 +1,6 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
 import { PostsApiActions, PostsUserActions } from './actions/';
-import { Post } from '../../types/post';
+import { Post } from '../../services/post.service';
 
 export type PostState = {
   posts: Post[];

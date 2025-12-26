@@ -1,9 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 
-import { PostService } from './post.service';
+import { PostService, Post } from './post.service';
 import { HttpClient } from '@angular/common/http';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { Post } from '../types/post';
 import { Observable, of } from 'rxjs';
 import { getRandomInt } from '../utils/utils';
 

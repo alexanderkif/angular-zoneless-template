@@ -1,5 +1,5 @@
 import { Injectable, inject, PLATFORM_ID, makeStateKey, TransferState } from '@angular/core';
-import { isPlatformBrowser, isPlatformServer } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -136,35 +136,30 @@ export class AuthEffects {
           );
         }
         
-        // На сервере делаем запрос и сохраняем в TransferState
-        if (isPlatformServer(this.platformId)) {
-          // Best Practice 2025: Проверяем наличие cookies перед запросом
-          // Во время сборки (prerender) requestStorage пуст -> запрос не делается
-          // Если у пользователя нет cookies -> запрос не делается
-          const storage = (globalThis as any).requestStorage;
-          const request = storage?.getStore();
-          
-          if (!request || !request.headers?.cookie) {
+        // На сервере (или любой другой платформе) делаем запрос и сохраняем в TransferState
+        // Best Practice 2025: Проверяем наличие cookies перед запросом
+        // Во время сборки (prerender) requestStorage пуст -> запрос не делается
+        // Если у пользователя нет cookies -> запрос не делается
+        const storage = (globalThis as any).requestStorage;
+        const request = storage?.getStore();
+        
+        if (!request || !request.headers?.cookie) {
+          this.transferState.set(AUTH_USER_KEY, null);
+          return of(sessionActions.sessionInvalid());
+        }
+
+        return this.authService.getCurrentUser().pipe(
+          tap((user) => {
+            // Сохраняем user в TransferState для клиента
+            this.transferState.set(AUTH_USER_KEY, user);
+          }),
+          map((user) => sessionActions.sessionValid({ user })),
+          catchError(() => {
+            // Важно: сохраняем null чтобы клиент знал что проверка была
             this.transferState.set(AUTH_USER_KEY, null);
             return of(sessionActions.sessionInvalid());
-          }
-
-          return this.authService.getCurrentUser().pipe(
-            tap((user) => {
-              // Сохраняем user в TransferState для клиента
-              this.transferState.set(AUTH_USER_KEY, user);
-            }),
-            map((user) => sessionActions.sessionValid({ user })),
-            catchError(() => {
-              // Важно: сохраняем null чтобы клиент знал что проверка была
-              this.transferState.set(AUTH_USER_KEY, null);
-              return of(sessionActions.sessionInvalid());
-            })
-          );
-        }
-        
-        // Fallback (не должно происходить)
-        return of(sessionActions.sessionInvalid());
+          })
+        );
       })
     )
   );

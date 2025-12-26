@@ -87,6 +87,21 @@ describe('UserMenuComponent', () => {
     expect(mockEvent.stopPropagation).toHaveBeenCalled();
   });
 
+  it('should handle settings click', () => {
+    const mockEvent = new Event('click');
+    vi.spyOn(mockEvent, 'stopPropagation');
+
+    const mockTarget = document.createElement('button');
+    mockTarget.id = 'settings';
+    Object.defineProperty(mockEvent, 'target', { value: mockTarget });
+
+    component.toggleMenu(mockEvent);
+
+    // Currently settings does nothing, but we want to ensure it doesn't crash and stops propagation
+    expect(mockEvent.stopPropagation).toHaveBeenCalled();
+    expect(component.showMenu).toBe(true);
+  });
+
   it('should close the menu when document is clicked', () => {
     component.showMenu = true;
     expect(component.showMenu).toBe(true);

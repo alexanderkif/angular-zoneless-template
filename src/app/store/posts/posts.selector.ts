@@ -1,5 +1,5 @@
 import { createSelector } from '@ngrx/store';
-import { Post } from '../../types/post';
+import { Post } from '../../services/post.service';
 import { selectPosts } from './posts.reducer';
 
 export const selectPostsLength = createSelector(

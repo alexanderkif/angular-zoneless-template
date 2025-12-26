@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Post } from '../../types/post';
+import { Post } from '../../services/post.service';
 import { Router } from '@angular/router';
 
 @Component({

@@ -80,7 +80,16 @@ export function getApiUrl(): string {
   }
   
   const env = getEnv();
-  return env.API_URL 
-    || (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : '')
-    || 'http://localhost:3000';
+
+  // 1. Explicit override (Best Practice: Set this in Vercel for Production)
+  if (env.API_URL) return env.API_URL;
+
+  // 2. Production auto-detection (Stable URL)
+  if (env.VERCEL_ENV === 'production' && env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+
+  // 3. Fallback to current deployment URL (Preview/Dev)
+  // Note: OAuth providers usually won't accept dynamic preview URLs
+  return env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:3000';
 }

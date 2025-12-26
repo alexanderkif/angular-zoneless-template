@@ -3,16 +3,19 @@ import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 import { handleCors } from '../_lib/cors';
 import { cleanupAndLimitSessions } from '../_lib/session-manager';
-import { getFrontendUrl } from '../_lib/env';
+import { getFrontendUrl, getApiUrl } from '../_lib/env';
 
 async function handleGithub(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const callbackUrl = `${getApiUrl()}/api/auth/callback-github`;
+  console.log('[OAuth] GitHub Callback URL:', callbackUrl);
+
   const githubAuthUrl = new URL('https://github.com/login/oauth/authorize');
   githubAuthUrl.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
-  githubAuthUrl.searchParams.set('redirect_uri', process.env.GITHUB_CALLBACK_URL!);
+  githubAuthUrl.searchParams.set('redirect_uri', callbackUrl);
   githubAuthUrl.searchParams.set('scope', 'user:email');
 
   return res.redirect(302, githubAuthUrl.toString());
@@ -23,9 +26,12 @@ async function handleGoogle(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const callbackUrl = `${getApiUrl()}/api/auth/callback-google`;
+  console.log('[OAuth] Google Callback URL:', callbackUrl);
+
   const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   googleAuthUrl.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID!);
-  googleAuthUrl.searchParams.set('redirect_uri', process.env.GOOGLE_CALLBACK_URL!);
+  googleAuthUrl.searchParams.set('redirect_uri', callbackUrl);
   googleAuthUrl.searchParams.set('response_type', 'code');
   googleAuthUrl.searchParams.set('scope', 'email profile');
   googleAuthUrl.searchParams.set('access_type', 'offline');
@@ -46,6 +52,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
 
   const { code } = req.query;
   const frontendUrl = getFrontendUrl();
+  const callbackUrl = `${getApiUrl()}/api/auth/callback-github`;
 
   if (!code || typeof code !== 'string') {
     return res.redirect(`${frontendUrl}/login?error=no_code`);
@@ -63,6 +70,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
         client_id: process.env.GITHUB_CLIENT_ID,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
         code,
+        redirect_uri: callbackUrl,
       }),
     });
 
@@ -195,6 +203,7 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
 
   const { code } = req.query;
   const frontendUrl = getFrontendUrl();
+  const callbackUrl = `${getApiUrl()}/api/auth/callback-google`;
 
   if (!code || typeof code !== 'string') {
     return res.redirect(`${frontendUrl}/login?error=no_code`);
@@ -212,7 +221,7 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: process.env.GOOGLE_CALLBACK_URL,
+        redirect_uri: callbackUrl,
       }),
     });
 

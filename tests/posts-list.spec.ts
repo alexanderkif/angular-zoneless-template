@@ -62,11 +62,25 @@ test.describe('Posts list page', () => {
   });
 
   test('should navigate to Post Details page', async ({ page }) => {
+    // Mock posts API
+    await page.route(`${API_URL}?_limit=3&_start=0`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { userId: 1, id: 1, title: 'Title 1', body: 'Body 1' },
+          { userId: 1, id: 2, title: 'Title 2', body: 'Body 2' },
+          { userId: 1, id: 3, title: 'Title 3', body: 'Body 3' },
+        ]),
+      });
+    });
+
     // Navigate to posts page via UI click (after reload with localStorage set)
     await page.getByRole('link', { name: 'Posts' }).click();
     await expect(page).toHaveURL(URL);
 
-    const firstPost = page.locator('app-post').first();
+    // Wait for non-skeleton post
+    const firstPost = page.locator('app-post article:not(.skeleton)').first();
     await firstPost.waitFor({ state: 'visible', timeout: 20000 });
     await firstPost.click();
     await expect(page).toHaveURL(/\/posts\/\d+/);

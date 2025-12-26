@@ -73,34 +73,12 @@ input.invalid {
   font-size: 0.875rem;
 }
 
-.btn-primary {
-  padding: 1rem;
-  background: var(--color-accent-gradient);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .divider {
   display: flex;
   align-items: center;
   text-align: center;
   margin: 2rem 0;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .divider::before,
@@ -165,7 +143,7 @@ input.invalid {
 }
 
 .signup-link a {
-  color: #667eea;
+  color: #1d4ed8;
   text-decoration: none;
   font-weight: 600;
 }

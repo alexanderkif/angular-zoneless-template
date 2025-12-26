@@ -14,7 +14,7 @@
   --color-border: #e0e0e0;
   
   --color-text: #1e1e1e;
-  --color-text-secondary: #757575;
+  --color-text-secondary: #595959;
   
   --color-success: #4caf50;
   --color-success-bg: #4caf50;
@@ -70,3 +70,57 @@ li {
   padding: 0;
   list-style: none;
 }
+
+/* Global Button Styles */
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 6px rgba(221, 0, 49, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(221, 0, 49, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(221, 0, 49, 0.05);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+

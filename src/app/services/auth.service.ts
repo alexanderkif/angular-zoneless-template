@@ -1,10 +1,10 @@
-import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID, isDevMode } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AuthUser } from '../store/auth/auth.actions';
-import { environment } from '../../environments/environment';
+import { WINDOW } from '../tokens/window.token';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +12,8 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
-  private apiUrl = `${environment.apiUrl}/api`;
+  private window = inject(WINDOW);
+  private apiUrl = isDevMode() ? 'http://localhost:3000/api' : '/api';
 
   /**
    * Login with email and password
@@ -108,26 +109,84 @@ export class AuthService {
   }
 
   /**
+   * Resend verification email using email address
+   */
+  resendVerification(email: string): Observable<{ message: string }> {
+    return this.http
+      .post<{ message: string }>(
+        `${this.apiUrl}/auth/resend-verification`,
+        { email },
+        { withCredentials: true }
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Resend verification email using expired token
+   */
+  resendVerificationByToken(token: string): Observable<{ message: string }> {
+    return this.http
+      .post<{ message: string }>(
+        `${this.apiUrl}/auth/resend-verification`,
+        { token },
+        { withCredentials: true }
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Cancel registration (delete unverified user)
+   */
+  cancelRegistration(token: string): Observable<{ message: string }> {
+    return this.http
+      .post<{ message: string }>(
+        `${this.apiUrl}/auth/cancel-registration`,
+        { token },
+        { withCredentials: true }
+      )
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
    * Login with GitHub OAuth
    */
   loginWithGithub(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      window.location.href = `${this.apiUrl}/auth/github`;
-    }
+    this.navigateTo(`${this.apiUrl}/auth/github`);
   }
 
   /**
    * Login with Google OAuth
    */
   loginWithGoogle(): void {
+    this.navigateTo(`${this.apiUrl}/auth/google`);
+  }
+
+  public navigateTo(url: string): void {
     if (isPlatformBrowser(this.platformId)) {
-      window.location.href = `${this.apiUrl}/auth/google`;
+      this.window.location.href = url;
     }
   }
 
   private handleError(error: any): Observable<never> {
     console.error('Auth service error:', error);
-    const message = error.error?.error || error.message || 'An error occurred';
+    let message = 'An error occurred';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      message = error.error.message;
+    } else if (error.error && typeof error.error === 'object' && Object.keys(error.error).length > 0) {
+      // Server-side error with JSON body
+      message = error.error.error || error.error.message || JSON.stringify(error.error);
+    } else if (error.message) {
+      // Generic HTTP error message or JS Error
+      message = error.message;
+    }
+    
+    // Ensure message is a string
+    if (typeof message !== 'string') {
+      message = 'An unexpected error occurred';
+    }
+
     return throwError(() => new Error(message));
   }
 }

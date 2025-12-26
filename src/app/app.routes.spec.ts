@@ -4,6 +4,10 @@ import { PostDetailsComponent } from './pages/post-details/post-details.componen
 import { AboutComponent } from './pages/about/about.component';
 import { HomeComponent } from './pages/home/home.component';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
+import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
+import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component';
+import { VerifyEmailComponent } from './pages/verify-email/verify-email';
 
 describe('app.routes', () => {
   it('should define routes', () => {
@@ -124,6 +128,50 @@ describe('app.routes', () => {
     if (loadComponent) {
       const module = await loadComponent();
       expect(module).toBe(PageNotFoundComponent);
+    }
+  });
+
+  it('should load LoginComponent via lazy loading', async () => {
+    const route = routes.find((r) => r.path === 'login');
+    const loadComponent = route?.loadComponent;
+    
+    expect(loadComponent).toBeDefined();
+    if (loadComponent) {
+      const module = await loadComponent();
+      expect(module).toBe(LoginComponent);
+    }
+  });
+
+  it('should load RegisterComponent via lazy loading', async () => {
+    const route = routes.find((r) => r.path === 'register');
+    const loadComponent = route?.loadComponent;
+    
+    expect(loadComponent).toBeDefined();
+    if (loadComponent) {
+      const module = await loadComponent();
+      expect(module).toBe(RegisterComponent);
+    }
+  });
+
+  it('should load AuthCallbackComponent via lazy loading', async () => {
+    const route = routes.find((r) => r.path === 'auth/callback');
+    const loadComponent = route?.loadComponent;
+    
+    expect(loadComponent).toBeDefined();
+    if (loadComponent) {
+      const module = await loadComponent();
+      expect(module).toBe(AuthCallbackComponent);
+    }
+  });
+
+  it('should load VerifyEmailComponent via lazy loading', async () => {
+    const route = routes.find((r) => r.path === 'verify-email');
+    const loadComponent = route?.loadComponent;
+    
+    expect(loadComponent).toBeDefined();
+    if (loadComponent) {
+      const module = await loadComponent();
+      expect(module).toBe(VerifyEmailComponent);
     }
   });
 });

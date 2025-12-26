@@ -23,7 +23,14 @@ const registerSchema = z.object({
 });
 
 const resendSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
+  token: z.string().optional(),
+}).refine(data => data.email || data.token, {
+  message: "Either email or token must be provided",
+});
+
+const cancelRegistrationSchema = z.object({
+  token: z.string(),
 });
 
 // Handlers
@@ -468,14 +475,33 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
     // Validate input
     const body = resendSchema.parse(req.body);
 
-    // Find user by email
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email, name, email_verified, provider')
-      .eq('email', body.email)
-      .single();
+    let user;
+    
+    if (body.token) {
+      // Find user by verification token
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email, name, email_verified, provider')
+        .eq('verification_token', body.token)
+        .single();
+        
+      if (!error && data) {
+        user = data;
+      }
+    } else if (body.email) {
+      // Find user by email
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email, name, email_verified, provider')
+        .eq('email', body.email)
+        .single();
+        
+      if (!error && data) {
+        user = data;
+      }
+    }
 
-    if (userError || !user) {
+    if (!user) {
       // Don't reveal if user exists (security best practice)
       return res.status(200).json({
         message: 'If the email exists, a verification link has been sent.',
@@ -536,6 +562,54 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
   }
 }
 
+async function handleCancelRegistration(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const env = getEnv();
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
+    // Validate input
+    const body = cancelRegistrationSchema.parse(req.body);
+
+    // Find user by verification token
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email_verified')
+      .eq('verification_token', body.token)
+      .single();
+
+    if (userError || !user) {
+      // If user not found, maybe already deleted or invalid token. 
+      // Return success to not leak info.
+      return res.status(200).json({ message: 'Registration cancelled.' });
+    }
+
+    // Only allow deleting unverified users
+    if (user.email_verified) {
+      return res.status(400).json({ error: 'Cannot cancel registration for verified user' });
+    }
+
+    // Delete user
+    const { error: deleteError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', user.id);
+
+    if (deleteError) {
+      console.error('Delete user error:', deleteError);
+      return res.status(500).json({ error: 'Failed to cancel registration' });
+    }
+
+    return res.status(200).json({ message: 'Registration cancelled successfully.' });
+  } catch (error) {
+    console.error('Cancel registration error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
   if (handleCors(req, res)) return;
@@ -558,6 +632,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleVerifyEmail(req, res);
     case 'resend-verification':
       return handleResendVerification(req, res);
+    case 'cancel-registration':
+      return handleCancelRegistration(req, res);
     default:
       return res.status(400).json({ error: 'Invalid action' });
   }

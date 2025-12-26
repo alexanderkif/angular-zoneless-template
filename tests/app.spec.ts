@@ -32,14 +32,14 @@ test.describe('App Navigation', () => {
     await page.goto(URL);
     await page.getByRole('link', { name: 'Home' }).click();
     await expect(page).toHaveURL(URL);
-    await expect(page.getByRole('heading', { name: 'Main content' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome to Angular Zoneless Template' })).toBeVisible();
   });
 
   test('should navigate to About page', async ({ page }) => {
     await page.goto(URL);
     await page.getByRole('link', { name: 'About' }).click();
     await expect(page).toHaveURL(`${URL}about`);
-    await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'About This Project' })).toBeVisible();
   });
 
   test('should navigate to Posts List page', async ({ page }) => {
