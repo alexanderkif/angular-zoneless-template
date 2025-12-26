@@ -11,8 +11,8 @@ describe('app.routes', () => {
     expect(Array.isArray(routes)).toBe(true);
   });
 
-  it('should have 5 routes', () => {
-    expect(routes.length).toBe(5);
+  it('should have 9 routes', () => {
+    expect(routes.length).toBe(9);
   });
 
   it('should have posts list route', () => {

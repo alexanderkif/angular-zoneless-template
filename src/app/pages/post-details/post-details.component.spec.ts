@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PostDetailsComponent } from './post-details.component';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
-import { PostService } from '../../service/post.service';
+import { PostService } from '../../services/post.service';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 

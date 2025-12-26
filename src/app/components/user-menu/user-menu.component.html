@@ -1,4 +1,14 @@
-<button class="user-menu__button" (click)="toggleMenu($event)">avatar</button>
+<button class="user-menu__button" (click)="toggleMenu($event)" aria-label="avatar">
+  @if (isAuthLoading()) {
+    <span class="user-menu__loader"></span>
+  } @else {
+    @if (userAvatar()) {
+      <img [src]="userAvatar()" [alt]="userName()" class="user-menu__avatar" />
+    } @else {
+      <span class="user-menu__avatar-placeholder">{{ userName().charAt(0).toUpperCase() }}</span>
+    }
+  }
+</button>
 @if(showMenu) {
   <div class="user-menu__list" (click)="toggleMenu($event)">
     <div class="user-menu__name">{{ userName() }}</div>
@@ -7,7 +17,7 @@
         <li id="login">Login</li>
       } @else {
         <li id="settings">Settings</li>
-        <li id="exit">Exit</li>
+        <li id="exit">Logout</li>
       }
     </ul>
   </div>

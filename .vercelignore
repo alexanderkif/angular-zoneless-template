@@ -1,0 +1,10 @@
+node_modules
+.angular
+dist
+coverage
+test-results
+playwright-report
+*.spec.ts
+*.test.ts
+vitest.config.ts
+playwright.config.ts

@@ -4,8 +4,7 @@ import { MainContentComponent } from "../../components/main-content/main-content
 @Component({
     selector: 'app-home',
     imports: [MainContentComponent],
-    templateUrl: './home.component.html',
-    styleUrl: './home.component.css'
+    templateUrl: './home.component.html'
 })
 export class HomeComponent {
 

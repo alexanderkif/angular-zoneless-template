@@ -1,7 +1,29 @@
 {
+  "buildCommand": "npm run build",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@5.5.16"
+    }
+  },
   "rewrites": [
+    { "source": "/api/auth/login", "destination": "/api/auth?action=login" },
+    { "source": "/api/auth/register", "destination": "/api/auth?action=register" },
+    { "source": "/api/auth/logout", "destination": "/api/auth?action=logout" },
+    { "source": "/api/auth/refresh", "destination": "/api/auth?action=refresh" },
+    { "source": "/api/auth/verify-email", "destination": "/api/auth?action=verify-email" },
+    { "source": "/api/auth/resend-verification", "destination": "/api/auth?action=resend-verification" },
+    
+    { "source": "/api/auth/github", "destination": "/api/auth/oauth?action=github" },
+    { "source": "/api/auth/google", "destination": "/api/auth/oauth?action=google" },
+    { "source": "/api/auth/callback-github", "destination": "/api/auth/oauth?action=callback-github" },
+    { "source": "/api/auth/callback-google", "destination": "/api/auth/oauth?action=callback-google" },
+
+    { "source": "/api/user/me", "destination": "/api/user?action=me" },
+    { "source": "/api/user/sessions", "destination": "/api/user?action=sessions" },
+    { "source": "/api/user/revoke-session", "destination": "/api/user?action=revoke-session" },
+
     {
-      "source": "/:path*",
+      "source": "/((?!api).*)",
       "destination": "/"
     }
   ]

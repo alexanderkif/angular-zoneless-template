@@ -1,7 +1,16 @@
 .about {
-  padding: 0 2rem;
+  padding: var(--spacing-lg) var(--spacing-md);
+
+  h1 {
+    color: var(--color-text);
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-md);
+  }
 
   p {
     text-align: justify;
+    line-height: 1.8;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
   }
 }

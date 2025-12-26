@@ -49,3 +49,20 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Vercel
+.vercel
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# Development files
+test-smtp.ts
+CHANGES_SUMMARY.md
+
+# Supabase
+/supabase/.branches
+/supabase/.temp
+/supabase/functions/.env

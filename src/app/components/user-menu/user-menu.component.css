@@ -5,48 +5,82 @@
   width: var(--header-height);
   height: var(--header-height);
   padding: 0;
+  margin-right: var(--spacing-md);
   border-radius: 50%;
-  background-color: lightsalmon;
-  border: none;
-  word-break: break-all;
+  background-color: var(--color-accent);
+  border: 2px solid var(--color-accent);
   font: inherit;
   cursor: pointer;
   outline: inherit;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+  }
 }
 
-ul,
-li {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.user-menu__loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.user-menu__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-menu__avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
 }
 
 .user-menu__list {
   position: fixed;
-  top: calc(var(--header-height) + 0.5rem);
-  right: 0.5rem;
-  border-radius: 0.5rem;
-  background-color: lightsalmon;
-  border: none;
+  top: calc(var(--header-height) + var(--spacing-sm));
+  right: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
+  min-width: 12rem;
 
   .user-menu__name {
-    background-color: maroon;
-    font-weight: bold;
-    color: #fff;
+    background-color: var(--color-primary);
+    font-weight: 600;
+    color: white;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .user-menu__name,
   li {
     display: flex;
     align-items: center;
-    padding: 1rem;
-    min-width: 8rem;
-  }
+    padding: var(--spacing-md);
+    color: var(--color-text);
+    transition: all 0.2s;
 
-  li:hover {
-    background-color: chocolate;
-    color: #fff;
-    cursor: pointer;
+    &:hover {
+      background-color: var(--color-background);
+      cursor: pointer;
+    }
   }
 }

@@ -2,12 +2,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 8rem;
   height: var(--header-height);
-  border-radius: 0.3rem;
-  background-color: coral;
+}
 
-  @media screen and (max-width: 600px) {
-    width: 4rem;
+.logo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8rem;
+  height: 3rem;
+  background: var(--color-accent-gradient);
+  color: white;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+}
+
+@media screen and (max-width: 600px) {
+  .logo-badge {
+    width: 5rem;
+    height: 2.5rem;
+    font-size: 1rem;
   }
 }

@@ -1,9 +1,8 @@
 import { Component, HostListener, inject } from '@angular/core';
-import { selectUserName } from '../../store/users/users.selector';
+import { Router } from '@angular/router';
+import { selectUserName, selectUserAvatar, selectIsLoading } from '../../store/auth/auth.selectors';
 import { Store } from '@ngrx/store';
-import { UserState } from '../../store/users/users.reducer';
-import { GUEST } from '../../types/user';
-import { UsersUserActions } from '../../store/users/actions';
+import { sessionActions } from '../../store/auth/auth.actions';
 
 @Component({
   selector: 'app-user-menu',
@@ -12,10 +11,13 @@ import { UsersUserActions } from '../../store/users/actions';
   styleUrl: './user-menu.component.css',
 })
 export class UserMenuComponent {
-  private userStore = inject(Store<UserState>);
+  private store = inject(Store);
+  private router = inject(Router);
   public showMenu = false;
-  public userName = this.userStore.selectSignal(selectUserName);
-  public readonly GUEST = GUEST;
+  public userName = this.store.selectSignal(selectUserName);
+  public userAvatar = this.store.selectSignal(selectUserAvatar);
+  public isAuthLoading = this.store.selectSignal(selectIsLoading);
+  public readonly GUEST = 'Guest';
 
   @HostListener('document:click') closeMenu() {
     this.showMenu = false;
@@ -25,13 +27,15 @@ export class UserMenuComponent {
     const target = e.target as HTMLElement;
     switch (target.id) {
       case 'login':
-        this.userStore.dispatch(UsersUserActions.getUser({ id: 1 }));
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: this.router.url } 
+        });
         break;
       case 'settings':
-        console.info('Handle settings logic');
+        // TODO: Implement settings
         break;
       case 'exit':
-        this.userStore.dispatch(UsersUserActions.exitUser());
+        this.store.dispatch(sessionActions.logout());
         break;
     }
     e.stopPropagation();

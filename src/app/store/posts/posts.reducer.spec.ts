@@ -6,6 +6,8 @@ export const postsSlice: PostState = {
   posts: [],
   error: '',
   isLoading: false,
+  offset: 0,
+  limit: 3,
 };
 
 describe('postsSlice reducer', () => {
@@ -15,7 +17,7 @@ describe('postsSlice reducer', () => {
   });
 
   it('should set isLoading true on loadPosts', () => {
-    const action = PostsUserActions.loadPosts({ limit: 10 });
+    const action = PostsUserActions.loadPosts();
     const state = postsFeature.reducer(postsSlice, action);
     expect(state.isLoading).toBe(true);
   });
@@ -42,6 +44,8 @@ describe('postsSlice reducer', () => {
       posts: [{ id: 1, title: 'Test', body: 'Body', userId: 1 }],
       error: 'Some error',
       isLoading: true,
+      offset: 10,
+      limit: 3,
     };
     const action = PostsUserActions.clearPosts();
     const state = postsFeature.reducer(prevState, action);
