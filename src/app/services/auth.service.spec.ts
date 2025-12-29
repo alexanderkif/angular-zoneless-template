@@ -1,10 +1,10 @@
-import { TestBed } from '@angular/core/testing';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient, HttpClient } from '@angular/common/http';
-import { AuthService } from './auth.service';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { PLATFORM_ID, provideZonelessChangeDetection, isDevMode } from '@angular/core';
-import { WINDOW } from '../tokens/window.token';
+import { TestBed } from '@angular/core/testing';
 import { throwError } from 'rxjs';
+import { WINDOW } from '../tokens/window.token';
+import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -15,8 +15,8 @@ describe('AuthService', () => {
   beforeEach(() => {
     windowMock = {
       location: {
-        href: ''
-      }
+        href: '',
+      },
     };
 
     TestBed.configureTestingModule({
@@ -26,8 +26,8 @@ describe('AuthService', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: PLATFORM_ID, useValue: 'browser' },
-        { provide: WINDOW, useValue: windowMock }
-      ]
+        { provide: WINDOW, useValue: windowMock },
+      ],
     });
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -43,8 +43,8 @@ describe('AuthService', () => {
 
   it('should login', () => {
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
-    
-    service.login('test@example.com', 'password').subscribe(user => {
+
+    service.login('test@example.com', 'password').subscribe((user) => {
       expect(user).toEqual(mockUser);
     });
 
@@ -56,21 +56,25 @@ describe('AuthService', () => {
 
   it('should register', () => {
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
-    
-    service.register('test@example.com', 'password', 'Test').subscribe(user => {
+
+    service.register('test@example.com', 'password', 'Test').subscribe((user) => {
       expect(user).toEqual(mockUser);
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/register`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ email: 'test@example.com', password: 'password', name: 'Test' });
+    expect(req.request.body).toEqual({
+      email: 'test@example.com',
+      password: 'password',
+      name: 'Test',
+    });
     req.flush({ user: mockUser });
   });
 
   it('should get current user', () => {
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
-    
-    service.getCurrentUser().subscribe(user => {
+
+    service.getCurrentUser().subscribe((user) => {
       expect(user).toEqual(mockUser);
     });
 
@@ -83,7 +87,7 @@ describe('AuthService', () => {
     service.getCurrentUser().subscribe({
       error: (error) => {
         expect(error.message).toBe('Not authenticated');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/user/me`);
@@ -92,8 +96,8 @@ describe('AuthService', () => {
 
   it('should refresh token', () => {
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
-    
-    service.refreshToken().subscribe(user => {
+
+    service.refreshToken().subscribe((user) => {
       expect(user).toEqual(mockUser);
     });
 
@@ -106,7 +110,7 @@ describe('AuthService', () => {
     service.refreshToken().subscribe({
       error: (error) => {
         expect(error.message).toBe('Session expired');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/refresh`);
@@ -124,8 +128,8 @@ describe('AuthService', () => {
   it('should verify email', () => {
     const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
     const token = 'valid-token';
-    
-    service.verifyEmail(token).subscribe(response => {
+
+    service.verifyEmail(token).subscribe((response) => {
       expect(response.user).toEqual(mockUser);
       expect(response.message).toBe('Success');
     });
@@ -139,7 +143,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('Invalid credentials');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -160,61 +164,61 @@ describe('AuthService', () => {
 
   it('should log error for non-401 in getCurrentUser', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     service.getCurrentUser().subscribe({
       error: (error) => {
         expect(error.message).toBe('Not authenticated');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/user/me`);
     req.flush('Server Error', { status: 500, statusText: 'Server Error' });
-    
+
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it('should log error for non-401 in refreshToken', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     service.refreshToken().subscribe({
       error: (error) => {
         expect(error.message).toBe('Session expired');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/refresh`);
     req.flush('Server Error', { status: 500, statusText: 'Server Error' });
-    
+
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it('should handle generic error', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toContain('Http failure response');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
     req.flush({}, { status: 500, statusText: 'Server Error' });
-    
+
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
   it('should handle error with ErrorEvent', () => {
     const errorEvent = new ErrorEvent('Network error', {
-      message: 'Network error occurred'
+      message: 'Network error occurred',
     });
 
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('Network error occurred');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -225,7 +229,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('Custom error');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -241,7 +245,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('Nested error');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -255,10 +259,10 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('Message error');
-      }
+      },
     });
   });
-  
+
   it('should fallback to default error message', () => {
     const httpClient = TestBed.inject(HttpClient);
     vi.spyOn(httpClient, 'post').mockReturnValue(throwError(() => ({})));
@@ -266,14 +270,14 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('An error occurred');
-      }
+      },
     });
   });
 
   it('should resend verification email', () => {
     const email = 'test@example.com';
-    
-    service.resendVerification(email).subscribe(response => {
+
+    service.resendVerification(email).subscribe((response) => {
       expect(response.message).toBe('Verification email sent');
     });
 
@@ -285,8 +289,8 @@ describe('AuthService', () => {
 
   it('should resend verification by token', () => {
     const token = 'expired-token';
-    
-    service.resendVerificationByToken(token).subscribe(response => {
+
+    service.resendVerificationByToken(token).subscribe((response) => {
       expect(response.message).toBe('Verification email sent');
     });
 
@@ -298,8 +302,8 @@ describe('AuthService', () => {
 
   it('should cancel registration', () => {
     const token = 'valid-token';
-    
-    service.cancelRegistration(token).subscribe(response => {
+
+    service.cancelRegistration(token).subscribe((response) => {
       expect(response.message).toBe('Registration cancelled');
     });
 
@@ -313,7 +317,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('An unexpected error occurred');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -324,7 +328,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toContain('Http failure response');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -335,7 +339,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe('Custom message');
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -347,7 +351,7 @@ describe('AuthService', () => {
     service.login('test@example.com', 'password').subscribe({
       error: (error) => {
         expect(error.message).toBe(JSON.stringify(errorBody));
-      }
+      },
     });
 
     const req = httpMock.expectOne(`${apiUrl}/auth/login`);
@@ -362,8 +366,8 @@ describe('AuthService (Server)', () => {
   beforeEach(() => {
     windowMock = {
       location: {
-        href: ''
-      }
+        href: '',
+      },
     };
 
     TestBed.configureTestingModule({
@@ -373,8 +377,8 @@ describe('AuthService (Server)', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: PLATFORM_ID, useValue: 'server' },
-        { provide: WINDOW, useValue: windowMock }
-      ]
+        { provide: WINDOW, useValue: windowMock },
+      ],
     });
     service = TestBed.inject(AuthService);
   });

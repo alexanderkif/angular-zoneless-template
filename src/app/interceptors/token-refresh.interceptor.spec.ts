@@ -1,12 +1,12 @@
-import { TestBed } from '@angular/core/testing';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
-import { tokenRefreshInterceptor } from './token-refresh.interceptor';
-import { AuthService } from '../services/auth.service';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { Store } from '@ngrx/store';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 import { tokenActions } from '../store/auth/auth.actions';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { tokenRefreshInterceptor } from './token-refresh.interceptor';
 
 describe('tokenRefreshInterceptor', () => {
   let httpMock: HttpTestingController;
@@ -16,10 +16,10 @@ describe('tokenRefreshInterceptor', () => {
 
   beforeEach(() => {
     authServiceMock = {
-      refreshToken: vi.fn()
+      refreshToken: vi.fn(),
     };
     storeMock = {
-      dispatch: vi.fn()
+      dispatch: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -28,8 +28,8 @@ describe('tokenRefreshInterceptor', () => {
         provideHttpClient(withInterceptors([tokenRefreshInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },
-        { provide: Store, useValue: storeMock }
-      ]
+        { provide: Store, useValue: storeMock },
+      ],
     });
 
     httpMock = TestBed.inject(HttpTestingController);
@@ -42,7 +42,7 @@ describe('tokenRefreshInterceptor', () => {
 
   it('should pass through successful requests', () => {
     httpClient.get('/test').subscribe();
-    
+
     const req = httpMock.expectOne('/test');
     req.flush({});
   });
@@ -52,13 +52,13 @@ describe('tokenRefreshInterceptor', () => {
     authServiceMock.refreshToken.mockReturnValue(of(user));
 
     httpClient.get('/test').subscribe();
-    
+
     const req = httpMock.expectOne('/test');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(authServiceMock.refreshToken).toHaveBeenCalled();
     expect(storeMock.dispatch).toHaveBeenCalledWith(tokenActions.refreshTokenSuccess({ user }));
-    
+
     // Should retry original request
     const retryReq = httpMock.expectOne('/test');
     retryReq.flush({});
@@ -66,9 +66,9 @@ describe('tokenRefreshInterceptor', () => {
 
   it('should not refresh on 401 for auth endpoints', () => {
     httpClient.post('/auth/login', {}).subscribe({
-      error: () => {}
+      error: () => {},
     });
-    
+
     const req = httpMock.expectOne('/auth/login');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
@@ -81,13 +81,15 @@ describe('tokenRefreshInterceptor', () => {
     httpClient.get('/test').subscribe({
       error: (error) => {
         expect(error.message).toBe('Refresh failed');
-      }
+      },
     });
-    
+
     const req = httpMock.expectOne('/test');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(tokenActions.refreshTokenFailure({ error: 'Session expired' }));
+    expect(storeMock.dispatch).toHaveBeenCalledWith(
+      tokenActions.refreshTokenFailure({ error: 'Session expired' }),
+    );
   });
 
   it('should not dispatch failure if session expired message', () => {
@@ -96,9 +98,9 @@ describe('tokenRefreshInterceptor', () => {
     httpClient.get('/test').subscribe({
       error: (error) => {
         expect(error.message).toBe('Session expired');
-      }
+      },
     });
-    
+
     const req = httpMock.expectOne('/test');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 

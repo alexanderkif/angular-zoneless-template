@@ -12,7 +12,7 @@ export interface AuthUser {
 export const loginActions = createActionGroup({
   source: 'Auth/Login',
   events: {
-    'Login': props<{ email: string; password: string; returnUrl?: string }>(),
+    Login: props<{ email: string; password: string; returnUrl?: string }>(),
     'Login Success': props<{ user: AuthUser; returnUrl?: string }>(),
     'Login Failure': props<{ error: string }>(),
   },
@@ -22,7 +22,7 @@ export const loginActions = createActionGroup({
 export const registerActions = createActionGroup({
   source: 'Auth/Register',
   events: {
-    'Register': props<{ email: string; password: string; name: string }>(),
+    Register: props<{ email: string; password: string; name: string }>(),
     'Register Success': props<{ user: AuthUser }>(),
     'Register Failure': props<{ error: string }>(),
   },
@@ -46,7 +46,7 @@ export const sessionActions = createActionGroup({
     'Check Session': emptyProps(),
     'Session Valid': props<{ user: AuthUser }>(),
     'Session Invalid': emptyProps(),
-    'Logout': emptyProps(), // Optimistic - no success/failure needed
+    Logout: emptyProps(), // Optimistic - no success/failure needed
   },
 });
 

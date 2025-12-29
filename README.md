@@ -2,7 +2,7 @@
 
 Modern Angular 20 application template with **zoneless change detection**, server-side rendering (SSR), **authentication (Email + OAuth)**, state management, and comprehensive testing setup.
 
-##  Features
+## Features
 
 - **Angular 20.3** - Latest stable version with zoneless architecture
 - **Server-Side Rendering (SSR)** - Angular Universal for improved SEO and performance
@@ -15,20 +15,23 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 - **Lazy Loading** - Route-based code splitting for optimal bundle size
 - **Signal Forms** - Modern Angular reactive forms
 
-##  Tech Stack
+## Tech Stack
 
 ### Core
+
 - **Angular 20.3.0** - Framework
 - **TypeScript 5.9.2** - Language
 - **RxJS 7.8.0** - Reactive programming
 - **Express 5.1.0** - SSR server
 
 ### State Management
+
 - **@ngrx/store 20.0.1** - State management
 - **@ngrx/effects 20.0.1** - Side effects
 - **@ngrx/store-devtools 20.0.1** - Redux DevTools integration
 
 ### Authentication & Backend
+
 - **Supabase** - PostgreSQL database with authentication
 - **Vercel Functions** - Serverless API endpoints
 - **JWT** - Token-based authentication with refresh tokens (15m access, 7d refresh)
@@ -44,6 +47,7 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 - **Optimistic Logout** - Fire-and-forget logout for instant UX
 
 ### Testing
+
 - **Vitest 3.2.4** - Unit test runner with native ESM support
 - **@vitest/ui 3.2.4** - Visual test interface
 - **@vitest/coverage-v8 3.2.4** - Code coverage reporting
@@ -52,9 +56,10 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 - **jsdom 25.0.1** - DOM testing environment
 - Uses latest Angular 20 testing APIs with zoneless change detection
 
-##  Development
+## Development
 
 ### Prerequisites
+
 - Node.js 20.11.1 or higher
 - npm 11.6.2 or higher
 - Supabase account (free tier available)
@@ -81,6 +86,7 @@ npm run dev
 ```
 
 Visit:
+
 - Frontend: http://localhost:4200
 - API: http://localhost:3000
 
@@ -120,29 +126,33 @@ Build in watch mode for development:
 npm run watch
 ```
 
-##  OAuth Setup (Optional)
+## OAuth Setup (Optional)
 
 ### GitHub
+
 1. Create OAuth App: https://github.com/settings/developers
 2. Set Homepage URL: `https://angular-zoneless-template.vercel.app`
 3. Set Callback URL: `https://angular-zoneless-template.vercel.app/api/auth/callback-github`
 4. Add credentials to `.env.local`:
+
 ```env
 GITHUB_CLIENT_ID=your_client_id
 GITHUB_CLIENT_SECRET=your_client_secret
 ```
 
 ### Google
+
 1. Create OAuth Client: https://console.cloud.google.com
 2. Add Authorized origins: `https://angular-zoneless-template.vercel.app`
 3. Add Redirect URI: `https://angular-zoneless-template.vercel.app/api/auth/callback-google`
 4. Add credentials to `.env.local`:
+
 ```env
 GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_client_secret
 ```
 
-##  Testing
+## Testing
 
 ### Unit Tests
 
@@ -172,7 +182,8 @@ npm run test:coverage
 
 Coverage report will be generated in `coverage/` directory. Open `coverage/index.html` to view detailed results.
 
-**Current Coverage: 100%** 
+**Current Coverage: 100%**
+
 - **125 tests** across all modules
 - 100% statements, branches, functions, and lines covered
 
@@ -190,7 +201,7 @@ Run E2E tests in UI mode:
 npx playwright test --ui
 ```
 
-##  Project Structure
+## Project Structure
 
 ```
 api/                     # Vercel serverless functions
@@ -262,11 +273,12 @@ supabase/
  vitest.config.ts        # Vitest configuration
 ```
 
-##  Session Management
+## Session Management
 
 For detailed information, see [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md).
 
 ### Multi-Device Strategy
+
 The authentication system supports **up to 5 concurrent sessions** per user:
 
 1. **On Login** (email/OAuth):
@@ -294,18 +306,21 @@ The authentication system supports **up to 5 concurrent sessions** per user:
 ### Session Management API
 
 **Get Active Sessions:**
+
 ```typescript
-GET /api/user/sessions
+GET / api / user / sessions;
 // Returns: { sessions: [{id, createdAt, expiresAt}], total: number }
 ```
 
 **Revoke Session:**
+
 ```typescript
 DELETE /api/user/revoke-session?sessionId=xxx
 // Deletes specific session
 ```
 
 ### Why 5 Devices?
+
 - **Balance**: Security vs UX
 - **Use cases**: Phone, Laptop, Tablet, Work PC, Home PC
 - **2025 Best Practice**: Most apps allow 3-10 concurrent sessions
@@ -313,18 +328,20 @@ DELETE /api/user/revoke-session?sessionId=xxx
 ### Alternative Strategies
 
 **Single Session** (highest security):
+
 ```typescript
 // In session-manager.ts, change MAX_ACTIVE_SESSIONS to 1
 const MAX_ACTIVE_SESSIONS = 1;
 ```
 
 **Unlimited Sessions** (best UX):
+
 ```typescript
 // Remove session limit check in cleanupAndLimitSessions()
 // Only clean expired tokens
 ```
 
-##  Configuration Files
+## Configuration Files
 
 - **vitest.config.ts** - Vitest test runner configuration with @analogjs/vite-plugin-angular
 - **playwright.config.ts** - Playwright E2E test configuration
@@ -332,49 +349,55 @@ const MAX_ACTIVE_SESSIONS = 1;
 - **tsconfig.spec.json** - TypeScript configuration for tests
 - **angular.json** - Angular CLI configuration
 
-##  Key Concepts
+## Key Concepts
 
 ### Zoneless Change Detection
+
 This project uses Angular`'s experimental zoneless mode for better performance:
+
 - Manual change detection control
 - Reduced overhead from Zone.js
 - Signal-based reactivity
 
 ### Lazy Loading
+
 Routes are configured with lazy loading for optimal initial load time:
+
 ```typescript
 loadComponent: () => import(`'./pages/home/home.component`')
   .then((m) => m.HomeComponent)
 ```
 
 ### State Management Pattern
+
 - **Actions** - Events that describe state changes
 - **Reducers** - Pure functions that handle state transitions
 - **Effects** - Side effects like HTTP requests
 - **Selectors** - Derived state queries
 
-##  Scripts Reference
+## Scripts Reference
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start both API and Angular dev servers |
-| `npm run dev:api` | Start Vercel API only (port 3000) |
-| `npm run dev:ssr` | Start Angular SSR only (port 4200) |
-| `npm start` | Start Angular development server |
-| `npm run build` | Production build |
-| `npm test` | Run unit tests once |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run test:ui` | Open test UI with coverage |
-| `npm run test:coverage` | Generate coverage report |
-| `npx playwright test` | Run E2E tests |
+| Script                  | Description                            |
+| ----------------------- | -------------------------------------- |
+| `npm run dev`           | Start both API and Angular dev servers |
+| `npm run dev:api`       | Start Vercel API only (port 3000)      |
+| `npm run dev:ssr`       | Start Angular SSR only (port 4200)     |
+| `npm start`             | Start Angular development server       |
+| `npm run build`         | Production build                       |
+| `npm test`              | Run unit tests once                    |
+| `npm run test:watch`    | Run tests in watch mode                |
+| `npm run test:ui`       | Open test UI with coverage             |
+| `npm run test:coverage` | Generate coverage report               |
+| `npx playwright test`   | Run E2E tests                          |
 
-##  Deployment
+## Deployment
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel deployment and environment variables.
 
 ### Vercel Production Deploy
 
 1. Deploy to Vercel:
+
 ```bash
 vercel --prod
 ```
@@ -391,7 +414,7 @@ vercel --prod
 
 3. Update OAuth callback URLs to production domain in GitHub/Google OAuth settings
 
-##  Additional Resources
+## Additional Resources
 
 - [Angular Documentation](https://angular.dev)
 - [Angular CLI](https://angular.dev/tools/cli)
@@ -399,6 +422,6 @@ vercel --prod
 - [Vitest Documentation](https://vitest.dev)
 - [Playwright Documentation](https://playwright.dev)
 
-##  License
+## License
 
 This project is open source and available under the MIT License.

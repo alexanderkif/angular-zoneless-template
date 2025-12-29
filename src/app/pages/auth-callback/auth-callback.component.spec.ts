@@ -1,10 +1,10 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AuthCallbackComponent } from './auth-callback.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
 import { oauthActions } from '../../store/auth/auth.actions';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { AuthCallbackComponent } from './auth-callback.component';
 
 describe('AuthCallbackComponent', () => {
   let component: AuthCallbackComponent;
@@ -15,13 +15,13 @@ describe('AuthCallbackComponent', () => {
 
   beforeEach(async () => {
     routerMock = {
-      navigate: vi.fn()
+      navigate: vi.fn(),
     };
     storeMock = {
-      dispatch: vi.fn()
+      dispatch: vi.fn(),
     };
     activatedRouteStub = {
-      queryParams: of({})
+      queryParams: of({}),
     };
 
     await TestBed.configureTestingModule({
@@ -30,8 +30,8 @@ describe('AuthCallbackComponent', () => {
         provideZonelessChangeDetection(),
         { provide: Router, useValue: routerMock },
         { provide: Store, useValue: storeMock },
-        { provide: ActivatedRoute, useValue: activatedRouteStub }
-      ]
+        { provide: ActivatedRoute, useValue: activatedRouteStub },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AuthCallbackComponent);
@@ -47,9 +47,11 @@ describe('AuthCallbackComponent', () => {
     // Re-initialize component to trigger ngOnInit with new params
     component.ngOnInit();
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(oauthActions.oAuthFailure({ 
-      error: 'Authentication failed' 
-    }));
+    expect(storeMock.dispatch).toHaveBeenCalledWith(
+      oauthActions.oAuthFailure({
+        error: 'Authentication failed',
+      }),
+    );
     expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
   });
 
@@ -57,9 +59,11 @@ describe('AuthCallbackComponent', () => {
     activatedRouteStub.queryParams = of({ error: 'unknown_error' });
     component.ngOnInit();
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(oauthActions.oAuthFailure({ 
-      error: 'An error occurred during authentication' 
-    }));
+    expect(storeMock.dispatch).toHaveBeenCalledWith(
+      oauthActions.oAuthFailure({
+        error: 'An error occurred during authentication',
+      }),
+    );
     expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
   });
 
@@ -68,12 +72,14 @@ describe('AuthCallbackComponent', () => {
     activatedRouteStub.queryParams = of({});
     component.ngOnInit();
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(oauthActions.oAuthSuccess({ 
-      user: { id: '', email: '', name: '' } 
-    }));
-    
+    expect(storeMock.dispatch).toHaveBeenCalledWith(
+      oauthActions.oAuthSuccess({
+        user: { id: '', email: '', name: '' },
+      }),
+    );
+
     vi.advanceTimersByTime(1000);
-    
+
     expect(routerMock.navigate).toHaveBeenCalledWith(['/']);
     vi.useRealTimers();
   });

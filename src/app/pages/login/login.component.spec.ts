@@ -1,12 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { LoginComponent } from './login.component';
-import { Store } from '@ngrx/store';
-import { ActivatedRoute } from '@angular/router';
-import { loginActions, oauthActions } from '../../store/auth/auth.actions';
-import { selectIsLoading, selectError } from '../../store/auth/auth.selectors';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { loginActions, oauthActions } from '../../store/auth/auth.actions';
+import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -18,17 +17,17 @@ describe('LoginComponent', () => {
   beforeEach(async () => {
     storeMock = {
       dispatch: vi.fn(),
-      selectSignal: vi.fn().mockReturnValue(() => false)
+      selectSignal: vi.fn().mockReturnValue(() => false),
     };
 
     activatedRouteStub = {
       snapshot: {
-        queryParams: {}
-      }
+        queryParams: {},
+      },
     };
 
     authServiceMock = {
-      resendVerification: vi.fn()
+      resendVerification: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -37,8 +36,8 @@ describe('LoginComponent', () => {
         provideZonelessChangeDetection(),
         { provide: Store, useValue: storeMock },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
-        { provide: AuthService, useValue: authServiceMock }
-      ]
+        { provide: AuthService, useValue: authServiceMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
@@ -51,44 +50,39 @@ describe('LoginComponent', () => {
   });
 
   it('should dispatch login action on valid submit', () => {
-    component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password123'
-    });
+    component.loginModel.set({ email: 'test@example.com', password: 'password123' });
 
-    component.onSubmit();
+    component.onSubmit({ preventDefault: () => {} } as any);
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(loginActions.login({
-      email: 'test@example.com',
-      password: 'password123',
-      returnUrl: undefined
-    }));
+    expect(storeMock.dispatch).toHaveBeenCalledWith(
+      loginActions.login({
+        email: 'test@example.com',
+        password: 'password123',
+        returnUrl: undefined,
+      }),
+    );
   });
 
   it('should dispatch login action with returnUrl', () => {
     activatedRouteStub.snapshot.queryParams['returnUrl'] = '/dashboard';
-    
-    component.loginForm.setValue({
-      email: 'test@example.com',
-      password: 'password123'
-    });
 
-    component.onSubmit();
+    component.loginModel.set({ email: 'test@example.com', password: 'password123' });
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(loginActions.login({
-      email: 'test@example.com',
-      password: 'password123',
-      returnUrl: '/dashboard'
-    }));
+    component.onSubmit({ preventDefault: () => {} } as any);
+
+    expect(storeMock.dispatch).toHaveBeenCalledWith(
+      loginActions.login({
+        email: 'test@example.com',
+        password: 'password123',
+        returnUrl: '/dashboard',
+      }),
+    );
   });
 
   it('should not dispatch login action on invalid submit', () => {
-    component.loginForm.setValue({
-      email: 'invalid-email',
-      password: ''
-    });
+    component.loginModel.set({ email: 'invalid-email', password: '' });
 
-    component.onSubmit();
+    component.onSubmit({ preventDefault: () => {} } as any);
 
     expect(storeMock.dispatch).not.toHaveBeenCalled();
   });
@@ -105,7 +99,7 @@ describe('LoginComponent', () => {
 
   it('should call resendVerification and set success message', () => {
     const email = 'test@example.com';
-    component.loginForm.controls.email.setValue(email);
+    component.loginModel.set({ email, password: '' });
     authServiceMock.resendVerification.mockReturnValue(of({ message: 'Verification email sent' }));
 
     component.resendVerification();
@@ -116,8 +110,10 @@ describe('LoginComponent', () => {
 
   it('should call resendVerification and set error message on failure', () => {
     const email = 'test@example.com';
-    component.loginForm.controls.email.setValue(email);
-    authServiceMock.resendVerification.mockReturnValue(throwError(() => ({ message: 'Failed to send' })));
+    component.loginModel.set({ email, password: '' });
+    authServiceMock.resendVerification.mockReturnValue(
+      throwError(() => ({ message: 'Failed to send' })),
+    );
 
     component.resendVerification();
 
@@ -127,7 +123,7 @@ describe('LoginComponent', () => {
 
   it('should use default error message on resend failure if message is missing', () => {
     const email = 'test@example.com';
-    component.loginForm.controls.email.setValue(email);
+    component.loginModel.set({ email, password: '' });
     authServiceMock.resendVerification.mockReturnValue(throwError(() => ({})));
 
     component.resendVerification();
@@ -137,7 +133,7 @@ describe('LoginComponent', () => {
   });
 
   it('should not call resendVerification if email is empty', () => {
-    component.loginForm.controls.email.setValue('');
+    component.loginModel.set({ email: '', password: '' });
     component.resendVerification();
     expect(authServiceMock.resendVerification).not.toHaveBeenCalled();
   });

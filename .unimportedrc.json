@@ -1,0 +1,24 @@
+{
+  "ignoreUnresolved": [],
+  "ignoreUnused": [
+    "@angular/platform-browser-dynamic",
+    "@angular/ssr",
+    "@node-rs/argon2",
+    "@supabase/supabase-js",
+    "express",
+    "jsonwebtoken",
+    "nodemailer",
+    "tslib",
+    "zod"
+  ],
+  "ignoreUnimported": [
+    "C:\\github\\angular-zoneless-template\\src\\app\\app.config.server.ts",
+    "C:\\github\\angular-zoneless-template\\src\\app\\app.routes.server.ts",
+    "C:\\github\\angular-zoneless-template\\src\\app\\components\\main-content\\main-content.component.ts",
+    "C:\\github\\angular-zoneless-template\\src\\app\\tokens\\ssr.tokens.ts",
+    "C:\\github\\angular-zoneless-template\\src\\app\\utils\\utils.ts",
+    "C:\\github\\angular-zoneless-template\\src\\main.server.ts",
+    "C:\\github\\angular-zoneless-template\\src\\server.ts",
+    "C:\\github\\angular-zoneless-template\\src\\test-setup.ts"
+  ]
+}

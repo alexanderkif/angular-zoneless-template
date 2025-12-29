@@ -45,10 +45,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   const { code } = req.query;
   const frontendUrl = getFrontendUrl();
@@ -74,7 +71,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
       }),
     });
 
-    const tokenData = await tokenResponse.json() as {
+    const tokenData = (await tokenResponse.json()) as {
       access_token?: string;
       error?: string;
       error_description?: string;
@@ -92,7 +89,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    const githubUser = await userResponse.json() as {
+    const githubUser = (await userResponse.json()) as {
       id: number;
       login: string;
       email?: string;
@@ -158,13 +155,13 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
     const accessToken = jwt.sign(
       { userId, email: userEmail },
       process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' } as jwt.SignOptions,
     );
 
     const refreshToken = jwt.sign(
       { userId, type: 'refresh' },
       process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions,
     );
 
     // Clean up old/expired sessions and enforce limit
@@ -196,10 +193,7 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   const { code } = req.query;
   const frontendUrl = getFrontendUrl();
@@ -225,7 +219,7 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
       }),
     });
 
-    const tokenData = await tokenResponse.json() as {
+    const tokenData = (await tokenResponse.json()) as {
       access_token?: string;
       error?: string;
       error_description?: string;
@@ -237,10 +231,10 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
 
     // Get user info from Google
     const userResponse = await fetch(
-      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenData.access_token}`
+      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenData.access_token}`,
     );
 
-    const googleUser = await userResponse.json() as {
+    const googleUser = (await userResponse.json()) as {
       id: string;
       email: string;
       name: string;
@@ -306,13 +300,13 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
     const accessToken = jwt.sign(
       { userId, email: userEmail },
       process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' } as jwt.SignOptions,
     );
 
     const refreshToken = jwt.sign(
       { userId, type: 'refresh' },
       process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions,
     );
 
     // Clean up old/expired sessions and enforce limit

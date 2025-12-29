@@ -1,5 +1,12 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
-import { AuthUser, loginActions, registerActions, oauthActions, sessionActions, tokenActions } from './auth.actions';
+import {
+  AuthUser,
+  loginActions,
+  registerActions,
+  oauthActions,
+  sessionActions,
+  tokenActions,
+} from './auth.actions';
 
 export interface AuthState {
   user: AuthUser | null;
@@ -73,7 +80,7 @@ export const authFeature = createFeature({
       isAuthenticated: true,
       isLoading: false,
       sessionChecked: true,
-      error: null
+      error: null,
     })),
     on(oauthActions.oAuthFailure, (state, { error }) => ({
       ...state,
@@ -104,7 +111,7 @@ export const authFeature = createFeature({
     })),
 
     // Logout - immediate state reset (optimistic)
-    on(sessionActions.logout, (state) => ({
+    on(sessionActions.logout, () => ({
       user: null,
       isAuthenticated: false,
       isLoading: false, // Important: Set to false to not block guards
@@ -125,7 +132,7 @@ export const authFeature = createFeature({
       user: null,
       isAuthenticated: false,
       error: 'Session expired',
-    }))
+    })),
   ),
 });
 

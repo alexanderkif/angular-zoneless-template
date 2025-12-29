@@ -1,14 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Store } from '@ngrx/store';
+import { Validators, ReactiveFormsModule } from '@angular/forms';
+import { form, Field, required, email as emailValidator } from '@angular/forms/signals';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { AuthService } from '../../services/auth.service';
 import { loginActions, oauthActions } from '../../store/auth/auth.actions';
 import { selectIsLoading, selectError } from '../../store/auth/auth.selectors';
-import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Field],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -19,29 +20,26 @@ export class LoginComponent {
 
   resendMessage = signal<string | null>(null);
 
-  // TODO Signal Forms
-  loginForm = new FormGroup({
-    email: new FormControl('', {
-      validators: [Validators.required, Validators.email],
-      nonNullable: true,
-    }),
-    password: new FormControl('', {
-      validators: [Validators.required],
-      nonNullable: true,
-    }),
+  // Signal Forms (experimental API)
+  loginModel = signal({
+    email: '',
+    password: '',
   });
-
-  // Form controls для удобства
-  emailControl = this.loginForm.controls.email;
-  passwordControl = this.loginForm.controls.password;
+  loginForm = form(this.loginModel, (schema) => {
+    required(schema.email, { message: 'Email is required' });
+    emailValidator(schema.email, { message: 'Enter a valid email address' });
+    required(schema.password, { message: 'Password is required' });
+  });
 
   // Selectors as signals
   isLoading = this.store.selectSignal(selectIsLoading);
   error = this.store.selectSignal(selectError);
 
-  onSubmit(): void {
-    if (this.loginForm.valid) {
-      const { email, password } = this.loginForm.getRawValue();
+  onSubmit(event: Event): void {
+    event.preventDefault();
+    if (this.loginForm.email().valid() && this.loginForm.password().valid()) {
+      const email = this.loginForm.email().value();
+      const password = this.loginForm.password().value();
       const returnUrl = this.route.snapshot.queryParams['returnUrl'];
       this.store.dispatch(loginActions.login({ email, password, returnUrl }));
       this.resendMessage.set(null); // Clear previous messages
@@ -49,7 +47,7 @@ export class LoginComponent {
   }
 
   resendVerification(): void {
-    const email = this.loginForm.controls.email.value;
+    const email = this.loginForm.email().value();
     if (!email) return;
 
     this.authService.resendVerification(email).subscribe({
@@ -58,7 +56,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.resendMessage.set(err.message || 'Failed to resend verification email');
-      }
+      },
     });
   }
 

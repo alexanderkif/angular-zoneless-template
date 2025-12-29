@@ -1,11 +1,18 @@
-import { Injectable, inject, PLATFORM_ID, makeStateKey, TransferState } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Injectable, inject, PLATFORM_ID, makeStateKey, TransferState } from '@angular/core';
 import { Router } from '@angular/router';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { map, exhaustMap, catchError, tap } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
-import { loginActions, registerActions, oauthActions, sessionActions, tokenActions, AuthUser } from './auth.actions';
+import {
+  loginActions,
+  registerActions,
+  oauthActions,
+  sessionActions,
+  tokenActions,
+  AuthUser,
+} from './auth.actions';
 
 // TransferState key for auth user data
 const AUTH_USER_KEY = makeStateKey<AuthUser | null>('auth_user');
@@ -26,20 +33,20 @@ export class AuthEffects {
         this.authService.login(email, password).pipe(
           map((user) => loginActions.loginSuccess({ user, returnUrl })),
           catchError((error) =>
-            of(loginActions.loginFailure({ error: error.message || 'Login failed' }))
-          )
-        )
-      )
-    )
+            of(loginActions.loginFailure({ error: error.message || 'Login failed' })),
+          ),
+        ),
+      ),
+    ),
   );
 
   loginSuccess$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(loginActions.loginSuccess),
-        tap(({ returnUrl }) => this.router.navigateByUrl(returnUrl || '/'))
+        tap(({ returnUrl }) => this.router.navigateByUrl(returnUrl || '/')),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   // Redirect if authenticated and on login/register page (e.g. after SSR failure or direct navigation)
@@ -55,9 +62,9 @@ export class AuthEffects {
             const returnUrl = tree.queryParams['returnUrl'];
             this.router.navigateByUrl(returnUrl || '/');
           }
-        })
+        }),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   // Register
@@ -68,11 +75,11 @@ export class AuthEffects {
         this.authService.register(email, password, name).pipe(
           map((user) => registerActions.registerSuccess({ user })),
           catchError((error) =>
-            of(registerActions.registerFailure({ error: error.message || 'Registration failed' }))
-          )
-        )
-      )
-    )
+            of(registerActions.registerFailure({ error: error.message || 'Registration failed' })),
+          ),
+        ),
+      ),
+    ),
   );
 
   registerSuccess$ = createEffect(
@@ -82,9 +89,10 @@ export class AuthEffects {
         tap(() => {
           // Don't navigate - user needs to verify email first
           // Component will show success message
-        })
+          console.log('User registered, waiting for email verification');
+        }),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   // OAuth
@@ -92,18 +100,18 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(oauthActions.githubLogin),
-        tap(() => this.authService.loginWithGithub())
+        tap(() => this.authService.loginWithGithub()),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   googleLogin$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(oauthActions.googleLogin),
-        tap(() => this.authService.loginWithGoogle())
+        tap(() => this.authService.loginWithGoogle()),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   // Session check - SSR optimized with TransferState
@@ -120,7 +128,7 @@ export class AuthEffects {
             const cachedUser = this.transferState.get(AUTH_USER_KEY, null);
             // Удаляем из TransferState чтобы не использовать повторно
             this.transferState.remove(AUTH_USER_KEY);
-            
+
             // Используем данные из SSR (может быть user или null)
             if (cachedUser) {
               return of(sessionActions.sessionValid({ user: cachedUser }));
@@ -128,21 +136,21 @@ export class AuthEffects {
               return of(sessionActions.sessionInvalid());
             }
           }
-          
+
           // Если ключа нет - делаем запрос (fallback для CSR без SSR)
           return this.authService.getCurrentUser().pipe(
             map((user) => sessionActions.sessionValid({ user })),
-            catchError(() => of(sessionActions.sessionInvalid()))
+            catchError(() => of(sessionActions.sessionInvalid())),
           );
         }
-        
+
         // На сервере (или любой другой платформе) делаем запрос и сохраняем в TransferState
         // Best Practice 2025: Проверяем наличие cookies перед запросом
         // Во время сборки (prerender) requestStorage пуст -> запрос не делается
         // Если у пользователя нет cookies -> запрос не делается
         const storage = (globalThis as any).requestStorage;
         const request = storage?.getStore();
-        
+
         if (!request || !request.headers?.cookie) {
           this.transferState.set(AUTH_USER_KEY, null);
           return of(sessionActions.sessionInvalid());
@@ -158,10 +166,10 @@ export class AuthEffects {
             // Важно: сохраняем null чтобы клиент знал что проверка была
             this.transferState.set(AUTH_USER_KEY, null);
             return of(sessionActions.sessionInvalid());
-          })
+          }),
         );
-      })
-    )
+      }),
+    ),
   );
 
   // Logout - optimistic approach (2025 best practice)
@@ -175,18 +183,18 @@ export class AuthEffects {
           // If protected, navigate to home. If public, stay on page.
           const currentUrl = this.router.url;
           const isProtected = currentUrl.startsWith('/posts'); // Add other protected routes here
-          
+
           if (isProtected) {
             this.router.navigate(['/']);
           }
-          
+
           // Call logout API in background (fire and forget)
           this.authService.logout().subscribe({
-            error: (err: Error) => console.error('Logout API error:', err)
+            error: (err: Error) => console.error('Logout API error:', err),
           });
-        })
+        }),
       ),
-    { dispatch: false }
+    { dispatch: false },
   );
 
   // Remove logoutSuccess$ effect - no longer needed
@@ -199,10 +207,12 @@ export class AuthEffects {
         this.authService.refreshToken().pipe(
           map((user: AuthUser) => tokenActions.refreshTokenSuccess({ user })),
           catchError((error) =>
-            of(tokenActions.refreshTokenFailure({ error: error.message || 'Token refresh failed' }))
-          )
-        )
-      )
-    )
+            of(
+              tokenActions.refreshTokenFailure({ error: error.message || 'Token refresh failed' }),
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }

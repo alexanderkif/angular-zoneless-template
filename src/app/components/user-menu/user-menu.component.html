@@ -3,13 +3,13 @@
     <span class="user-menu__loader"></span>
   } @else {
     @if (userAvatar()) {
-      <img [src]="userAvatar()" [alt]="userName()" class="user-menu__avatar" />
+      <img [ngSrc]="userAvatar() || ''" [alt]="userName()" class="user-menu__avatar" width="40" height="40" priority />
     } @else {
       <span class="user-menu__avatar-placeholder">{{ userName().charAt(0).toUpperCase() }}</span>
     }
   }
 </button>
-@if(showMenu) {
+@if (showMenu) {
   <div class="user-menu__list" (click)="toggleMenu($event)">
     <div class="user-menu__name">{{ userName() }}</div>
     <ul>

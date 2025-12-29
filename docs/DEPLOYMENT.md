@@ -3,7 +3,9 @@
 ## Vercel Environment Variables
 
 ### Problem
+
 Vercel automatically overwrites certain environment variables:
+
 - `NODE_ENV` → always set to `production` in production
 - URL variables may not match your expectations
 
@@ -12,6 +14,7 @@ Vercel automatically overwrites certain environment variables:
 #### 1. Use `VERCEL_ENV` instead of `NODE_ENV`
 
 Vercel provides `VERCEL_ENV` which is **NOT overwritten**:
+
 ```typescript
 // ❌ BAD - Vercel overwrites this
 const isProduction = process.env.NODE_ENV === 'production';
@@ -24,6 +27,7 @@ const isLocal = !process.env.VERCEL; // true when running locally
 #### 2. Use Auto-Detection for URLs
 
 Vercel provides these **automatic** variables:
+
 - `VERCEL` - present when running on Vercel
 - `VERCEL_ENV` - `development` | `preview` | `production`
 - `VERCEL_URL` - current deployment URL (e.g., `your-app-xyz123.vercel.app`)
@@ -35,10 +39,9 @@ function getFrontendUrl(): string {
   if (!process.env.VERCEL) {
     return 'http://localhost:4200'; // Local development
   }
-  
+
   // On Vercel: use manual override or fall back to auto URL
-  return process.env.FRONTEND_URL 
-    || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  return process.env.FRONTEND_URL || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
 }
 ```
 
@@ -75,6 +78,7 @@ process.env.VERCEL_ENV === 'production'
 ## Testing Locally
 
 To test Vercel environment locally:
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -89,5 +93,6 @@ vercel dev
 ```
 
 ## References
+
 - [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables)
 - [System Environment Variables](https://vercel.com/docs/projects/environment-variables/system-environment-variables)

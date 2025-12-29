@@ -1,17 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { UserMenuComponent } from './user-menu.component';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { MockStore, provideMockStore } from '@ngrx/store/testing';
-import { selectUserName, selectUserAvatar, selectIsLoading } from '../../store/auth/auth.selectors';
-import { sessionActions } from '../../store/auth/auth.actions';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { MockStore, provideMockStore } from '@ngrx/store/testing';
+import { sessionActions } from '../../store/auth/auth.actions';
+import { selectUserName, selectUserAvatar, selectIsLoading } from '../../store/auth/auth.selectors';
+import { UserMenuComponent } from './user-menu.component';
 
 describe('UserMenuComponent', () => {
   let component: UserMenuComponent;
   let fixture: ComponentFixture<UserMenuComponent>;
   let store: MockStore;
   let dispatchSpy: ReturnType<typeof vi.spyOn>;
-  let router: { navigate: ReturnType<typeof vi.fn>, url: string };
+  let router: { navigate: ReturnType<typeof vi.fn>; url: string };
 
   beforeEach(async () => {
     router = { navigate: vi.fn(), url: '/current-url' };
@@ -22,7 +22,7 @@ describe('UserMenuComponent', () => {
         provideZonelessChangeDetection(),
         provideMockStore(),
         { provide: Router, useValue: router },
-      ]
+      ],
     }).compileComponents();
 
     store = TestBed.inject(MockStore);
@@ -69,7 +69,9 @@ describe('UserMenuComponent', () => {
 
     component.toggleMenu(mockEvent);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/current-url' } });
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/current-url' },
+    });
     expect(mockEvent.stopPropagation).toHaveBeenCalled();
   });
 

@@ -22,12 +22,14 @@ const registerSchema = z.object({
   name: z.string().min(2).max(100),
 });
 
-const resendSchema = z.object({
-  email: z.string().email().optional(),
-  token: z.string().optional(),
-}).refine(data => data.email || data.token, {
-  message: "Either email or token must be provided",
-});
+const resendSchema = z
+  .object({
+    email: z.string().email().optional(),
+    token: z.string().optional(),
+  })
+  .refine((data) => data.email || data.token, {
+    message: 'Either email or token must be provided',
+  });
 
 const cancelRegistrationSchema = z.object({
   token: z.string(),
@@ -61,38 +63,35 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
 
     // Check if user registered with OAuth
     if (user.provider !== 'email') {
-      return res.status(400).json({ 
-        error: `Please sign in with ${user.provider}` 
+      return res.status(400).json({
+        error: `Please sign in with ${user.provider}`,
       });
     }
 
     // Verify password with Argon2id
     const isValidPassword = await verifyPassword(user.password_hash, body.password);
-    
+
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Check email verification (only for email provider)
     if (!user.email_verified) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: 'Email not verified',
-        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+        message:
+          'Please verify your email before logging in. Check your inbox for the verification link.',
       });
     }
 
     // Generate tokens
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_ACCESS_EXPIRES_IN } as jwt.SignOptions
-    );
+    const accessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
+      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+    } as jwt.SignOptions);
 
-    const refreshToken = jwt.sign(
-      { userId: user.id, type: 'refresh' },
-      env.JWT_REFRESH_SECRET,
-      { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
-    );
+    const refreshToken = jwt.sign({ userId: user.id, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
+      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+    } as jwt.SignOptions);
 
     // Clean up old/expired sessions and enforce limit
     await cleanupAndLimitSessions(user.id, supabase);
@@ -104,10 +103,7 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
         token: refreshToken,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       }),
-      supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', user.id)
+      supabase.from('users').update({ last_login: new Date().toISOString() }).eq('id', user.id),
     ]);
 
     // Set httpOnly cookies with SameSite=Lax for better OAuth compatibility
@@ -125,7 +121,7 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
     }
@@ -208,7 +204,7 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Register error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
     }
@@ -229,12 +225,13 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
 
     // Delete refresh token from database (don't wait for it)
     if (refreshToken) {
-      supabase.from('refresh_tokens')
+      supabase
+        .from('refresh_tokens')
         .delete()
         .eq('token', refreshToken)
         .then(
           () => {}, // Success - ignore
-          (err: unknown) => console.error('Failed to delete token:', err)
+          (err: unknown) => console.error('Failed to delete token:', err),
         );
     }
 
@@ -307,17 +304,13 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     }
 
     // Generate new tokens (token rotation)
-    const newAccessToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_ACCESS_EXPIRES_IN } as jwt.SignOptions
-    );
+    const newAccessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
+      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+    } as jwt.SignOptions);
 
-    const newRefreshToken = jwt.sign(
-      { userId: user.id, type: 'refresh' },
-      env.JWT_REFRESH_SECRET,
-      { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
-    );
+    const newRefreshToken = jwt.sign({ userId: user.id, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
+      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+    } as jwt.SignOptions);
 
     // Delete old refresh token and store new one (rotation) in parallel
     await Promise.all([
@@ -326,7 +319,7 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
         user_id: user.id,
         token: newRefreshToken,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      })
+      }),
     ]);
 
     // Set new cookies
@@ -344,7 +337,7 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Refresh token error:', error);
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       // Clear invalid cookies
       res.setHeader('Set-Cookie', [
@@ -410,17 +403,13 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
     }
 
     // Generate tokens for automatic login
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_ACCESS_EXPIRES_IN } as jwt.SignOptions
-    );
+    const accessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
+      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+    } as jwt.SignOptions);
 
-    const refreshToken = jwt.sign(
-      { userId: user.id, type: 'refresh' },
-      env.JWT_REFRESH_SECRET,
-      { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
-    );
+    const refreshToken = jwt.sign({ userId: user.id, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
+      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+    } as jwt.SignOptions);
 
     // Clean up old sessions and enforce limit
     await cleanupAndLimitSessions(user.id, supabase);
@@ -476,7 +465,7 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
     const body = resendSchema.parse(req.body);
 
     let user;
-    
+
     if (body.token) {
       // Find user by verification token
       const { data, error } = await supabase
@@ -484,7 +473,7 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
         .select('id, email, name, email_verified, provider')
         .eq('verification_token', body.token)
         .single();
-        
+
       if (!error && data) {
         user = data;
       }
@@ -495,7 +484,7 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
         .select('id, email, name, email_verified, provider')
         .eq('email', body.email)
         .single();
-        
+
       if (!error && data) {
         user = data;
       }
@@ -515,8 +504,8 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
 
     // Only allow resend for email provider
     if (user.provider !== 'email') {
-      return res.status(400).json({ 
-        error: 'Email verification is only for email registrations' 
+      return res.status(400).json({
+        error: 'Email verification is only for email registrations',
       });
     }
 
@@ -582,7 +571,7 @@ async function handleCancelRegistration(req: VercelRequest, res: VercelResponse)
       .single();
 
     if (userError || !user) {
-      // If user not found, maybe already deleted or invalid token. 
+      // If user not found, maybe already deleted or invalid token.
       // Return success to not leak info.
       return res.status(200).json({ message: 'Registration cancelled.' });
     }
@@ -593,10 +582,7 @@ async function handleCancelRegistration(req: VercelRequest, res: VercelResponse)
     }
 
     // Delete user
-    const { error: deleteError } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', user.id);
+    const { error: deleteError } = await supabase.from('users').delete().eq('id', user.id);
 
     if (deleteError) {
       console.error('Delete user error:', deleteError);

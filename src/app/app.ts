@@ -9,11 +9,11 @@ import { selectIsLoading } from './store/auth/auth.selectors';
   selector: 'app-root',
   imports: [RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App {
   private store = inject(Store);
-  
+
   protected readonly title = signal('angular-test-app');
   protected readonly isAuthLoading = this.store.selectSignal(selectIsLoading);
 
@@ -24,8 +24,24 @@ export class App {
   ngOnInit(): void {
     console.log('AppComponent ngOnInit !');
   }
-  
+
+  ngOnChanges(): void {
+    console.log('AppComponent ngOnChanges !');
+  }
+
   ngDoCheck(): void {
     console.log('AppComponent ngDoCheck ===');
+  }
+
+  ngAfterViewInit(): void {
+    console.log('AppComponent ngAfterViewInit ***');
+  }
+
+  ngAfterContentInit(): void {
+    console.log('AppComponent ngAfterContentInit $$$');
+  }
+
+  ngOnDestroy(): void {
+    console.log('AppComponent ngOnDestroy ###');
   }
 }

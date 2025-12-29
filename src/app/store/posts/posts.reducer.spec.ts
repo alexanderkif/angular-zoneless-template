@@ -1,6 +1,6 @@
-import { postsFeature, PostState } from './posts.reducer';
-import { PostsApiActions, PostsUserActions } from './actions/';
 import { Post } from '../../services/post.service';
+import { PostsApiActions, PostsUserActions } from './actions/';
+import { postsFeature, PostState } from './posts.reducer';
 
 export const postsSlice: PostState = {
   posts: [],

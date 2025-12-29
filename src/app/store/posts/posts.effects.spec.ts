@@ -1,11 +1,11 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
+import { provideMockStore } from '@ngrx/store/testing';
 import { Observable, of, throwError, firstValueFrom } from 'rxjs';
-import { PostsEffects } from './posts.effects';
 import { PostService } from '../../services/post.service';
 import { PostsApiActions, PostsUserActions } from './actions/';
-import { provideZonelessChangeDetection } from '@angular/core';
-import { provideMockStore } from '@ngrx/store/testing';
+import { PostsEffects } from './posts.effects';
 
 describe('PostsEffects', () => {
   let actions$: Observable<any>;

@@ -1,14 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { PostComponent } from '../../components/post/post.component';
+
 import { Store } from '@ngrx/store';
+import { PostComponent } from '../../components/post/post.component';
 import { PostsUserActions } from '../../store/posts/actions';
 import { PostState, selectIsLoading, selectPosts } from '../../store/posts/posts.reducer';
 import { selectPostsLength } from '../../store/posts/posts.selector';
 
 @Component({
   selector: 'app-posts-list',
-  imports: [CommonModule, PostComponent],
+  imports: [PostComponent],
   templateUrl: './posts-list.component.html',
   styleUrl: './posts-list.component.css',
 })

@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { catchError, concatMap, map, of, withLatestFrom } from 'rxjs';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { catchError, concatMap, map, of, withLatestFrom } from 'rxjs';
 import { PostService } from '../../services/post.service';
 import { PostsApiActions, PostsUserActions } from './actions/';
-import { Store } from '@ngrx/store';
 import { selectLimit, selectOffset } from './posts.reducer';
 
 @Injectable()
@@ -20,10 +20,10 @@ export class PostsEffects {
         this.postService.getPosts(offset, limit).pipe(
           map((posts) => PostsApiActions.loadPostsSuccess({ posts })),
           catchError((error: { message: string }) =>
-            of(PostsApiActions.loadPostsFailure({ errorMsg: error.message }))
-          )
-        )
-      )
-    )
+            of(PostsApiActions.loadPostsFailure({ errorMsg: error.message })),
+          ),
+        ),
+      ),
+    ),
   );
 }

@@ -5,10 +5,10 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree } from '@angular/router';
-import { authGuard } from './auth-guard';
-import { of, throwError, firstValueFrom } from 'rxjs';
-import { selectIsAuthenticated, selectSessionChecked } from '../store/auth/auth.selectors';
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
+import { throwError, firstValueFrom } from 'rxjs';
+import { selectIsAuthenticated, selectSessionChecked } from '../store/auth/auth.selectors';
+import { authGuard } from './auth-guard';
 
 describe('authGuard', () => {
   let router: { createUrlTree: ReturnType<typeof vi.fn> };
@@ -34,8 +34,10 @@ describe('authGuard', () => {
     store.overrideSelector(selectSessionChecked, true);
     store.overrideSelector(selectIsAuthenticated, true);
 
-    const result$ = runInInjectionContext(injector, () => authGuard({} as any, { url: '/protected' } as any));
-    
+    const result$ = runInInjectionContext(injector, () =>
+      authGuard({} as any, { url: '/protected' } as any),
+    );
+
     const result = await firstValueFrom(result$ as any);
     expect(result).toBe(true);
   });
@@ -46,12 +48,16 @@ describe('authGuard', () => {
     store.overrideSelector(selectSessionChecked, true);
     store.overrideSelector(selectIsAuthenticated, false);
 
-    const result$ = runInInjectionContext(injector, () => authGuard({} as any, { url: '/protected' } as any));
+    const result$ = runInInjectionContext(injector, () =>
+      authGuard({} as any, { url: '/protected' } as any),
+    );
 
     const result = await firstValueFrom(result$ as any);
 
     expect(result).toBe(urlTree);
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/protected' } });
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/protected' },
+    });
   });
 
   it('should redirect to login on error', async () => {
@@ -60,16 +66,20 @@ describe('authGuard', () => {
     store.overrideSelector(selectSessionChecked, true);
     // Simulate error in selector
     vi.spyOn(store, 'select').mockReturnValue(throwError(() => new Error('Error')));
-    
+
     // Suppress console.error for this test
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const result$ = runInInjectionContext(injector, () => authGuard({} as any, { url: '/protected' } as any));
+    const result$ = runInInjectionContext(injector, () =>
+      authGuard({} as any, { url: '/protected' } as any),
+    );
 
     const result = await firstValueFrom(result$ as any);
 
     expect(result).toBe(urlTree);
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/protected' } });
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/protected' },
+    });
     expect(consoleSpy).toHaveBeenCalledWith('Auth guard timeout - redirecting to login');
   });
 });

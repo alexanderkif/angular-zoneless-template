@@ -1,11 +1,11 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PostsListComponent } from './posts-list.component';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
 import { PostsUserActions } from '../../store/posts/actions';
 import { PostState } from '../../store/posts/posts.reducer';
 import { selectPosts, selectIsLoading } from '../../store/posts/posts.reducer';
 import { selectPostsLength } from '../../store/posts/posts.selector';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { PostsListComponent } from './posts-list.component';
 
 describe('PostsListComponent', () => {
   let component: PostsListComponent;
@@ -16,10 +16,7 @@ describe('PostsListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PostsListComponent],
-      providers: [
-        provideZonelessChangeDetection(),
-        provideMockStore(),
-      ]
+      providers: [provideZonelessChangeDetection(), provideMockStore()],
     }).compileComponents();
 
     store = TestBed.inject(MockStore);

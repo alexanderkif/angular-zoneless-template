@@ -1,15 +1,15 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { Store } from '@ngrx/store';
 import { AuthService } from '../../services/auth.service';
 import { loginActions } from '../../store/auth/auth.actions';
 
 @Component({
   selector: 'app-verify-email',
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './verify-email.html',
-  styleUrl: './verify-email.css'
+  styleUrl: './verify-email.css',
 })
 export class VerifyEmailComponent implements OnInit {
   status = signal<'loading' | 'success' | 'error'>('loading');
@@ -34,10 +34,10 @@ export class VerifyEmailComponent implements OnInit {
       next: (response) => {
         this.status.set('success');
         this.message.set(response.message || 'Email verified successfully!');
-        
+
         // Update store with logged in user
         this.store.dispatch(loginActions.loginSuccess({ user: response.user }));
-        
+
         // Redirect to home after 2 seconds
         setTimeout(() => {
           this.router.navigate(['/']);
@@ -46,7 +46,7 @@ export class VerifyEmailComponent implements OnInit {
       error: (error) => {
         this.status.set('error');
         this.message.set(error.message || 'Failed to verify email');
-      }
+      },
     });
   }
 
@@ -66,15 +66,18 @@ export class VerifyEmailComponent implements OnInit {
       },
       error: (error) => {
         this.message.set(error.message || 'Failed to resend verification link');
-      }
+      },
     });
   }
 
   cancelRegistration() {
     const token = this.route.snapshot.queryParamMap.get('token');
-    if (!token) return;
-
-    if (!confirm('Are you sure you want to cancel your registration? This will delete your account.')) {
+    if (!token) {
+      return;
+    }
+    if (
+      !confirm('Are you sure you want to cancel your registration? This will delete your account.')
+    ) {
       return;
     }
 
@@ -92,7 +95,7 @@ export class VerifyEmailComponent implements OnInit {
       error: (error) => {
         this.status.set('error');
         this.message.set(error.message || 'Failed to cancel registration');
-      }
+      },
     });
   }
 }

@@ -3,6 +3,7 @@
 ## Overview
 
 This project uses a secure, stateless authentication system based on JWTs (JSON Web Tokens) and HttpOnly cookies. It supports:
+
 - Email/Password Login
 - OAuth (GitHub, Google)
 - Multi-device sessions (up to 5)
@@ -16,22 +17,24 @@ This project uses a secure, stateless authentication system based on JWTs (JSON 
 **Default:** Up to 5 concurrent sessions per user.
 
 Change in [api/lib/session-manager.ts](../api/lib/session-manager.ts):
+
 ```typescript
 const MAX_ACTIVE_SESSIONS = 5; // Modify this value
 ```
 
 ### Recommended Limits
 
-| Use Case | Limit | Rationale |
-|----------|-------|-----------|
-| **Consumer Apps** | 5-10 | Multiple devices (phone, laptop, tablet, work PC) |
-| **Enterprise Apps** | 1-3 | Higher security requirements |
-| **Banking Apps** | 1 | Maximum security, single session only |
-| **SaaS Apps** | 5-7 | Balance between UX and security |
+| Use Case            | Limit | Rationale                                         |
+| ------------------- | ----- | ------------------------------------------------- |
+| **Consumer Apps**   | 5-10  | Multiple devices (phone, laptop, tablet, work PC) |
+| **Enterprise Apps** | 1-3   | Higher security requirements                      |
+| **Banking Apps**    | 1     | Maximum security, single session only             |
+| **SaaS Apps**       | 5-7   | Balance between UX and security                   |
 
 ### How It Works
 
 #### On Login
+
 1. Generate JWT tokens (15m access, 7d refresh)
 2. Clean up expired tokens
 3. Delete oldest session if limit exceeded
@@ -39,12 +42,14 @@ const MAX_ACTIVE_SESSIONS = 5; // Modify this value
 5. Set HttpOnly cookies
 
 #### On Token Refresh
+
 1. Verify old refresh token
 2. Generate new tokens
 3. Delete old token, insert new one
 4. Return new tokens in cookies
 
 #### On Logout
+
 1. Delete refresh token (fire-and-forget)
 2. Clear cookies immediately
 3. Return success
@@ -57,7 +62,7 @@ const MAX_ACTIVE_SESSIONS = 5; // Modify this value
 ✅ **Rate Limiting** - 5 login attempts per minute  
 ✅ **Argon2id** - Modern password hashing (OWASP 2024-2025)  
 ✅ **Auto Cleanup** - Expired tokens deleted automatically  
-✅ **Device Limit** - Max 5 concurrent sessions  
+✅ **Device Limit** - Max 5 concurrent sessions
 
 ## Error Handling
 
@@ -82,6 +87,7 @@ GET http://localhost:3000/api/user/me 401 (Unauthorized)
 ### Silent Failure
 
 The auth service and interceptors are configured to handle these 401 errors silently:
+
 - ✅ **No console.error** for expected 401s
 - ✅ **No Redux action** dispatch for missing tokens
 - ✅ **Clean state** - user stays in logged-out state

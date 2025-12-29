@@ -32,7 +32,9 @@ test.describe('App Navigation', () => {
     await page.goto(URL);
     await page.getByRole('link', { name: 'Home' }).click();
     await expect(page).toHaveURL(URL);
-    await expect(page.getByRole('heading', { name: 'Welcome to Angular Zoneless Template' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Welcome to Angular 21 Zoneless Template' }),
+    ).toBeVisible();
   });
 
   test('should navigate to About page', async ({ page }) => {
@@ -48,7 +50,7 @@ test.describe('App Navigation', () => {
     await expect(page).toHaveURL(`${URL}posts`);
 
     await page.waitForResponse(
-      (response) => response.url().includes('/posts?_limit=') && response.status() === 200
+      (response) => response.url().includes('/posts?_limit=') && response.status() === 200,
     );
 
     await expect(page.getByRole('heading').first()).toBeVisible();

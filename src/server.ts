@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { join } from 'node:path';
 import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
@@ -5,8 +7,6 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import { join } from 'node:path';
-import { AsyncLocalStorage } from 'node:async_hooks';
 
 // Use AsyncLocalStorage to share request context without relying on DI
 // This is more robust for SSR when bundles are separated
@@ -49,9 +49,7 @@ app.use((req, res, next) => {
   requestStorage.run(req, () => {
     angularApp
       .handle(req)
-      .then((response) =>
-        response ? writeResponseToNodeResponse(response, res) : next(),
-      )
+      .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
       .catch(next);
   });
 });

@@ -1,10 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { PanelComponent } from './panel.component';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { provideMockStore } from '@ngrx/store/testing';
+import { PanelComponent } from './panel.component';
 
 describe('PanelComponent', () => {
   let component: PanelComponent;
@@ -18,7 +17,7 @@ describe('PanelComponent', () => {
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
         { provide: HttpClient, useValue: {} },
         provideMockStore({ initialState: {} }),
-      ]
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PanelComponent);

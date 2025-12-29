@@ -28,7 +28,7 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
           switchMap((user) => {
             isRefreshing = false;
             store.dispatch(tokenActions.refreshTokenSuccess({ user }));
-            
+
             // Retry original request
             return next(req);
           }),
@@ -40,11 +40,11 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
               store.dispatch(tokenActions.refreshTokenFailure({ error: 'Session expired' }));
             }
             return throwError(() => refreshError);
-          })
+          }),
         );
       }
 
       return throwError(() => error);
-    })
+    }),
   );
 };

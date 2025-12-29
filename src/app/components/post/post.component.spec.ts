@@ -1,7 +1,7 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { PostComponent } from './post.component';
-import { provideZonelessChangeDetection } from '@angular/core';
 
 describe('PostComponent', () => {
   let component: PostComponent;
@@ -13,7 +13,7 @@ describe('PostComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [PostComponent],
-      providers: [provideZonelessChangeDetection(), { provide: Router, useValue: routerSpy }]
+      providers: [provideZonelessChangeDetection(), { provide: Router, useValue: routerSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PostComponent);

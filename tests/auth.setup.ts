@@ -45,7 +45,7 @@ setup('authenticate', async ({ page }) => {
   ]);
 
   await page.goto(URL);
-  
+
   // Verify we are logged in (Posts link enabled)
   await expect(page.getByRole('link', { name: 'Posts' })).not.toHaveClass('disabled-link');
   await page.context().storageState({ path: authFile });

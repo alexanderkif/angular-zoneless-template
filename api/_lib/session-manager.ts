@@ -8,10 +8,7 @@ const MAX_ACTIVE_SESSIONS = 5;
  * @param userId - User ID
  * @param supabaseClient - Optional Supabase client (if not provided, creates new one)
  */
-export async function cleanupAndLimitSessions(
-  userId: string,
-  supabaseClient?: any
-): Promise<void> {
+export async function cleanupAndLimitSessions(userId: string, supabaseClient?: any): Promise<void> {
   const env = getEnv();
   const supabase = supabaseClient || createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -29,7 +26,10 @@ export async function cleanupAndLimitSessions(
     await supabase
       .from('refresh_tokens')
       .delete()
-      .in('id', tokensToDelete.map((t: any) => t.id));
+      .in(
+        'id',
+        tokensToDelete.map((t: any) => t.id),
+      );
   }
 
   // Clean up expired tokens (don't await, fire-and-forget)
@@ -63,8 +63,5 @@ export async function revokeAllSessions(userId: string): Promise<void> {
   const env = getEnv();
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-  await supabase
-    .from('refresh_tokens')
-    .delete()
-    .eq('user_id', userId);
+  await supabase.from('refresh_tokens').delete().eq('user_id', userId);
 }

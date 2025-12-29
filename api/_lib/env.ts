@@ -66,19 +66,21 @@ export function getFrontendUrl(): string {
   if (isLocal()) {
     return 'http://localhost:4200';
   }
-  
+
   const env = getEnv();
-  return env.FRONTEND_URL 
-    || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
-    || (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : '')
-    || 'http://localhost:4200';
+  return (
+    env.FRONTEND_URL ||
+    (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+    (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : '') ||
+    'http://localhost:4200'
+  );
 }
 
 export function getApiUrl(): string {
   if (isLocal()) {
     return 'http://localhost:3000';
   }
-  
+
   const env = getEnv();
 
   // 1. Explicit override (Best Practice: Set this in Vercel for Production)

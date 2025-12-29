@@ -1,5 +1,4 @@
 import { selectPostsLength } from './posts.selector';
-import { PostState } from './posts.reducer';
 
 describe('Posts Selectors', () => {
   it('should select the length of posts', () => {
