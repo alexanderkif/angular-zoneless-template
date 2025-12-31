@@ -11,13 +11,25 @@
     { "source": "/api/auth/logout", "destination": "/api/auth?action=logout" },
     { "source": "/api/auth/refresh", "destination": "/api/auth?action=refresh" },
     { "source": "/api/auth/verify-email", "destination": "/api/auth?action=verify-email" },
-    { "source": "/api/auth/resend-verification", "destination": "/api/auth?action=resend-verification" },
-    { "source": "/api/auth/cancel-registration", "destination": "/api/auth?action=cancel-registration" },
-    
+    {
+      "source": "/api/auth/resend-verification",
+      "destination": "/api/auth?action=resend-verification"
+    },
+    {
+      "source": "/api/auth/cancel-registration",
+      "destination": "/api/auth?action=cancel-registration"
+    },
+
     { "source": "/api/auth/github", "destination": "/api/auth/oauth?action=github" },
     { "source": "/api/auth/google", "destination": "/api/auth/oauth?action=google" },
-    { "source": "/api/auth/callback-github", "destination": "/api/auth/oauth?action=callback-github" },
-    { "source": "/api/auth/callback-google", "destination": "/api/auth/oauth?action=callback-google" },
+    {
+      "source": "/api/auth/callback-github",
+      "destination": "/api/auth/oauth?action=callback-github"
+    },
+    {
+      "source": "/api/auth/callback-google",
+      "destination": "/api/auth/oauth?action=callback-google"
+    },
 
     { "source": "/api/user/me", "destination": "/api/user?action=me" },
     { "source": "/api/user/sessions", "destination": "/api/user?action=sessions" },

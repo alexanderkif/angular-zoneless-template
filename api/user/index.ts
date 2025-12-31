@@ -41,7 +41,7 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ user });
   } catch (error) {
     console.error('Get user error:', error);
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({ error: 'Invalid token' });
     }
@@ -91,12 +91,13 @@ async function handleSessions(req: VercelRequest, res: VercelResponse) {
     }
 
     return res.status(200).json({
-      sessions: sessions?.map(s => ({
-        id: s.id,
-        createdAt: s.created_at,
-        expiresAt: s.expires_at,
-        isCurrent: false, // We can't reliably detect current session without storing token hash
-      })) || [],
+      sessions:
+        sessions?.map((s) => ({
+          id: s.id,
+          createdAt: s.created_at,
+          expiresAt: s.expires_at,
+          isCurrent: false, // We can't reliably detect current session without storing token hash
+        })) || [],
       total: sessions?.length || 0,
     });
   } catch (error) {

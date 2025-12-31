@@ -1,6 +1,6 @@
-import { Injectable, inject, PLATFORM_ID, isDevMode } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject, PLATFORM_ID, isDevMode } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AuthUser } from '../store/auth/auth.actions';
@@ -20,12 +20,16 @@ export class AuthService {
    */
   login(email: string, password: string): Observable<AuthUser> {
     return this.http
-      .post<{ user: AuthUser }>(`${this.apiUrl}/auth/login`, { email, password }, {
-        withCredentials: true,
-      })
+      .post<{ user: AuthUser }>(
+        `${this.apiUrl}/auth/login`,
+        { email, password },
+        {
+          withCredentials: true,
+        },
+      )
       .pipe(
         map((response) => response.user),
-        catchError(this.handleError)
+        catchError(this.handleError),
       );
   }
 
@@ -34,14 +38,12 @@ export class AuthService {
    */
   register(email: string, password: string, name: string): Observable<AuthUser> {
     return this.http
-      .post<{ user: AuthUser }>(
-        `${this.apiUrl}/auth/register`,
-        { email, password, name },
-        { withCredentials: true }
-      )
+      .post<{
+        user: AuthUser;
+      }>(`${this.apiUrl}/auth/register`, { email, password, name }, { withCredentials: true })
       .pipe(
         map((response) => response.user),
-        catchError(this.handleError)
+        catchError(this.handleError),
       );
   }
 
@@ -61,7 +63,7 @@ export class AuthService {
             console.error('Get current user error:', error);
           }
           return throwError(() => new Error('Not authenticated'));
-        })
+        }),
       );
   }
 
@@ -70,9 +72,13 @@ export class AuthService {
    */
   refreshToken(): Observable<AuthUser> {
     return this.http
-      .post<{ user: AuthUser }>(`${this.apiUrl}/auth/refresh`, {}, {
-        withCredentials: true,
-      })
+      .post<{ user: AuthUser }>(
+        `${this.apiUrl}/auth/refresh`,
+        {},
+        {
+          withCredentials: true,
+        },
+      )
       .pipe(
         map((response) => response.user),
         catchError((error) => {
@@ -81,7 +87,7 @@ export class AuthService {
             console.error('Token refresh error:', error);
           }
           return throwError(() => new Error('Session expired'));
-        })
+        }),
       );
   }
 
@@ -90,9 +96,13 @@ export class AuthService {
    */
   logout(): Observable<void> {
     return this.http
-      .post<void>(`${this.apiUrl}/auth/logout`, {}, {
-        withCredentials: true,
-      })
+      .post<void>(
+        `${this.apiUrl}/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+        },
+      )
       .pipe(catchError(this.handleError));
   }
 
@@ -101,10 +111,10 @@ export class AuthService {
    */
   verifyEmail(token: string): Observable<{ message: string; user: AuthUser }> {
     return this.http
-      .get<{ message: string; user: AuthUser }>(
-        `${this.apiUrl}/auth/verify-email?token=${token}`,
-        { withCredentials: true }
-      )
+      .get<{
+        message: string;
+        user: AuthUser;
+      }>(`${this.apiUrl}/auth/verify-email?token=${token}`, { withCredentials: true })
       .pipe(catchError(this.handleError));
   }
 
@@ -113,11 +123,9 @@ export class AuthService {
    */
   resendVerification(email: string): Observable<{ message: string }> {
     return this.http
-      .post<{ message: string }>(
-        `${this.apiUrl}/auth/resend-verification`,
-        { email },
-        { withCredentials: true }
-      )
+      .post<{
+        message: string;
+      }>(`${this.apiUrl}/auth/resend-verification`, { email }, { withCredentials: true })
       .pipe(catchError(this.handleError));
   }
 
@@ -126,11 +134,9 @@ export class AuthService {
    */
   resendVerificationByToken(token: string): Observable<{ message: string }> {
     return this.http
-      .post<{ message: string }>(
-        `${this.apiUrl}/auth/resend-verification`,
-        { token },
-        { withCredentials: true }
-      )
+      .post<{
+        message: string;
+      }>(`${this.apiUrl}/auth/resend-verification`, { token }, { withCredentials: true })
       .pipe(catchError(this.handleError));
   }
 
@@ -139,11 +145,9 @@ export class AuthService {
    */
   cancelRegistration(token: string): Observable<{ message: string }> {
     return this.http
-      .post<{ message: string }>(
-        `${this.apiUrl}/auth/cancel-registration`,
-        { token },
-        { withCredentials: true }
-      )
+      .post<{
+        message: string;
+      }>(`${this.apiUrl}/auth/cancel-registration`, { token }, { withCredentials: true })
       .pipe(catchError(this.handleError));
   }
 
@@ -170,18 +174,22 @@ export class AuthService {
   private handleError(error: any): Observable<never> {
     console.error('Auth service error:', error);
     let message = 'An error occurred';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       message = error.error.message;
-    } else if (error.error && typeof error.error === 'object' && Object.keys(error.error).length > 0) {
+    } else if (
+      error.error &&
+      typeof error.error === 'object' &&
+      Object.keys(error.error).length > 0
+    ) {
       // Server-side error with JSON body
       message = error.error.error || error.error.message || JSON.stringify(error.error);
     } else if (error.message) {
       // Generic HTTP error message or JS Error
       message = error.message;
     }
-    
+
     // Ensure message is a string
     if (typeof message !== 'string') {
       message = 'An unexpected error occurred';

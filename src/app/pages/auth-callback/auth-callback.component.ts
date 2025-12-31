@@ -17,19 +17,23 @@ export class AuthCallbackComponent implements OnInit {
     // Check for errors in query params
     this.route.queryParams.subscribe((params) => {
       if (params['error']) {
-        this.store.dispatch(oauthActions.oAuthFailure({ 
-          error: this.getErrorMessage(params['error']) 
-        }));
+        this.store.dispatch(
+          oauthActions.oAuthFailure({
+            error: this.getErrorMessage(params['error']),
+          }),
+        );
         this.router.navigate(['/login']);
         return;
       }
 
       // OAuth successful - cookies are set by backend
       // Just dispatch success and redirect
-      this.store.dispatch(oauthActions.oAuthSuccess({ 
-        user: { id: '', email: '', name: '' } // Will be loaded by session check
-      }));
-      
+      this.store.dispatch(
+        oauthActions.oAuthSuccess({
+          user: { id: '', email: '', name: '' }, // Will be loaded by session check
+        }),
+      );
+
       // Redirect to home after short delay
       setTimeout(() => {
         this.router.navigate(['/']);
@@ -39,11 +43,11 @@ export class AuthCallbackComponent implements OnInit {
 
   private getErrorMessage(error: string): string {
     const errorMessages: Record<string, string> = {
-      'no_code': 'No authorization code received',
-      'token_exchange_failed': 'Failed to exchange authorization code',
-      'no_user_info': 'Failed to get user information',
-      'user_creation_failed': 'Failed to create user account',
-      'auth_failed': 'Authentication failed',
+      no_code: 'No authorization code received',
+      token_exchange_failed: 'Failed to exchange authorization code',
+      no_user_info: 'Failed to get user information',
+      user_creation_failed: 'Failed to create user account',
+      auth_failed: 'Authentication failed',
     };
 
     return errorMessages[error] || 'An error occurred during authentication';

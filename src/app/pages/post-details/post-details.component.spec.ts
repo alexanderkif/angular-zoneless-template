@@ -1,10 +1,10 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PostDetailsComponent } from './post-details.component';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
-import { PostService } from '../../services/post.service';
-import { provideZonelessChangeDetection } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { PostService } from '../../services/post.service';
+import { PostDetailsComponent } from './post-details.component';
 
 describe('PostDetailsComponent', () => {
   let component: PostDetailsComponent;
@@ -18,17 +18,16 @@ describe('PostDetailsComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            paramMap: of({ get: (key: string) => '1' }),
+            paramMap: of({ get: () => '1' }),
           },
         },
         {
           provide: PostService,
           useValue: {
-            getPost: (id: string) =>
-              of({ id: 1, title: 'Test', body: 'Body', userId: 1 }),
+            getPost: () => of({ id: 1, title: 'Test', body: 'Body', userId: 1 }),
           },
         },
-      ]
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PostDetailsComponent);

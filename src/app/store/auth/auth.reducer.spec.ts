@@ -1,5 +1,11 @@
+import {
+  loginActions,
+  registerActions,
+  oauthActions,
+  sessionActions,
+  tokenActions,
+} from './auth.actions';
 import { authReducer, AuthState } from './auth.reducer';
-import { loginActions, registerActions, oauthActions, sessionActions, tokenActions } from './auth.actions';
 
 describe('AuthReducer', () => {
   const initialState: AuthState = {
@@ -45,7 +51,11 @@ describe('AuthReducer', () => {
 
   // Register
   it('should set loading on register', () => {
-    const action = registerActions.register({ email: 'test@example.com', password: 'password', name: 'Test' });
+    const action = registerActions.register({
+      email: 'test@example.com',
+      password: 'password',
+      name: 'Test',
+    });
     const state = authReducer(initialState, action);
     expect(state.isLoading).toBe(true);
     expect(state.error).toBeNull();
@@ -138,7 +148,7 @@ describe('AuthReducer', () => {
       user: { id: '1', email: 'test@example.com', name: 'Test' },
       isAuthenticated: true,
       sessionChecked: true,
-      isLoading: false
+      isLoading: false,
     };
     const action = sessionActions.logout();
     const state = authReducer(loggedInState, action);

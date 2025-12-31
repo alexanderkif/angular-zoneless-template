@@ -1,8 +1,8 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { PostService, Post } from '../../services/post.service';
 import { Observable, switchMap } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { PostService, Post } from '../../services/post.service';
 
 @Component({
   selector: 'app-post-details',
@@ -15,12 +15,12 @@ export class PostDetailsComponent {
 
   constructor(
     public actRoute: ActivatedRoute,
-    private postService: PostService
+    private postService: PostService,
   ) {}
 
   ngOnInit(): void {
     this.post$ = this.actRoute.paramMap.pipe(
-      switchMap((params) => this.postService.getPost(params.get('id')))
+      switchMap((params) => this.postService.getPost(params.get('id'))),
     );
   }
 }

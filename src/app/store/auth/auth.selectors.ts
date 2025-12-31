@@ -8,22 +8,13 @@ export const selectIsLoading = authFeature.selectIsLoading;
 export const selectSessionChecked = authFeature.selectSessionChecked;
 export const selectError = authFeature.selectError;
 
-export const selectUserName = createSelector(
-  selectUser,
-  (user) => user?.name || 'Guest'
-);
+export const selectUserName = createSelector(selectUser, (user) => user?.name || 'Guest');
 
-export const selectUserEmail = createSelector(
-  selectUser,
-  (user) => user?.email || ''
-);
+export const selectUserEmail = createSelector(selectUser, (user) => user?.email || '');
 
-export const selectUserAvatar = createSelector(
-  selectUser,
-  (user) => user?.avatar_url || null
-);
+export const selectUserAvatar = createSelector(selectUser, (user) => user?.avatar_url || null);
 
 export const selectIsEmailProvider = createSelector(
   selectUser,
-  (user) => user?.provider === 'email' || !user?.provider
+  (user) => user?.provider === 'email' || !user?.provider,
 );

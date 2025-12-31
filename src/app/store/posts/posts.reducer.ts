@@ -1,6 +1,6 @@
 import { createFeature, createReducer, on } from '@ngrx/store';
-import { PostsApiActions, PostsUserActions } from './actions/';
 import { Post } from '../../services/post.service';
+import { PostsApiActions, PostsUserActions } from './actions/';
 
 export type PostState = {
   posts: Post[];
@@ -39,7 +39,7 @@ const postsReducer = createReducer(
     offset: 0,
     isLoading: false,
     error: '',
-  }))
+  })),
 );
 
 export const postsFeature = createFeature({
@@ -47,4 +47,5 @@ export const postsFeature = createFeature({
   reducer: postsReducer,
 });
 
-export const { selectPosts, selectError, selectIsLoading, selectOffset, selectLimit } = postsFeature;
+export const { selectPosts, selectError, selectIsLoading, selectOffset, selectLimit } =
+  postsFeature;

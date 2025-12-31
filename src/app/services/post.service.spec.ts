@@ -1,10 +1,9 @@
-import { TestBed } from '@angular/core/testing';
-
-import { PostService, Post } from './post.service';
 import { HttpClient } from '@angular/common/http';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { getRandomInt } from '../utils/utils';
+import { PostService, Post } from './post.service';
 
 describe('PostService', () => {
   let service: PostService;
@@ -23,9 +22,7 @@ describe('PostService', () => {
       get: vi.fn((url: string): Observable<Post | Post[] | null> => {
         if (url.includes('/posts/')) {
           const id = url.split('/posts/')[1] || null;
-          return id
-            ? of(mockPosts.find((post) => post.id.toString() === id) || null)
-            : of(null);
+          return id ? of(mockPosts.find((post) => post.id.toString() === id) || null) : of(null);
         }
         if (url.includes('/posts?_limit=')) {
           const limit = +url.split('/posts?_limit=')[1].split('&')[0];

@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { provideEffects } from '@ngrx/effects';
 import { provideState } from '@ngrx/store';
-import { PostsEffects } from './store/posts/posts.effects';
-import { postsFeature } from './store/posts/posts.reducer';
 import { authGuard } from './guards/auth-guard';
 import { publicGuard } from './guards/public.guard';
+import { PostsEffects } from './store/posts/posts.effects';
+import { postsFeature } from './store/posts/posts.reducer';
 
 export const routes: Routes = [
   {
@@ -21,9 +21,7 @@ export const routes: Routes = [
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('./pages/auth-callback/auth-callback.component').then(
-        (m) => m.AuthCallbackComponent
-      ),
+      import('./pages/auth-callback/auth-callback.component').then((m) => m.AuthCallbackComponent),
   },
   {
     path: 'verify-email',
@@ -57,7 +55,7 @@ export const routes: Routes = [
     path: '**',
     loadComponent: () =>
       import('./pages/page-not-found/page-not-found.component').then(
-        (m) => m.PageNotFoundComponent
+        (m) => m.PageNotFoundComponent,
       ),
   },
 ];

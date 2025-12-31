@@ -1,11 +1,11 @@
+import { PLATFORM_ID, TransferState, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Observable, of, throwError, firstValueFrom } from 'rxjs';
-import { AuthEffects } from './auth.effects';
 import { AuthService } from '../../services/auth.service';
-import { Router } from '@angular/router';
 import { sessionActions } from './auth.actions';
-import { PLATFORM_ID, TransferState, makeStateKey, provideZonelessChangeDetection } from '@angular/core';
+import { AuthEffects } from './auth.effects';
 
 describe('AuthEffects (Server)', () => {
   let actions$: Observable<any>;
@@ -16,21 +16,21 @@ describe('AuthEffects (Server)', () => {
 
   beforeEach(() => {
     authServiceMock = {
-      getCurrentUser: vi.fn()
+      getCurrentUser: vi.fn(),
     };
 
     routerMock = {
       navigateByUrl: vi.fn(),
       navigate: vi.fn(),
       parseUrl: vi.fn(),
-      url: '/'
+      url: '/',
     };
 
     transferStateMock = {
       hasKey: vi.fn(),
       get: vi.fn(),
       remove: vi.fn(),
-      set: vi.fn()
+      set: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -41,8 +41,8 @@ describe('AuthEffects (Server)', () => {
         { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: TransferState, useValue: transferStateMock },
-        { provide: PLATFORM_ID, useValue: 'server' }
-      ]
+        { provide: PLATFORM_ID, useValue: 'server' },
+      ],
     });
 
     effects = TestBed.inject(AuthEffects);
@@ -56,7 +56,7 @@ describe('AuthEffects (Server)', () => {
 
       // Mock globalThis.requestStorage
       (globalThis as any).requestStorage = {
-        getStore: vi.fn().mockReturnValue(null)
+        getStore: vi.fn().mockReturnValue(null),
       };
 
       const result = await firstValueFrom(effects.checkSession$);
@@ -71,7 +71,7 @@ describe('AuthEffects (Server)', () => {
       actions$ = of(action);
 
       (globalThis as any).requestStorage = {
-        getStore: vi.fn().mockReturnValue({ headers: { cookie: 'session=123' } })
+        getStore: vi.fn().mockReturnValue({ headers: { cookie: 'session=123' } }),
       };
       authServiceMock.getCurrentUser.mockReturnValue(of(user));
 
@@ -86,7 +86,7 @@ describe('AuthEffects (Server)', () => {
       actions$ = of(action);
 
       (globalThis as any).requestStorage = {
-        getStore: vi.fn().mockReturnValue({ headers: { cookie: 'session=123' } })
+        getStore: vi.fn().mockReturnValue({ headers: { cookie: 'session=123' } }),
       };
       authServiceMock.getCurrentUser.mockReturnValue(throwError(() => new Error('Error')));
 

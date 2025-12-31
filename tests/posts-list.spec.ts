@@ -55,7 +55,7 @@ test.describe('Posts list page', () => {
     await expect(page).toHaveURL(URL);
 
     await expect(page.locator('app-post')).toHaveCount(3);
-    
+
     // Click Load More
     await page.getByRole('button', { name: 'Load More' }).click();
     await expect(page.locator('app-post')).toHaveCount(6);

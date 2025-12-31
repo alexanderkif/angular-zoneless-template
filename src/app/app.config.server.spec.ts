@@ -17,7 +17,7 @@ describe('app.config.server', () => {
 
   it('should include server rendering provider', () => {
     const hasServerProvider = config.providers!.some(
-      (provider) => provider !== null && typeof provider === 'object'
+      (provider) => provider !== null && typeof provider === 'object',
     );
     expect(hasServerProvider).toBe(true);
   });

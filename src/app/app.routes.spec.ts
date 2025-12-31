@@ -1,12 +1,12 @@
 import { routes } from './app.routes';
-import { PostsListComponent } from './pages/posts-list/posts-list.component';
-import { PostDetailsComponent } from './pages/post-details/post-details.component';
 import { AboutComponent } from './pages/about/about.component';
-import { HomeComponent } from './pages/home/home.component';
-import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
-import { LoginComponent } from './pages/login/login.component';
-import { RegisterComponent } from './pages/register/register.component';
 import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component';
+import { HomeComponent } from './pages/home/home.component';
+import { LoginComponent } from './pages/login/login.component';
+import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
+import { PostDetailsComponent } from './pages/post-details/post-details.component';
+import { PostsListComponent } from './pages/posts-list/posts-list.component';
+import { RegisterComponent } from './pages/register/register.component';
 import { VerifyEmailComponent } from './pages/verify-email/verify-email';
 
 describe('app.routes', () => {
@@ -62,7 +62,7 @@ describe('app.routes', () => {
   it('should protect posts routes with authGuard', () => {
     const postsRoute = routes.find((r) => r.path === 'posts');
     const postDetailsRoute = routes.find((r) => r.path === 'posts/:id');
-    
+
     expect(postsRoute?.canActivate).toBeDefined();
     expect(postsRoute?.canActivate?.length).toBe(1);
     expect(postDetailsRoute?.canActivate).toBeDefined();
@@ -79,7 +79,7 @@ describe('app.routes', () => {
   it('should load PostsListComponent via lazy loading', async () => {
     const postsRoute = routes.find((r) => r.path === 'posts');
     const loadComponent = postsRoute?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -90,7 +90,7 @@ describe('app.routes', () => {
   it('should load PostDetailsComponent via lazy loading', async () => {
     const postDetailsRoute = routes.find((r) => r.path === 'posts/:id');
     const loadComponent = postDetailsRoute?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -101,7 +101,7 @@ describe('app.routes', () => {
   it('should load AboutComponent via lazy loading', async () => {
     const aboutRoute = routes.find((r) => r.path === 'about');
     const loadComponent = aboutRoute?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -112,7 +112,7 @@ describe('app.routes', () => {
   it('should load HomeComponent via lazy loading', async () => {
     const homeRoute = routes.find((r) => r.path === '');
     const loadComponent = homeRoute?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -123,7 +123,7 @@ describe('app.routes', () => {
   it('should load PageNotFoundComponent via lazy loading', async () => {
     const wildcardRoute = routes.find((r) => r.path === '**');
     const loadComponent = wildcardRoute?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -134,7 +134,7 @@ describe('app.routes', () => {
   it('should load LoginComponent via lazy loading', async () => {
     const route = routes.find((r) => r.path === 'login');
     const loadComponent = route?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -145,7 +145,7 @@ describe('app.routes', () => {
   it('should load RegisterComponent via lazy loading', async () => {
     const route = routes.find((r) => r.path === 'register');
     const loadComponent = route?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -156,7 +156,7 @@ describe('app.routes', () => {
   it('should load AuthCallbackComponent via lazy loading', async () => {
     const route = routes.find((r) => r.path === 'auth/callback');
     const loadComponent = route?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();
@@ -167,7 +167,7 @@ describe('app.routes', () => {
   it('should load VerifyEmailComponent via lazy loading', async () => {
     const route = routes.find((r) => r.path === 'verify-email');
     const loadComponent = route?.loadComponent;
-    
+
     expect(loadComponent).toBeDefined();
     if (loadComponent) {
       const module = await loadComponent();

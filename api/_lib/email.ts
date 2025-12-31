@@ -15,7 +15,7 @@ export async function sendVerificationEmail({
 }: SendVerificationEmailParams): Promise<void> {
   const env = getEnv();
   const isDevMode = isLocal();
-  
+
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -36,7 +36,7 @@ export async function sendVerificationEmail({
       minVersion: 'TLSv1.2',
     },
   } as SMTPTransport.Options);
-  
+
   const frontendUrl = getFrontendUrl();
   const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
@@ -132,29 +132,32 @@ export async function sendVerificationEmail({
 </html>
       `,
     });
-    
+
     transporter.close();
   } catch (error) {
-    console.error('Failed to send verification email:', error instanceof Error ? error.message : 'Unknown error');
-    
+    console.error(
+      'Failed to send verification email:',
+      error instanceof Error ? error.message : 'Unknown error',
+    );
+
     try {
       transporter.close();
     } catch (closeError) {
       // Ignore close errors
     }
-    
+
     throw error;
   }
 }
 
 export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
   const frontendUrl = getFrontendUrl();
-  
+
   // In local dev, skip email sending
   if (isLocal()) {
     return;
   }
-  
+
   const env = getEnv();
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',

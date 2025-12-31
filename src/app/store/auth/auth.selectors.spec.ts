@@ -1,5 +1,10 @@
-import { selectUserName, selectUserEmail, selectUserAvatar, selectIsEmailProvider } from './auth.selectors';
 import { AuthUser } from './auth.actions';
+import {
+  selectUserName,
+  selectUserEmail,
+  selectUserAvatar,
+  selectIsEmailProvider,
+} from './auth.selectors';
 
 describe('Auth Selectors', () => {
   const user: AuthUser = {
@@ -7,7 +12,7 @@ describe('Auth Selectors', () => {
     email: 'test@example.com',
     name: 'Test User',
     avatar_url: 'avatar.png',
-    provider: 'email'
+    provider: 'email',
   };
 
   it('should select user name', () => {

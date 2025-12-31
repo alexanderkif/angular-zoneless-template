@@ -1,11 +1,17 @@
+import { PLATFORM_ID, TransferState, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { Observable, of, throwError, firstValueFrom } from 'rxjs';
-import { AuthEffects } from './auth.effects';
 import { AuthService } from '../../services/auth.service';
-import { Router } from '@angular/router';
-import { loginActions, registerActions, oauthActions, sessionActions, tokenActions } from './auth.actions';
-import { PLATFORM_ID, TransferState, makeStateKey, provideZonelessChangeDetection } from '@angular/core';
+import {
+  loginActions,
+  registerActions,
+  oauthActions,
+  sessionActions,
+  tokenActions,
+} from './auth.actions';
+import { AuthEffects } from './auth.effects';
 
 describe('AuthEffects', () => {
   let actions$: Observable<any>;
@@ -22,7 +28,7 @@ describe('AuthEffects', () => {
       loginWithGoogle: vi.fn(),
       getCurrentUser: vi.fn(),
       logout: vi.fn(),
-      refreshToken: vi.fn()
+      refreshToken: vi.fn(),
     };
 
     routerMock = {
@@ -30,14 +36,16 @@ describe('AuthEffects', () => {
       navigate: vi.fn(),
       parseUrl: vi.fn(),
       _url: '/login',
-      get url() { return this._url; }
+      get url() {
+        return this._url;
+      },
     };
 
     transferStateMock = {
       hasKey: vi.fn(),
       get: vi.fn(),
       remove: vi.fn(),
-      set: vi.fn()
+      set: vi.fn(),
     };
 
     TestBed.configureTestingModule({
@@ -48,8 +56,8 @@ describe('AuthEffects', () => {
         { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: TransferState, useValue: transferStateMock },
-        { provide: PLATFORM_ID, useValue: 'browser' }
-      ]
+        { provide: PLATFORM_ID, useValue: 'browser' },
+      ],
     });
 
     effects = TestBed.inject(AuthEffects);
@@ -121,7 +129,11 @@ describe('AuthEffects', () => {
   describe('register$', () => {
     it('should return registerSuccess on success', async () => {
       const user = { id: '1', email: 'test@example.com', name: 'Test' };
-      const action = registerActions.register({ email: 'test@example.com', password: 'password', name: 'Test' });
+      const action = registerActions.register({
+        email: 'test@example.com',
+        password: 'password',
+        name: 'Test',
+      });
       const outcome = registerActions.registerSuccess({ user });
 
       actions$ = of(action);
@@ -133,7 +145,11 @@ describe('AuthEffects', () => {
 
     it('should return registerFailure on error', async () => {
       const error = 'Registration failed';
-      const action = registerActions.register({ email: 'test@example.com', password: 'password', name: 'Test' });
+      const action = registerActions.register({
+        email: 'test@example.com',
+        password: 'password',
+        name: 'Test',
+      });
       const outcome = registerActions.registerFailure({ error });
 
       actions$ = of(action);
@@ -144,7 +160,11 @@ describe('AuthEffects', () => {
     });
 
     it('should return registerFailure with default message on error without message', async () => {
-      const action = registerActions.register({ email: 'test@example.com', password: 'password', name: 'Test' });
+      const action = registerActions.register({
+        email: 'test@example.com',
+        password: 'password',
+        name: 'Test',
+      });
       const outcome = registerActions.registerFailure({ error: 'Registration failed' });
 
       actions$ = of(action);
@@ -232,7 +252,9 @@ describe('AuthEffects', () => {
 
   describe('redirectIfAuthenticated$', () => {
     it('should navigate to returnUrl if on login page', async () => {
-      const action = sessionActions.sessionValid({ user: { id: '1', email: 'test', name: 'Test' } });
+      const action = sessionActions.sessionValid({
+        user: { id: '1', email: 'test', name: 'Test' },
+      });
       actions$ = of(action);
 
       routerMock._url = '/login?returnUrl=/dashboard';
@@ -243,7 +265,9 @@ describe('AuthEffects', () => {
     });
 
     it('should navigate to root if on register page without returnUrl', async () => {
-      const action = sessionActions.sessionValid({ user: { id: '1', email: 'test', name: 'Test' } });
+      const action = sessionActions.sessionValid({
+        user: { id: '1', email: 'test', name: 'Test' },
+      });
       actions$ = of(action);
 
       routerMock._url = '/register';
@@ -254,7 +278,9 @@ describe('AuthEffects', () => {
     });
 
     it('should NOT navigate if not on auth page', async () => {
-      const action = sessionActions.sessionValid({ user: { id: '1', email: 'test', name: 'Test' } });
+      const action = sessionActions.sessionValid({
+        user: { id: '1', email: 'test', name: 'Test' },
+      });
       actions$ = of(action);
 
       routerMock._url = '/dashboard';
@@ -268,7 +294,7 @@ describe('AuthEffects', () => {
     it('should call logout API and navigate if protected', async () => {
       const action = sessionActions.logout();
       actions$ = of(action);
-      
+
       // Mock protected route
       routerMock._url = '/posts';
       authServiceMock.logout.mockReturnValue(of(void 0));
@@ -281,7 +307,7 @@ describe('AuthEffects', () => {
     it('should call logout API and navigate if protected (nested route)', async () => {
       const action = sessionActions.logout();
       actions$ = of(action);
-      
+
       // Mock protected route
       routerMock._url = '/posts/123';
       authServiceMock.logout.mockReturnValue(of(void 0));
@@ -294,7 +320,7 @@ describe('AuthEffects', () => {
     it('should call logout API and NOT navigate if public', async () => {
       const action = sessionActions.logout();
       actions$ = of(action);
-      
+
       // Mock public route
       routerMock._url = '/';
       authServiceMock.logout.mockReturnValue(of(void 0));
@@ -305,20 +331,20 @@ describe('AuthEffects', () => {
     });
   });
 
-    it('should log error if logout API fails', async () => {
-      const action = sessionActions.logout();
-      actions$ = of(action);
-      
-      routerMock._url = '/';
-      authServiceMock.logout.mockReturnValue(throwError(() => new Error('Logout failed')));
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('should log error if logout API fails', async () => {
+    const action = sessionActions.logout();
+    actions$ = of(action);
 
-      await firstValueFrom(effects.logout$);
-      
-      expect(authServiceMock.logout).toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('Logout API error:', expect.any(Error));
-      consoleSpy.mockRestore();
-    });
+    routerMock._url = '/';
+    authServiceMock.logout.mockReturnValue(throwError(() => new Error('Logout failed')));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await firstValueFrom(effects.logout$);
+
+    expect(authServiceMock.logout).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith('Logout API error:', expect.any(Error));
+    consoleSpy.mockRestore();
+  });
 
   describe('refreshToken$', () => {
     it('should return refreshTokenSuccess on success', async () => {
@@ -354,6 +380,18 @@ describe('AuthEffects', () => {
 
       const result = await firstValueFrom(effects.refreshToken$);
       expect(result).toEqual(outcome);
+    });
+  });
+
+  describe('registerSuccess$', () => {
+    it('should log message when user registered and waiting for email verification', async () => {
+      const user = { id: '1', email: 'test@example.com', name: 'Test' };
+      const action = registerActions.registerSuccess({ user });
+      actions$ = of(action);
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      await firstValueFrom(effects.registerSuccess$);
+      expect(consoleSpy).toHaveBeenCalledWith('User registered, waiting for email verification');
+      consoleSpy.mockRestore();
     });
   });
 });

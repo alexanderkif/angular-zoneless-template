@@ -48,7 +48,7 @@ For production, or if you want to test real emails locally, follow these steps.
 1. Go to https://myaccount.google.com/apppasswords
 2. Select app: **Mail**
 3. Select device: **Other (Custom name)**
-4. Name it: `Angular Zoneless Template`
+4. Name it: `Angular 21 Zoneless Template`
 5. Click **Generate**
 6. Copy the 16-character password (no spaces)
 
@@ -88,15 +88,18 @@ await resend.emails.send({ ... });
 ## Troubleshooting
 
 ### "Invalid login credentials"
+
 - Check if you are using App Password (not regular password).
 - Check if App Password has spaces (remove them).
 - Check if 2FA is enabled.
 
 ### "Connection timeout"
+
 - Network/firewall blocking port 587.
 - Increase timeouts in `nodemailer` config.
 
 ### "User not verified" error
+
 - Check console for verification link.
 - Copy the full URL (including token).
 

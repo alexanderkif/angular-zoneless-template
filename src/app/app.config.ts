@@ -1,4 +1,10 @@
 import {
+  provideHttpClient,
+  withFetch,
+  withInterceptors,
+  withXsrfConfiguration,
+} from '@angular/common/http';
+import {
   ApplicationConfig,
   inject,
   isDevMode,
@@ -6,31 +12,33 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
+import {
+  provideClientHydration,
+  withEventReplay,
+  withHttpTransferCacheOptions,
+} from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-
-import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
-import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore, provideState, Store } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
-import { tokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
+import { routes } from './app.routes';
 import { ssrCookieInterceptor } from './interceptors/ssr-cookie.interceptor';
-import { authFeature } from './store/auth/auth.reducer';
-import { AuthEffects } from './store/auth/auth.effects';
+import { tokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
 import { sessionActions } from './store/auth/auth.actions';
+import { AuthEffects } from './store/auth/auth.effects';
+import { authFeature } from './store/auth/auth.reducer';
 
 /**
  * Application Config (Best Practice 2025 - SSR Ready)
- * 
+ *
  * Ключевые особенности для SSR авторизации:
- * 
+ *
  * 1. provideClientHydration(withEventReplay()) - включает гидратацию SSR
  * 2. withFetch() - использует Fetch API с автоматическим transfer cache
  * 3. ssrCookieInterceptor - на сервере перекладывает cookies в API запросы
  * 4. withFetchWithXsrfConfiguration - защита от CSRF атак
  * 5. provideAppInitializer - проверяет сессию на старте (и SSR, и клиент)
- * 
+ *
  * Логика работы:
  * - SSR: cookies из браузера → API → получение user → рендер с данными
  * - Client: гидратация с SSR данными → избегаем повторных запросов
@@ -45,8 +53,8 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(
       withEventReplay(),
       withHttpTransferCacheOptions({
-        includePostRequests: false
-      })
+        includePostRequests: false,
+      }),
     ),
     provideHttpClient(
       withFetch(),
@@ -54,7 +62,7 @@ export const appConfig: ApplicationConfig = {
       withXsrfConfiguration({
         cookieName: 'XSRF-TOKEN',
         headerName: 'X-XSRF-TOKEN',
-      })
+      }),
     ),
     provideStore(),
     provideState(authFeature),
