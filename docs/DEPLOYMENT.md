@@ -1,6 +1,6 @@
 # Deployment & Environment Variables
 
-## Vercel Environment Variables
+## Vercel Environment Variables (Angular 21)
 
 ### Problem
 
@@ -11,7 +11,7 @@ Vercel automatically overwrites certain environment variables:
 
 ### Solution
 
-#### 1. Use `VERCEL_ENV` instead of `NODE_ENV`
+#### 1. Use `VERCEL_ENV` instead of `NODE_ENV` (Angular 21 best practice)
 
 Vercel provides `VERCEL_ENV` which is **NOT overwritten**:
 
@@ -24,7 +24,7 @@ const isProduction = process.env.VERCEL_ENV === 'production';
 const isLocal = !process.env.VERCEL; // true when running locally
 ```
 
-#### 2. Use Auto-Detection for URLs
+#### 2. Use Auto-Detection for URLs (recommended)
 
 Vercel provides these **automatic** variables:
 
@@ -45,7 +45,7 @@ function getFrontendUrl(): string {
 }
 ```
 
-#### 3. Configure in Vercel Dashboard
+#### 3. Configure in Vercel Dashboard (if needed)
 
 **Recommended approach**: Don't set `FRONTEND_URL` and `API_URL` in Vercel Dashboard unless you have a custom domain.
 
@@ -59,7 +59,7 @@ If you need custom domains:
    ```
 3. Leave **Development** and **Preview** empty (auto-detection works)
 
-## Environment Detection Logic
+## Environment Detection Logic (2025)
 
 ```typescript
 // Local development
@@ -75,7 +75,7 @@ process.env.VERCEL_ENV === 'production'
 → process.env.FRONTEND_URL || https://your-app.vercel.app
 ```
 
-## Testing Locally
+## Testing Locally (Vercel CLI)
 
 To test Vercel environment locally:
 
@@ -90,6 +90,10 @@ vercel link
 vercel dev
 
 # This will set VERCEL=1 and load env vars from Vercel
+
+---
+
+_Last updated: December 31, 2025 for Angular 21_
 ```
 
 ## References

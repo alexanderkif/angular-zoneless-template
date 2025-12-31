@@ -1,8 +1,8 @@
-# Email Setup & Workflow
+# Email Setup & Workflow (Angular 21)
 
-## Development Workflow
+## Development Workflow (2025)
 
-### How Email Works in Development
+### How Email Works in Development (Mock Mode)
 
 When you register a new user in **development** (localhost):
 
@@ -32,9 +32,11 @@ After registration, check your **terminal/console** (where `npm run dev` is runn
 
 ### Why Mock in Development?
 
+Nodemailer + Gmail SMTP can have issues on Windows with `vercel dev` (hanging connections). Mocking is faster and more reliable for local development. In Angular 21 template, this is the default for DX.
+
 Nodemailer + Gmail SMTP has issues on Windows with `vercel dev` (hanging connections). Mocking is faster and more reliable for local development.
 
-## Production Setup (Gmail SMTP)
+## Production Setup (Gmail SMTP, 2025)
 
 For production, or if you want to test real emails locally, follow these steps.
 
@@ -63,7 +65,7 @@ SMTP_USER="your-email@gmail.com"
 SMTP_PASS="abcdefghijklmnop"  # 16-char app password WITHOUT spaces
 ```
 
-## Production Best Practices (2025)
+## Production Best Practices (2025, Angular 21)
 
 ### 1. Use Email Queue (Recommended)
 
@@ -85,7 +87,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 await resend.emails.send({ ... });
 ```
 
-## Troubleshooting
+## Troubleshooting (2025)
 
 ### "Invalid login credentials"
 
@@ -104,6 +106,10 @@ await resend.emails.send({ ... });
 - Copy the full URL (including token).
 
 ## References
+
+---
+
+_Last updated: December 31, 2025 for Angular 21_
 
 - [Gmail SMTP Settings](https://support.google.com/mail/answer/7126229)
 - [Nodemailer Gmail Setup](https://nodemailer.com/usage/using-gmail/)

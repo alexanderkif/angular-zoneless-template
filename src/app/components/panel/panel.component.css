@@ -36,11 +36,12 @@ li a {
   }
 
   &.disabled-link {
-    background-color: var(--color-background);
-    color: var(--color-text-secondary);
+    background-color: #f5f5f5;
+    color: #7a0404;
     pointer-events: none;
     cursor: default;
-    opacity: 0.6;
+    opacity: 1;
+    text-decoration: line-through;
   }
 
   @media screen and (max-width: 600px) {

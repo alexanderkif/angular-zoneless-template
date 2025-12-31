@@ -3,7 +3,14 @@
     <span class="user-menu__loader"></span>
   } @else {
     @if (userAvatar()) {
-      <img [ngSrc]="userAvatar() || ''" [alt]="userName()" class="user-menu__avatar" width="40" height="40" priority />
+      <img
+        [ngSrc]="userAvatar() || ''"
+        [alt]="userName()"
+        class="user-menu__avatar"
+        width="40"
+        height="40"
+        priority
+      />
     } @else {
       <span class="user-menu__avatar-placeholder">{{ userName().charAt(0).toUpperCase() }}</span>
     }

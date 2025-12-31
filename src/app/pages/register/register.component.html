@@ -91,9 +91,13 @@
             type="password"
             [field]="registerForm.confirmPassword"
             placeholder="Confirm your password"
-            [class.invalid]="!registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()"
+            [class.invalid]="
+              !registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()
+            "
           />
-          @if (!registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()) {
+          @if (
+            !registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()
+          ) {
             <span class="error-text">
               @for (error of registerForm.confirmPassword().errors(); track error) {
                 <span>{{ error.message }}</span>
@@ -105,7 +109,18 @@
           }
         </div>
 
-        <button type="submit" class="btn-primary" [disabled]="!registerForm.name().valid() || !registerForm.email().valid() || !registerForm.password().valid() || !registerForm.confirmPassword().valid() || passwordMismatch() || isLoading()">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="
+            !registerForm.name().valid() ||
+            !registerForm.email().valid() ||
+            !registerForm.password().valid() ||
+            !registerForm.confirmPassword().valid() ||
+            passwordMismatch() ||
+            isLoading()
+          "
+        >
           @if (isLoading()) {
             <span>Creating account...</span>
           } @else {

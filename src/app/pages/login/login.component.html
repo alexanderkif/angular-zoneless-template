@@ -73,7 +73,11 @@
         }
       </div>
 
-      <button type="submit" class="btn-primary" [disabled]="!loginForm.email().valid() || !loginForm.password().valid() || isLoading()">
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="!loginForm.email().valid() || !loginForm.password().valid() || isLoading()"
+      >
         @if (isLoading()) {
           <span>Signing in...</span>
         } @else {

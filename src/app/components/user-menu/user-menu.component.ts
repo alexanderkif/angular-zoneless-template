@@ -11,7 +11,7 @@ import { selectUserName, selectUserAvatar, selectIsLoading } from '../../store/a
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.css',
   host: {
-    '(document:click)': 'closeMenu()'
+    '(document:click)': 'closeMenu()',
   },
 })
 export class UserMenuComponent {

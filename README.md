@@ -1,10 +1,10 @@
 # Angular Zoneless Template
 
-Modern Angular 20 application template with **zoneless change detection**, server-side rendering (SSR), **authentication (Email + OAuth)**, state management, and comprehensive testing setup.
+Modern Angular 21 application template with **zoneless change detection**, server-side rendering (SSR), **authentication (Email + OAuth)**, state management, and comprehensive testing setup.
 
 ## Features
 
-- **Angular 20.3** - Latest stable version with zoneless architecture
+- **Angular 21.0** - Latest stable version with zoneless architecture
 - **Server-Side Rendering (SSR)** - Angular Universal for improved SEO and performance
 - **Authentication** - Email + OAuth (GitHub, Google) with JWT & Supabase
 - **State Management** - NgRx Store with Effects for predictable state management
@@ -19,16 +19,16 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 
 ### Core
 
-- **Angular 20.3.0** - Framework
+- **Angular 21.0.6** - Framework
 - **TypeScript 5.9.2** - Language
 - **RxJS 7.8.0** - Reactive programming
 - **Express 5.1.0** - SSR server
 
 ### State Management
 
-- **@ngrx/store 20.0.1** - State management
-- **@ngrx/effects 20.0.1** - Side effects
-- **@ngrx/store-devtools 20.0.1** - Redux DevTools integration
+- **@ngrx/store 21.0.1** - State management
+- **@ngrx/effects 21.0.1** - Side effects
+- **@ngrx/store-devtools 21.0.1** - Redux DevTools integration
 
 ### Authentication & Backend
 
@@ -48,13 +48,13 @@ Modern Angular 20 application template with **zoneless change detection**, serve
 
 ### Testing
 
-- **Vitest 3.2.4** - Unit test runner with native ESM support
-- **@vitest/ui 3.2.4** - Visual test interface
-- **@vitest/coverage-v8 3.2.4** - Code coverage reporting
-- **@analogjs/vite-plugin-angular 2.1.3** - Official Angular + Vitest integration
+- **Vitest 4.0.16** - Unit test runner with native ESM support
+- **@vitest/ui 4.0.16** - Visual test interface
+- **@vitest/coverage-v8 4.0.16** - Code coverage reporting
+- **@analogjs/vite-plugin-angular 2.2.0** - Official Angular + Vitest integration
 - **Playwright 1.56.0** - E2E testing
-- **jsdom 25.0.1** - DOM testing environment
-- Uses latest Angular 20 testing APIs with zoneless change detection
+- **jsdom 27.4.0** - DOM testing environment
+- Uses latest Angular 21 testing APIs with zoneless change detection
 
 ## Development
 
@@ -123,7 +123,7 @@ Artifacts will be stored in the `dist/` directory, optimized for production.
 Build in watch mode for development:
 
 ```bash
-npm run watch
+# (add a watch script if needed)
 ```
 
 ## OAuth Setup (Optional)

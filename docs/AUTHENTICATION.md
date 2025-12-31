@@ -6,7 +6,7 @@ This project uses a secure, stateless authentication system based on JWTs (JSON 
 
 - Email/Password Login
 - OAuth (GitHub, Google)
-- Multi-device sessions (up to 5)
+- Multi-device sessions (up to 5, configurable in api/lib/session-manager.ts)
 - Automatic token rotation
 - Secure SSR compatibility
 
@@ -14,12 +14,12 @@ This project uses a secure, stateless authentication system based on JWTs (JSON 
 
 ### Configuration
 
-**Default:** Up to 5 concurrent sessions per user.
+**Default:** Up to 5 concurrent sessions per user (2025 best practice).
 
 Change in [api/lib/session-manager.ts](../api/lib/session-manager.ts):
 
 ```typescript
-const MAX_ACTIVE_SESSIONS = 5; // Modify this value
+const MAX_ACTIVE_SESSIONS = 5; // Modify this value (see code for details)
 ```
 
 ### Recommended Limits
@@ -36,33 +36,33 @@ const MAX_ACTIVE_SESSIONS = 5; // Modify this value
 #### On Login
 
 1. Generate JWT tokens (15m access, 7d refresh)
-2. Clean up expired tokens
+2. Clean up expired tokens (fire-and-forget)
 3. Delete oldest session if limit exceeded
 4. Store new refresh token in database
-5. Set HttpOnly cookies
+5. Set HttpOnly cookies (SameSite=Lax)
 
 #### On Token Refresh
 
 1. Verify old refresh token
 2. Generate new tokens
-3. Delete old token, insert new one
+3. Delete old token, insert new one (token rotation)
 4. Return new tokens in cookies
 
 #### On Logout
 
 1. Delete refresh token (fire-and-forget)
 2. Clear cookies immediately
-3. Return success
+3. Return success (optimistic logout)
 
 ## Security Features
 
 ✅ **HttpOnly Cookies** - XSS protection  
 ✅ **SameSite=Lax** - CSRF protection  
 ✅ **Token Rotation** - Refresh tokens rotated on every use  
-✅ **Rate Limiting** - 5 login attempts per minute  
-✅ **Argon2id** - Modern password hashing (OWASP 2024-2025)  
+✅ **Rate Limiting** - 5 login attempts per minute, 3 register/min  
+✅ **Argon2id** - Modern password hashing (OWASP 2025)  
 ✅ **Auto Cleanup** - Expired tokens deleted automatically  
-✅ **Device Limit** - Max 5 concurrent sessions
+✅ **Device Limit** - Max 5 concurrent sessions (configurable)
 
 ## Error Handling
 
@@ -113,11 +113,15 @@ A: Use `revokeAllSessions(userId)` in code or logout from each device.
 A: Tokens expire in 7 days. Change password to revoke all tokens immediately.
 
 **Q: Should I store tokens in localStorage?**  
-A: ❌ NO! Always use HttpOnly cookies. localStorage is vulnerable to XSS.
+A: ❌ NO! Always use HttpOnly cookies. localStorage is vulnerable to XSS. This project never stores tokens in localStorage.
 
 ## Database Schema
 
 See: [supabase/migrations/20241222_initial_schema.sql](../supabase/migrations/20241222_initial_schema.sql)
+
+---
+
+_Last updated: December 31, 2025 for Angular 21_
 
 ## References
 

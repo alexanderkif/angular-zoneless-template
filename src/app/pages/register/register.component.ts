@@ -38,16 +38,16 @@ export class RegisterComponent {
   });
 
   // computed-сигнал для ошибки совпадения паролей
-  passwordMismatch = signal(() =>
-    this.registerModel().password &&
-    this.registerModel().confirmPassword &&
-    this.registerModel().password !== this.registerModel().confirmPassword
+  passwordMismatch = signal(
+    () =>
+      this.registerModel().password &&
+      this.registerModel().confirmPassword &&
+      this.registerModel().password !== this.registerModel().confirmPassword,
   );
 
   // Selectors as signals
   isLoading = this.store.selectSignal(selectIsLoading);
   error = this.store.selectSignal(selectError);
-
 
   onSubmit(event: Event): void {
     event.preventDefault();
