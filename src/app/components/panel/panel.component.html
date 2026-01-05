@@ -6,7 +6,12 @@
       >
     </li>
     <li>
-      <a routerLink="/posts" routerLinkActive="active" [class.disabled-link]="!isAuthenticated()"
+      <a
+        routerLink="/posts"
+        routerLinkActive="active"
+        [class.disabled-link]="!isAuthenticated()"
+        [attr.tabindex]="isAuthenticated() ? 0 : -1"
+        [attr.aria-disabled]="!isAuthenticated()"
         >Posts</a
       >
     </li>

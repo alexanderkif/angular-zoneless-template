@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { of } from 'rxjs';
-import { oauthActions } from '../../store/auth/auth.actions';
+import { oauthActions, sessionActions } from '../../store/auth/auth.actions';
 import { AuthCallbackComponent } from './auth-callback.component';
 
 describe('AuthCallbackComponent', () => {
@@ -72,14 +72,9 @@ describe('AuthCallbackComponent', () => {
     activatedRouteStub.queryParams = of({});
     component.ngOnInit();
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(
-      oauthActions.oAuthSuccess({
-        user: { id: '', email: '', name: '' },
-      }),
-    );
+    expect(storeMock.dispatch).toHaveBeenCalledWith(sessionActions.checkSession());
 
-    vi.advanceTimersByTime(1000);
-
+    vi.advanceTimersByTime(100);
     expect(routerMock.navigate).toHaveBeenCalledWith(['/']);
     vi.useRealTimers();
   });

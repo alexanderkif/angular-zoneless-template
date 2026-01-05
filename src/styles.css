@@ -41,7 +41,8 @@
   --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.3);
 
   /* Header */
-  --header-height: 3rem;
+  --header-height: 4rem;
+  --header-item-height: 2.75rem;
   --footer-height: 3rem;
 
   /* Layout */
@@ -51,6 +52,35 @@
 /* Global resets */
 * {
   box-sizing: border-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: var(--spacing-md);
+  z-index: 10000;
+  transition: top 0.3s;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 var(--radius-md) 0;
+}
+
+.skip-link:focus {
+  top: 0;
 }
 
 body {

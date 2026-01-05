@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 import { PostService } from '../../services/post.service';
@@ -15,6 +15,7 @@ describe('PostDetailsComponent', () => {
       imports: [PostDetailsComponent],
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter([]),
         {
           provide: ActivatedRoute,
           useValue: {

@@ -110,6 +110,15 @@ p {
   flex-wrap: wrap;
 }
 
+.btn-danger {
+  color: var(--color-error) !important;
+  border-color: var(--color-error) !important;
+}
+
+.btn-danger:hover {
+  background: rgba(244, 67, 54, 0.05) !important;
+}
+
 @media (max-width: 600px) {
   .verify-card {
     padding: 32px 24px;

@@ -11,7 +11,7 @@ describe('Auth Selectors', () => {
     id: '1',
     email: 'test@example.com',
     name: 'Test User',
-    avatar_url: 'avatar.png',
+    avatarUrl: 'avatar.png',
     provider: 'email',
   };
 

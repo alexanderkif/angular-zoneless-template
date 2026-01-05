@@ -137,4 +137,12 @@ describe('LoginComponent', () => {
     component.resendVerification();
     expect(authServiceMock.resendVerification).not.toHaveBeenCalled();
   });
+
+  it('should toggle password visibility', () => {
+    expect(component.showPassword()).toBe(false);
+    component.togglePasswordVisibility();
+    expect(component.showPassword()).toBe(true);
+    component.togglePasswordVisibility();
+    expect(component.showPassword()).toBe(false);
+  });
 });

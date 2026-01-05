@@ -22,15 +22,17 @@ test.describe('App Navigation', () => {
 
   test('should display navigation links', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.getByLabel('Logo')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
+    await expect(page.locator('.logo-link')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Home', exact: true }).filter({ hasText: 'Home' }),
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Posts' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'About' })).toBeVisible();
   });
 
   test('should navigate to Home page', async ({ page }) => {
     await page.goto(URL);
-    await page.getByRole('link', { name: 'Home' }).click();
+    await page.getByRole('link', { name: 'Home', exact: true }).filter({ hasText: 'Home' }).click();
     await expect(page).toHaveURL(URL);
     await expect(
       page.getByRole('heading', { name: 'Welcome to Angular 21 Zoneless Template' }),

@@ -1,4 +1,7 @@
 <section class="post-details">
+  <a routerLink="/posts" class="btn-secondary" style="margin-bottom: var(--spacing-lg)">
+    &larr; Back to Posts
+  </a>
   @if (post$ | async; as post) {
     <h1 class="post-details__title">{{ post.title }}</h1>
     <p class="post-details__body">{{ post.body }}</p>

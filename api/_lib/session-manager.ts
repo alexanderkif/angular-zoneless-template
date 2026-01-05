@@ -1,67 +1,58 @@
-import { createClient } from '@supabase/supabase-js';
-import { getEnv } from './env';
+import { eq, gt, desc, and, lt, inArray } from 'drizzle-orm';
+import { db } from '../db';
+import { refreshTokens } from '../db/schema';
 
 const MAX_ACTIVE_SESSIONS = 5;
 
 /**
  * Clean up expired tokens and enforce session limit
  * @param userId - User ID
- * @param supabaseClient - Optional Supabase client (if not provided, creates new one)
  */
-export async function cleanupAndLimitSessions(userId: string, supabaseClient?: any): Promise<void> {
-  const env = getEnv();
-  const supabase = supabaseClient || createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
+export async function cleanupAndLimitSessions(userId: string): Promise<void> {
   // Get active tokens sorted by creation time (newest first)
-  const { data: existingTokens } = await supabase
-    .from('refresh_tokens')
-    .select('id, created_at')
-    .eq('user_id', userId)
-    .gte('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false });
+  const existingTokens = await db.query.refreshTokens.findMany({
+    where: and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, new Date())),
+    orderBy: [desc(refreshTokens.createdAt)],
+    columns: {
+      id: true,
+      createdAt: true,
+    },
+  });
 
   // If user has max sessions, delete oldest ones
   if (existingTokens && existingTokens.length >= MAX_ACTIVE_SESSIONS) {
     const tokensToDelete = existingTokens.slice(MAX_ACTIVE_SESSIONS - 1);
-    await supabase
-      .from('refresh_tokens')
-      .delete()
-      .in(
-        'id',
-        tokensToDelete.map((t: any) => t.id),
-      );
+    await db.delete(refreshTokens).where(
+      inArray(
+        refreshTokens.id,
+        tokensToDelete.map((t) => t.id),
+      ),
+    );
   }
 
   // Clean up expired tokens (don't await, fire-and-forget)
-  void supabase
-    .from('refresh_tokens')
-    .delete()
-    .eq('user_id', userId)
-    .lt('expires_at', new Date().toISOString());
+  void db
+    .delete(refreshTokens)
+    .where(and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, new Date())));
 }
 
 /**
  * Get active sessions count for user
  */
 export async function getActiveSessionsCount(userId: string): Promise<number> {
-  const env = getEnv();
-  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const sessions = await db.query.refreshTokens.findMany({
+    where: and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, new Date())),
+    columns: {
+      id: true,
+    },
+  });
 
-  const { count } = await supabase
-    .from('refresh_tokens')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .gte('expires_at', new Date().toISOString());
-
-  return count || 0;
+  return sessions.length;
 }
 
 /**
  * Revoke all sessions for user (useful for security incidents)
  */
 export async function revokeAllSessions(userId: string): Promise<void> {
-  const env = getEnv();
-  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
-  await supabase.from('refresh_tokens').delete().eq('user_id', userId);
+  await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
 }

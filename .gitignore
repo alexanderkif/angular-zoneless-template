@@ -2,6 +2,7 @@
 
 # Compiled output
 /dist
+/api/dist
 /tmp
 /out-tsc
 /bazel-out
@@ -26,6 +27,7 @@ yarn-error.log
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/mcp.json
 .history/*
 
 # Miscellaneous

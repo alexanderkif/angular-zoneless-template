@@ -6,7 +6,7 @@ This project uses a secure, stateless authentication system based on JWTs (JSON 
 
 - Email/Password Login
 - OAuth (GitHub, Google)
-- Multi-device sessions (up to 5, configurable in api/lib/session-manager.ts)
+- Multi-device sessions (up to 5, configurable in api/\_lib/session-manager.ts)
 - Automatic token rotation
 - Secure SSR compatibility
 
@@ -16,7 +16,7 @@ This project uses a secure, stateless authentication system based on JWTs (JSON 
 
 **Default:** Up to 5 concurrent sessions per user (2025 best practice).
 
-Change in [api/lib/session-manager.ts](../api/lib/session-manager.ts):
+Change in [api/\_lib/session-manager.ts](../api/_lib/session-manager.ts):
 
 ```typescript
 const MAX_ACTIVE_SESSIONS = 5; // Modify this value (see code for details)
@@ -56,12 +56,12 @@ const MAX_ACTIVE_SESSIONS = 5; // Modify this value (see code for details)
 
 ## Security Features
 
-✅ **HttpOnly Cookies** - XSS protection  
-✅ **SameSite=Lax** - CSRF protection  
-✅ **Token Rotation** - Refresh tokens rotated on every use  
-✅ **Rate Limiting** - 5 login attempts per minute, 3 register/min  
-✅ **Argon2id** - Modern password hashing (OWASP 2025)  
-✅ **Auto Cleanup** - Expired tokens deleted automatically  
+✅ **HttpOnly Cookies** - XSS protection
+✅ **SameSite=Lax** - CSRF protection
+✅ **Token Rotation** - Refresh tokens rotated on every use
+✅ **Rate Limiting** - 5 login attempts per minute, 3 register/min
+✅ **Argon2id** - Modern password hashing (OWASP 2025)
+✅ **Auto Cleanup** - Expired tokens deleted automatically
 ✅ **Device Limit** - Max 5 concurrent sessions (configurable)
 
 ## Error Handling
@@ -94,30 +94,30 @@ The auth service and interceptors are configured to handle these 401 errors sile
 
 ## FAQ
 
-**Q: Why 5 devices?**  
+**Q: Why 5 devices?**
 A: Balances security and UX. Most users have 3-5 devices.
 
-**Q: What happens to old sessions?**  
+**Q: What happens to old sessions?**
 A: When limit reached, oldest session is automatically deleted.
 
-**Q: Are expired tokens deleted?**  
+**Q: Are expired tokens deleted?**
 A: Yes, automatically on every login (fire-and-forget cleanup).
 
-**Q: Can I see my active sessions?**  
+**Q: Can I see my active sessions?**
 A: Yes, use `GET /api/user/sessions` endpoint.
 
-**Q: Can I logout from all devices?**  
+**Q: Can I logout from all devices?**
 A: Use `revokeAllSessions(userId)` in code or logout from each device.
 
-**Q: What if someone steals my token?**  
+**Q: What if someone steals my token?**
 A: Tokens expire in 7 days. Change password to revoke all tokens immediately.
 
-**Q: Should I store tokens in localStorage?**  
+**Q: Should I store tokens in localStorage?**
 A: ❌ NO! Always use HttpOnly cookies. localStorage is vulnerable to XSS. This project never stores tokens in localStorage.
 
 ## Database Schema
 
-See: [supabase/migrations/20241222_initial_schema.sql](../supabase/migrations/20241222_initial_schema.sql)
+See: [api/db/schema.ts](../api/db/schema.ts)
 
 ---
 

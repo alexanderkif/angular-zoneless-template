@@ -4,9 +4,16 @@
     <p class="text">Please wait while we fetch the content.</p>
   </article>
 } @else if (post) {
-  <article class="post" (click)="openDetails(post.id)">
+  <article
+    class="post"
+    (click)="openDetails(post.id)"
+    (keydown.enter)="openDetails(post.id)"
+    (keydown.space)="$event.preventDefault(); openDetails(post.id)"
+    tabindex="0"
+    role="button"
+    [attr.aria-label]="'View details for ' + post.title"
+  >
     <h1 class="title">{{ post.title }}</h1>
-    <!-- <span class="user">{{post.userId}}</span> -->
     <p class="text">{{ post.body }}</p>
   </article>
 }

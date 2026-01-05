@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, switchMap } from 'rxjs';
 import { PostService, Post } from '../../services/post.service';
 
 @Component({
   selector: 'app-post-details',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './post-details.component.html',
   styleUrl: './post-details.component.css',
 })

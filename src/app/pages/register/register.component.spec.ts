@@ -51,7 +51,7 @@ describe('RegisterComponent', () => {
       confirmPassword: 'password456',
     });
 
-    expect(component.passwordMismatch()()).toBe(true);
+    expect(component.passwordMismatch()).toBe(true);
 
     component.registerModel.set({
       name: 'Test User',
@@ -60,7 +60,7 @@ describe('RegisterComponent', () => {
       confirmPassword: 'password123',
     });
 
-    expect(component.passwordMismatch()()).toBe(false);
+    expect(component.passwordMismatch()).toBe(false);
   });
 
   it('should dispatch register action on valid submit', () => {
@@ -109,5 +109,21 @@ describe('RegisterComponent', () => {
   it('should dispatch googleLogin action', () => {
     component.registerWithGoogle();
     expect(storeMock.dispatch).toHaveBeenCalledWith(oauthActions.googleLogin());
+  });
+
+  it('should toggle password visibility', () => {
+    expect(component.showPassword()).toBe(false);
+    component.togglePasswordVisibility();
+    expect(component.showPassword()).toBe(true);
+    component.togglePasswordVisibility();
+    expect(component.showPassword()).toBe(false);
+  });
+
+  it('should toggle confirm password visibility', () => {
+    expect(component.showConfirmPassword()).toBe(false);
+    component.toggleConfirmPasswordVisibility();
+    expect(component.showConfirmPassword()).toBe(true);
+    component.toggleConfirmPasswordVisibility();
+    expect(component.showConfirmPassword()).toBe(false);
   });
 });

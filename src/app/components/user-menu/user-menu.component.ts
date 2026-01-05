@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { sessionActions } from '../../store/auth/auth.actions';
@@ -28,8 +28,12 @@ export class UserMenuComponent {
   }
 
   toggleMenu(e: Event) {
-    const target = e.target as HTMLElement;
-    switch (target.id) {
+    e.stopPropagation();
+    this.showMenu = !this.showMenu;
+  }
+
+  handleAction(action: string) {
+    switch (action) {
       case 'login':
         this.router.navigate(['/login'], {
           queryParams: { returnUrl: this.router.url },
@@ -42,7 +46,6 @@ export class UserMenuComponent {
         this.store.dispatch(sessionActions.logout());
         break;
     }
-    e.stopPropagation();
-    this.showMenu = !this.showMenu;
+    this.showMenu = false;
   }
 }

@@ -13,7 +13,7 @@ li a {
   display: flex;
   place-items: center;
   justify-content: center;
-  min-height: var(--header-height);
+  height: var(--header-item-height);
   min-width: 8rem;
   padding: 0 var(--spacing-md);
   background-color: var(--color-surface);
@@ -42,6 +42,11 @@ li a {
     cursor: default;
     opacity: 1;
     text-decoration: line-through;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   @media screen and (max-width: 600px) {

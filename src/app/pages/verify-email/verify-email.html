@@ -15,11 +15,7 @@
     <p class="error-message">{{ message() }}</p>
     <div class="actions">
       <button (click)="resendVerification()" class="btn-primary">Request New Link</button>
-      <button
-        (click)="cancelRegistration()"
-        class="btn-secondary"
-        style="color: var(--color-error); border-color: var(--color-error)"
-      >
+      <button (click)="cancelRegistration()" class="btn-secondary btn-danger">
         Cancel Registration
       </button>
       <a routerLink="/login" class="btn-secondary"> Go to Login </a>

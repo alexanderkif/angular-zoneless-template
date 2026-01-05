@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "angular-cli": {
+      "command": "npx",
+      "args": ["-y", "@angular/cli", "mcp"]
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=yxiirmcplqkwjwknsfue"
+    },
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["playwright", "run-test-mcp-server"],
+      "cwd": "${workspaceFolder}"
+    }
+  },
+  "inputs": []
+}

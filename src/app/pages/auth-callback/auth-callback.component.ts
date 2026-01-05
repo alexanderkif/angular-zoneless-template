@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { oauthActions } from '../../store/auth/auth.actions';
+import { sessionActions, oauthActions } from '../../store/auth/auth.actions';
 
 @Component({
   selector: 'app-auth-callback',
@@ -27,17 +27,14 @@ export class AuthCallbackComponent implements OnInit {
       }
 
       // OAuth successful - cookies are set by backend
-      // Just dispatch success and redirect
-      this.store.dispatch(
-        oauthActions.oAuthSuccess({
-          user: { id: '', email: '', name: '' }, // Will be loaded by session check
-        }),
-      );
+      // Trigger session check to ensure we have the user data
+      this.store.dispatch(sessionActions.checkSession());
 
-      // Redirect to home after short delay
+      // Redirect to home after a short delay to allow session check to initiate
+      // and cookies to be properly established
       setTimeout(() => {
         this.router.navigate(['/']);
-      }, 1000);
+      }, 100);
     });
   }
 

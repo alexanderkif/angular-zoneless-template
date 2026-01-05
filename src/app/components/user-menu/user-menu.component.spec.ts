@@ -60,48 +60,27 @@ describe('UserMenuComponent', () => {
   });
 
   it('should navigate to login when login is clicked', () => {
-    const mockEvent = new Event('click');
-    vi.spyOn(mockEvent, 'stopPropagation');
-
-    const mockTarget = document.createElement('button');
-    mockTarget.id = 'login';
-    Object.defineProperty(mockEvent, 'target', { value: mockTarget });
-
-    component.toggleMenu(mockEvent);
+    component.handleAction('login');
 
     expect(router.navigate).toHaveBeenCalledWith(['/login'], {
       queryParams: { returnUrl: '/current-url' },
     });
-    expect(mockEvent.stopPropagation).toHaveBeenCalled();
+    expect(component.showMenu).toBe(false);
   });
 
   it('should dispatch logout action when exit is clicked', () => {
-    const mockEvent = new Event('click');
-    vi.spyOn(mockEvent, 'stopPropagation');
-
-    const mockTarget = document.createElement('button');
-    mockTarget.id = 'exit';
-    Object.defineProperty(mockEvent, 'target', { value: mockTarget });
-
-    component.toggleMenu(mockEvent);
+    component.handleAction('exit');
 
     expect(dispatchSpy).toHaveBeenCalledWith(sessionActions.logout());
-    expect(mockEvent.stopPropagation).toHaveBeenCalled();
+    expect(component.showMenu).toBe(false);
   });
 
   it('should handle settings click', () => {
-    const mockEvent = new Event('click');
-    vi.spyOn(mockEvent, 'stopPropagation');
+    component.showMenu = true;
+    component.handleAction('settings');
 
-    const mockTarget = document.createElement('button');
-    mockTarget.id = 'settings';
-    Object.defineProperty(mockEvent, 'target', { value: mockTarget });
-
-    component.toggleMenu(mockEvent);
-
-    // Currently settings does nothing, but we want to ensure it doesn't crash and stops propagation
-    expect(mockEvent.stopPropagation).toHaveBeenCalled();
-    expect(component.showMenu).toBe(true);
+    // Currently settings does nothing, but we want to ensure it closes the menu
+    expect(component.showMenu).toBe(false);
   });
 
   it('should close the menu when document is clicked', () => {

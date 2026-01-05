@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--header-height);
-  height: var(--header-height);
+  width: var(--header-item-height);
+  height: var(--header-item-height);
   padding: 0;
   margin-right: var(--spacing-md);
   border-radius: 50%;
@@ -11,13 +11,17 @@
   border: 2px solid var(--color-accent);
   font: inherit;
   cursor: pointer;
-  outline: inherit;
   overflow: hidden;
   transition: all 0.2s;
 
   &:hover {
     background-color: var(--color-accent-hover);
     border-color: var(--color-accent-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 }
 
@@ -76,13 +80,29 @@
   li {
     display: flex;
     align-items: center;
-    padding: var(--spacing-md);
     color: var(--color-text);
     transition: all 0.2s;
+  }
+
+  .user-menu__item {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: none;
+    background: none;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s;
 
     &:hover {
       background-color: var(--color-background);
-      cursor: pointer;
+    }
+
+    &:focus-visible {
+      background-color: var(--color-background);
+      outline: 2px solid var(--color-accent);
+      outline-offset: -4px;
     }
   }
 }

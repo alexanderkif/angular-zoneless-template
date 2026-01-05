@@ -1,6 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { createClient } from '@supabase/supabase-js';
+import { eq, and } from 'drizzle-orm';
+import { db } from '../db';
+import { users, refreshTokens } from '../db/schema';
 import { handleCors } from '../_lib/cors';
 import { cleanupAndLimitSessions } from '../_lib/session-manager';
 import { getFrontendUrl, getApiUrl } from '../_lib/env';
@@ -44,8 +46,6 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   const { code } = req.query;
   const frontendUrl = getFrontendUrl();
@@ -102,12 +102,14 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
     }
 
     // Check if user exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id, email, name')
-      .eq('provider_id', String(githubUser.id))
-      .eq('provider', 'github')
-      .single();
+    const existingUser = await db.query.users.findFirst({
+      where: and(eq(users.providerId, String(githubUser.id)), eq(users.provider, 'github')),
+      columns: {
+        id: true,
+        email: true,
+        name: true,
+      },
+    });
 
     let userId: string;
     let userEmail: string;
@@ -119,30 +121,32 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
       userEmail = existingUser.email;
       userName = existingUser.name;
 
-      await supabase
-        .from('users')
-        .update({
-          avatar_url: githubUser.avatar_url,
-          last_login: new Date().toISOString(),
+      await db
+        .update(users)
+        .set({
+          avatarUrl: githubUser.avatar_url,
+          lastLogin: new Date(),
         })
-        .eq('id', userId);
+        .where(eq(users.id, userId));
     } else {
       // Create new user
-      const { data: newUser, error: createError } = await supabase
-        .from('users')
-        .insert({
+      const [newUser] = await db
+        .insert(users)
+        .values({
           email: githubUser.email || `${githubUser.login}@github.com`,
           name: githubUser.name || githubUser.login,
-          avatar_url: githubUser.avatar_url,
+          avatarUrl: githubUser.avatar_url,
           provider: 'github',
-          provider_id: String(githubUser.id),
-          email_verified: true,
+          providerId: String(githubUser.id),
+          emailVerified: true,
         })
-        .select('id, email, name')
-        .single();
+        .returning({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+        });
 
-      if (createError || !newUser) {
-        console.error('Create user error:', createError);
+      if (!newUser) {
         return res.redirect(`${frontendUrl}/login?error=user_creation_failed`);
       }
 
@@ -165,19 +169,19 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
     );
 
     // Clean up old/expired sessions and enforce limit
-    await cleanupAndLimitSessions(userId, supabase);
+    await cleanupAndLimitSessions(userId);
 
     // Store new refresh token
-    await supabase.from('refresh_tokens').insert({
-      user_id: userId,
+    await db.insert(refreshTokens).values({
+      userId: userId,
       token: refreshToken,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     // Set cookies
     res.setHeader('Set-Cookie', [
-      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
+      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
+      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
     ]);
 
     // Redirect to frontend
@@ -192,8 +196,6 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   const { code } = req.query;
   const frontendUrl = getFrontendUrl();
@@ -247,12 +249,14 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
     }
 
     // Check if user exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id, email, name')
-      .eq('provider_id', googleUser.id)
-      .eq('provider', 'google')
-      .single();
+    const existingUser = await db.query.users.findFirst({
+      where: and(eq(users.providerId, googleUser.id), eq(users.provider, 'google')),
+      columns: {
+        id: true,
+        email: true,
+        name: true,
+      },
+    });
 
     let userId: string;
     let userEmail: string;
@@ -264,30 +268,32 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
       userEmail = existingUser.email;
       userName = existingUser.name;
 
-      await supabase
-        .from('users')
-        .update({
-          avatar_url: googleUser.picture,
-          last_login: new Date().toISOString(),
+      await db
+        .update(users)
+        .set({
+          avatarUrl: googleUser.picture,
+          lastLogin: new Date(),
         })
-        .eq('id', userId);
+        .where(eq(users.id, userId));
     } else {
       // Create new user
-      const { data: newUser, error: createError } = await supabase
-        .from('users')
-        .insert({
+      const [newUser] = await db
+        .insert(users)
+        .values({
           email: googleUser.email,
           name: googleUser.name,
-          avatar_url: googleUser.picture,
+          avatarUrl: googleUser.picture,
           provider: 'google',
-          provider_id: googleUser.id,
-          email_verified: googleUser.verified_email,
+          providerId: googleUser.id,
+          emailVerified: googleUser.verified_email,
         })
-        .select('id, email, name')
-        .single();
+        .returning({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+        });
 
-      if (createError || !newUser) {
-        console.error('Create user error:', createError);
+      if (!newUser) {
         return res.redirect(`${frontendUrl}/login?error=user_creation_failed`);
       }
 
@@ -310,19 +316,19 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
     );
 
     // Clean up old/expired sessions and enforce limit
-    await cleanupAndLimitSessions(userId, supabase);
+    await cleanupAndLimitSessions(userId);
 
     // Store new refresh token
-    await supabase.from('refresh_tokens').insert({
-      user_id: userId,
+    await db.insert(refreshTokens).values({
+      userId: userId,
       token: refreshToken,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     // Set cookies
     res.setHeader('Set-Cookie', [
-      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
+      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
+      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
     ]);
 
     // Redirect to frontend

@@ -1,8 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
-import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { eq, and } from 'drizzle-orm';
+import { db } from '../db';
+import { users, refreshTokens } from '../db/schema';
 import { handleCors } from '../_lib/cors';
 import { verifyPassword, hashPassword } from '../_lib/password';
 import { getEnv } from '../_lib/env';
@@ -46,18 +48,24 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
 
   try {
     const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
     // Validate input
     const body = loginSchema.parse(req.body);
 
     // Find user
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email, name, password_hash, provider, email_verified')
-      .eq('email', body.email)
-      .single();
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, body.email),
+      columns: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        passwordHash: true,
+        provider: true,
+        emailVerified: true,
+      },
+    });
 
-    if (userError || !user) {
+    if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -69,14 +77,14 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
     }
 
     // Verify password with Argon2id
-    const isValidPassword = await verifyPassword(user.password_hash, body.password);
+    const isValidPassword = await verifyPassword(user.passwordHash || '', body.password);
 
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Check email verification (only for email provider)
-    if (!user.email_verified) {
+    if (!user.emailVerified) {
       return res.status(403).json({
         error: 'Email not verified',
         message:
@@ -94,16 +102,16 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
     } as jwt.SignOptions);
 
     // Clean up old/expired sessions and enforce limit
-    await cleanupAndLimitSessions(user.id, supabase);
+    await cleanupAndLimitSessions(user.id);
 
     // Store new refresh token and update last login in parallel
     await Promise.all([
-      supabase.from('refresh_tokens').insert({
-        user_id: user.id,
+      db.insert(refreshTokens).values({
+        userId: user.id,
         token: refreshToken,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       }),
-      supabase.from('users').update({ last_login: new Date().toISOString() }).eq('id', user.id),
+      db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, user.id)),
     ]);
 
     // Set httpOnly cookies with SameSite=Lax for better OAuth compatibility
@@ -117,13 +125,14 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
     console.error('Login error:', error);
 
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      return res.status(400).json({ error: 'Invalid input', details: error.issues });
     }
 
     return res.status(500).json({ error: 'Internal server error' });
@@ -139,17 +148,14 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
     // Validate input
     const body = registerSchema.parse(req.body);
 
     // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', body.email)
-      .single();
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, body.email),
+      columns: { id: true },
+    });
 
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
@@ -163,22 +169,25 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
     const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create user
-    const { data: user, error: createError } = await supabase
-      .from('users')
-      .insert({
+    const [user] = await db
+      .insert(users)
+      .values({
         email: body.email,
         name: body.name,
-        password_hash: passwordHash,
+        passwordHash: passwordHash,
         provider: 'email',
-        email_verified: false,
-        verification_token: verificationToken,
-        token_expires_at: tokenExpiresAt.toISOString(),
+        emailVerified: false,
+        verificationToken: verificationToken,
+        tokenExpiresAt: tokenExpiresAt,
       })
-      .select('id, email, name, created_at')
-      .single();
+      .returning({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        createdAt: users.createdAt,
+      });
 
-    if (createError || !user) {
-      console.error('Create user error:', createError);
+    if (!user) {
       return res.status(500).json({ error: 'Failed to create user' });
     }
 
@@ -199,6 +208,7 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatarUrl: null,
       },
       message: 'Registration successful. Please check your email to verify your account.',
     });
@@ -206,7 +216,7 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
     console.error('Register error:', error);
 
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      return res.status(400).json({ error: 'Invalid input', details: error.issues });
     }
 
     return res.status(500).json({ error: 'Internal server error' });
@@ -219,16 +229,12 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
     const refreshToken = req.cookies.refresh_token;
 
     // Delete refresh token from database (don't wait for it)
     if (refreshToken) {
-      supabase
-        .from('refresh_tokens')
-        .delete()
-        .eq('token', refreshToken)
+      db.delete(refreshTokens)
+        .where(eq(refreshTokens.token, refreshToken))
         .then(
           () => {}, // Success - ignore
           (err: unknown) => console.error('Failed to delete token:', err),
@@ -237,8 +243,8 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
 
     // Clear cookies
     res.setHeader('Set-Cookie', [
-      'access_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0',
-      'refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0',
+      'access_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
+      'refresh_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
     ]);
 
     return res.status(200).json({ message: 'Logged out successfully' });
@@ -255,7 +261,6 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
 
   try {
     const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
     // Get refresh token from cookies
     const refreshToken = req.cookies.refresh_token;
 
@@ -274,32 +279,28 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     }
 
     // Check if refresh token exists in database
-    const { data: storedToken, error: tokenError } = await supabase
-      .from('refresh_tokens')
-      .select('*')
-      .eq('token', refreshToken)
-      .eq('user_id', decoded.userId)
-      .single();
+    const storedToken = await db.query.refreshTokens.findFirst({
+      where: and(eq(refreshTokens.token, refreshToken), eq(refreshTokens.userId, decoded.userId)),
+    });
 
-    if (tokenError || !storedToken) {
+    if (!storedToken) {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
     // Check if token is expired
-    if (new Date(storedToken.expires_at) < new Date()) {
+    if (new Date(storedToken.expiresAt) < new Date()) {
       // Delete expired token
-      await supabase.from('refresh_tokens').delete().eq('token', refreshToken);
+      await db.delete(refreshTokens).where(eq(refreshTokens.token, refreshToken));
       return res.status(401).json({ error: 'Refresh token expired' });
     }
 
     // Get user
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email, name')
-      .eq('id', decoded.userId)
-      .single();
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, decoded.userId),
+      columns: { id: true, email: true, name: true, avatarUrl: true },
+    });
 
-    if (userError || !user) {
+    if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
@@ -314,11 +315,11 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
 
     // Delete old refresh token and store new one (rotation) in parallel
     await Promise.all([
-      supabase.from('refresh_tokens').delete().eq('token', refreshToken),
-      supabase.from('refresh_tokens').insert({
-        user_id: user.id,
+      db.delete(refreshTokens).where(eq(refreshTokens.token, refreshToken)),
+      db.insert(refreshTokens).values({
+        userId: user.id,
         token: newRefreshToken,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       }),
     ]);
 
@@ -333,6 +334,7 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
@@ -358,8 +360,6 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
 
   try {
     const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') {
@@ -367,40 +367,41 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
     }
 
     // Find user with this verification token
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email, name, email_verified, token_expires_at')
-      .eq('verification_token', token)
-      .single();
+    const user = await db.query.users.findFirst({
+      where: eq(users.verificationToken, token),
+      columns: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        emailVerified: true,
+        tokenExpiresAt: true,
+      },
+    });
 
-    if (userError || !user) {
+    if (!user) {
       return res.status(400).json({ error: 'Invalid or expired verification token' });
     }
 
     // Check if already verified
-    if (user.email_verified) {
+    if (user.emailVerified) {
       return res.status(400).json({ error: 'Email already verified' });
     }
 
     // Check if token expired
-    if (user.token_expires_at && new Date(user.token_expires_at) < new Date()) {
+    if (user.tokenExpiresAt && new Date(user.tokenExpiresAt) < new Date()) {
       return res.status(400).json({ error: 'Verification token has expired' });
     }
 
     // Update user: mark as verified, clear token
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        email_verified: true,
-        verification_token: null,
-        token_expires_at: null,
+    await db
+      .update(users)
+      .set({
+        emailVerified: true,
+        verificationToken: null,
+        tokenExpiresAt: null,
       })
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error('Update user error:', updateError);
-      return res.status(500).json({ error: 'Failed to verify email' });
-    }
+      .where(eq(users.id, user.id));
 
     // Generate tokens for automatic login
     const accessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
@@ -412,13 +413,13 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
     } as jwt.SignOptions);
 
     // Clean up old sessions and enforce limit
-    await cleanupAndLimitSessions(user.id, supabase);
+    await cleanupAndLimitSessions(user.id);
 
     // Store refresh token
-    await supabase.from('refresh_tokens').insert({
-      user_id: user.id,
+    await db.insert(refreshTokens).values({
+      userId: user.id,
       token: refreshToken,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     // Set httpOnly cookies
@@ -441,6 +442,7 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {
@@ -458,9 +460,6 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
   }
 
   try {
-    const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
     // Validate input
     const body = resendSchema.parse(req.body);
 
@@ -468,26 +467,28 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
 
     if (body.token) {
       // Find user by verification token
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, name, email_verified, provider')
-        .eq('verification_token', body.token)
-        .single();
-
-      if (!error && data) {
-        user = data;
-      }
+      user = await db.query.users.findFirst({
+        where: eq(users.verificationToken, body.token),
+        columns: {
+          id: true,
+          email: true,
+          name: true,
+          emailVerified: true,
+          provider: true,
+        },
+      });
     } else if (body.email) {
       // Find user by email
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, name, email_verified, provider')
-        .eq('email', body.email)
-        .single();
-
-      if (!error && data) {
-        user = data;
-      }
+      user = await db.query.users.findFirst({
+        where: eq(users.email, body.email),
+        columns: {
+          id: true,
+          email: true,
+          name: true,
+          emailVerified: true,
+          provider: true,
+        },
+      });
     }
 
     if (!user) {
@@ -498,7 +499,7 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
     }
 
     // Check if already verified
-    if (user.email_verified) {
+    if (user.emailVerified) {
       return res.status(400).json({ error: 'Email already verified' });
     }
 
@@ -514,18 +515,13 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
     const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Update user with new token
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        verification_token: verificationToken,
-        token_expires_at: tokenExpiresAt.toISOString(),
+    await db
+      .update(users)
+      .set({
+        verificationToken: verificationToken,
+        tokenExpiresAt: tokenExpiresAt,
       })
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error('Update user error:', updateError);
-      return res.status(500).json({ error: 'Failed to resend verification email' });
-    }
+      .where(eq(users.id, user.id));
 
     // Send verification email
     await sendVerificationEmail({
@@ -541,7 +537,7 @@ async function handleResendVerification(req: VercelRequest, res: VercelResponse)
     console.error('Resend verification error:', error);
 
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      return res.status(400).json({ error: 'Invalid input', details: error.issues });
     }
 
     // Don't reveal email sending errors to user
@@ -557,37 +553,31 @@ async function handleCancelRegistration(req: VercelRequest, res: VercelResponse)
   }
 
   try {
-    const env = getEnv();
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
-
     // Validate input
     const body = cancelRegistrationSchema.parse(req.body);
 
     // Find user by verification token
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email_verified')
-      .eq('verification_token', body.token)
-      .single();
+    const user = await db.query.users.findFirst({
+      where: eq(users.verificationToken, body.token),
+      columns: {
+        id: true,
+        emailVerified: true,
+      },
+    });
 
-    if (userError || !user) {
+    if (!user) {
       // If user not found, maybe already deleted or invalid token.
       // Return success to not leak info.
       return res.status(200).json({ message: 'Registration cancelled.' });
     }
 
     // Only allow deleting unverified users
-    if (user.email_verified) {
+    if (user.emailVerified) {
       return res.status(400).json({ error: 'Cannot cancel registration for verified user' });
     }
 
     // Delete user
-    const { error: deleteError } = await supabase.from('users').delete().eq('id', user.id);
-
-    if (deleteError) {
-      console.error('Delete user error:', deleteError);
-      return res.status(500).json({ error: 'Failed to cancel registration' });
-    }
+    await db.delete(users).where(eq(users.id, user.id));
 
     return res.status(200).json({ message: 'Registration cancelled successfully.' });
   } catch (error) {

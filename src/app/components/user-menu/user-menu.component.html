@@ -1,4 +1,10 @@
-<button class="user-menu__button" (click)="toggleMenu($event)" aria-label="avatar">
+<button
+  class="user-menu__button"
+  (click)="toggleMenu($event)"
+  aria-label="User menu"
+  aria-haspopup="true"
+  [aria-expanded]="showMenu"
+>
   @if (isAuthLoading()) {
     <span class="user-menu__loader"></span>
   } @else {
@@ -17,14 +23,36 @@
   }
 </button>
 @if (showMenu) {
-  <div class="user-menu__list" (click)="toggleMenu($event)">
+  <div class="user-menu__list" role="menu" (keydown.escape)="closeMenu()">
     <div class="user-menu__name">{{ userName() }}</div>
-    <ul>
+    <ul role="none">
       @if (userName() === GUEST) {
-        <li id="login">Login</li>
+        <li role="none">
+          <button
+            class="user-menu__item"
+            id="login"
+            role="menuitem"
+            (click)="handleAction('login')"
+          >
+            Login
+          </button>
+        </li>
       } @else {
-        <li id="settings">Settings</li>
-        <li id="exit">Logout</li>
+        <li role="none">
+          <button
+            class="user-menu__item"
+            id="settings"
+            role="menuitem"
+            (click)="handleAction('settings')"
+          >
+            Settings
+          </button>
+        </li>
+        <li role="none">
+          <button class="user-menu__item" id="exit" role="menuitem" (click)="handleAction('exit')">
+            Logout
+          </button>
+        </li>
       }
     </ul>
   </div>

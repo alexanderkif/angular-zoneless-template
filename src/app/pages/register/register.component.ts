@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, inject, signal, computed } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { form, Field, required, email as emailValidator, minLength } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -38,12 +38,21 @@ export class RegisterComponent {
   });
 
   // computed-сигнал для ошибки совпадения паролей
-  passwordMismatch = signal(
-    () =>
-      this.registerModel().password &&
-      this.registerModel().confirmPassword &&
-      this.registerModel().password !== this.registerModel().confirmPassword,
-  );
+  passwordMismatch = computed(() => {
+    const model = this.registerModel();
+    return !!model.password && !!model.confirmPassword && model.password !== model.confirmPassword;
+  });
+
+  showPassword = signal(false);
+  showConfirmPassword = signal(false);
+
+  togglePasswordVisibility() {
+    this.showPassword.update((v) => !v);
+  }
+
+  toggleConfirmPasswordVisibility() {
+    this.showConfirmPassword.update((v) => !v);
+  }
 
   // Selectors as signals
   isLoading = this.store.selectSignal(selectIsLoading);

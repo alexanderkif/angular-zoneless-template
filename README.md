@@ -6,7 +6,7 @@ Modern Angular 21 application template with **zoneless change detection**, serve
 
 - **Angular 21.0** - Latest stable version with zoneless architecture
 - **Server-Side Rendering (SSR)** - Angular Universal for improved SEO and performance
-- **Authentication** - Email + OAuth (GitHub, Google) with JWT & Supabase
+- **Authentication** - Email + OAuth (GitHub, Google) with JWT & Drizzle ORM
 - **State Management** - NgRx Store with Effects for predictable state management
 - **Vitest** - Fast, modern test runner with native ESM support
 - **100% Test Coverage** - Comprehensive unit tests for all components, services, and logic
@@ -32,7 +32,8 @@ Modern Angular 21 application template with **zoneless change detection**, serve
 
 ### Authentication & Backend
 
-- **Supabase** - PostgreSQL database with authentication
+- **PostgreSQL** - Database (Supabase, Vercel Postgres, or any Postgres)
+- **Drizzle ORM** - Type-safe ORM for database interactions
 - **Vercel Functions** - Serverless API endpoints
 - **JWT** - Token-based authentication with refresh tokens (15m access, 7d refresh)
 - **Argon2id** - Modern password hashing (2025 OWASP recommendation)
@@ -62,7 +63,7 @@ Modern Angular 21 application template with **zoneless change detection**, serve
 
 - Node.js 20.11.1 or higher
 - npm 11.6.2 or higher
-- Supabase account (free tier available)
+- PostgreSQL database (Supabase, Vercel Postgres, or local)
 
 ### Quick Start
 
@@ -70,11 +71,11 @@ Modern Angular 21 application template with **zoneless change detection**, serve
 # 1. Install dependencies
 npm install
 
-# 2. Setup Supabase (cloud)
-# - Create project at https://supabase.com
-# - Copy .env.local and add your Supabase credentials
-# - Run SQL migration in Supabase Dashboard → SQL Editor:
-#   supabase/migrations/20241222_initial_schema.sql
+# 2. Setup Database
+# - Create a Postgres database (e.g., Supabase or Vercel Postgres)
+# - Copy .env.local and add your DATABASE_URL
+# - Push schema to database:
+#   npx drizzle-kit push
 
 # 3. Setup Email
 # - Development: Verification links logged to console (mock mode)
@@ -184,7 +185,7 @@ Coverage report will be generated in `coverage/` directory. Open `coverage/index
 
 **Current Coverage: 100%**
 
-- **125 tests** across all modules
+- **216 tests** across all modules
 - 100% statements, branches, functions, and lines covered
 
 ### E2E Tests
@@ -220,27 +221,28 @@ api/                     # Vercel serverless functions
     me.ts                # Get current user
     sessions.ts          # Get active sessions
     revoke-session.ts    # Revoke specific session
-  lib/                   # Shared utilities
+  _lib/                  # Shared utilities
     cors.ts              # CORS configuration
     password.ts          # Argon2id hashing
     env.ts               # Environment validation with Zod
     security.ts          # Rate limiting & security headers
     session-manager.ts   # Session cleanup & device limit
     email.ts             # Email sending with Nodemailer (Ethereal for dev)
+  db/                    # Database configuration
+    index.ts             # Drizzle client setup
+    schema.ts            # Database schema definitions
 src/
  app/
     store/               # NgRx state management
        auth/             # Auth state (actions, reducer, effects, selectors)
-       posts/
+       posts/            # Posts state
     services/            # Business logic services
        auth.service.ts   # Authentication API service
-    service/             # Domain services
        post.service.ts   # Post data service
     components/          # Reusable UI components
        footer/
        header/
        logo/
-       main-content/
        panel/
        post/
        user-menu/
@@ -256,11 +258,13 @@ src/
        posts-list/
     guards/              # Route guards
        auth.guard.ts     # Protect authenticated routes
+       public.guard.ts   # Protect public routes
     interceptors/        # HTTP interceptors
        token-refresh.interceptor.ts # Auto token refresh
-       loggingInterceptor.ts
-    types/               # TypeScript interfaces
-       post.ts           # Post types
+       ssr-cookie.interceptor.ts    # SSR cookie forwarding
+    tokens/              # Injection tokens
+       ssr.tokens.ts
+       window.token.ts
     utils/               # Utility functions
     app.config.ts        # App configuration
     app.config.server.ts # SSR configuration
@@ -403,9 +407,7 @@ vercel --prod
 ```
 
 2. Add environment variables in Vercel Dashboard (Settings → Environment Variables):
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `DATABASE_URL` (Connection string to your Postgres DB)
    - `JWT_SECRET`
    - `JWT_REFRESH_SECRET`
    - `SMTP_USER`, `SMTP_PASS`, `SMTP_HOST`, `SMTP_PORT` (for production email)

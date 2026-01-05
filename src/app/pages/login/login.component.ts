@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Validators, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { form, Field, required, email as emailValidator } from '@angular/forms/signals';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -34,6 +34,12 @@ export class LoginComponent {
   // Selectors as signals
   isLoading = this.store.selectSignal(selectIsLoading);
   error = this.store.selectSignal(selectError);
+
+  showPassword = signal(false);
+
+  togglePasswordVisibility() {
+    this.showPassword.update((v) => !v);
+  }
 
   onSubmit(event: Event): void {
     event.preventDefault();

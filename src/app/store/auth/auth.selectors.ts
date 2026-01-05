@@ -12,7 +12,7 @@ export const selectUserName = createSelector(selectUser, (user) => user?.name ||
 
 export const selectUserEmail = createSelector(selectUser, (user) => user?.email || '');
 
-export const selectUserAvatar = createSelector(selectUser, (user) => user?.avatar_url || null);
+export const selectUserAvatar = createSelector(selectUser, (user) => user?.avatarUrl || null);
 
 export const selectIsEmailProvider = createSelector(
   selectUser,
