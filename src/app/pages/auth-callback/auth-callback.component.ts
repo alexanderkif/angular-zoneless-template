@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { sessionActions, oauthActions } from '../../store/auth/auth.actions';
@@ -7,6 +7,7 @@ import { sessionActions, oauthActions } from '../../store/auth/auth.actions';
   selector: 'app-auth-callback',
   templateUrl: './auth-callback.component.html',
   styleUrl: './auth-callback.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthCallbackComponent implements OnInit {
   private router = inject(Router);

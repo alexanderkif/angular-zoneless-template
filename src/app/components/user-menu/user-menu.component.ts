@@ -1,5 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { sessionActions } from '../../store/auth/auth.actions';
@@ -10,6 +10,7 @@ import { selectUserName, selectUserAvatar, selectIsLoading } from '../../store/a
   imports: [NgOptimizedImage],
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:click)': 'closeMenu()',
   },

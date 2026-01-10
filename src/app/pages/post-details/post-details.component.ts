@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, switchMap } from 'rxjs';
 import { PostService, Post } from '../../services/post.service';
@@ -9,6 +9,7 @@ import { PostService, Post } from '../../services/post.service';
   imports: [CommonModule, RouterLink],
   templateUrl: './post-details.component.html',
   styleUrl: './post-details.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostDetailsComponent {
   public post$!: Observable<Post | null>;

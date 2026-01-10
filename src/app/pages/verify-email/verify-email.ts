@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Store } from '@ngrx/store';
@@ -10,6 +10,7 @@ import { loginActions } from '../../store/auth/auth.actions';
   imports: [RouterLink],
   templateUrl: './verify-email.html',
   styleUrl: './verify-email.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerifyEmailComponent implements OnInit {
   status = signal<'loading' | 'success' | 'error'>('loading');

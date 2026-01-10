@@ -1,4 +1,4 @@
-import { afterNextRender, Component, inject, signal } from '@angular/core';
+import { afterNextRender, Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { FooterComponent } from './components/footer/footer.component';
@@ -10,6 +10,7 @@ import { selectIsLoading } from './store/auth/auth.selectors';
   imports: [RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   private store = inject(Store);

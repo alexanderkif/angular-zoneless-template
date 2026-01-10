@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -7,5 +7,6 @@ import { RouterLink } from '@angular/router';
   imports: [RouterLink],
   templateUrl: './logo.component.html',
   styleUrl: './logo.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LogoComponent {}

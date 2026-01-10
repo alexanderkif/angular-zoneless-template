@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { PostComponent } from '../../components/post/post.component';
@@ -11,6 +11,7 @@ import { selectPostsLength } from '../../store/posts/posts.selector';
   imports: [PostComponent],
   templateUrl: './posts-list.component.html',
   styleUrl: './posts-list.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostsListComponent implements OnInit {
   private postStore = inject(Store<PostState>);

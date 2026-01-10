@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Post } from '../../services/post.service';
 
@@ -7,6 +7,7 @@ import { Post } from '../../services/post.service';
   imports: [],
   templateUrl: './post.component.html',
   styleUrl: './post.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostComponent {
   @Input() post?: Post;

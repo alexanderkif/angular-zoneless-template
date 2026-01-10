@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { form, Field, required, email as emailValidator, minLength } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ import { selectIsLoading, selectError } from '../../store/auth/auth.selectors';
   imports: [ReactiveFormsModule, RouterLink, Field],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent {
   private store = inject(Store);

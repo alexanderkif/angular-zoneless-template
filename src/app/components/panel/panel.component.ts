@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { selectIsAuthenticated } from '../../store/auth/auth.selectors';
@@ -8,6 +8,7 @@ import { selectIsAuthenticated } from '../../store/auth/auth.selectors';
   imports: [RouterModule],
   templateUrl: './panel.component.html',
   styleUrl: './panel.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PanelComponent {
   private store = inject(Store);
