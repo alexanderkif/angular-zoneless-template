@@ -1,17 +1,28 @@
 <section class="home-container">
   <div class="hero">
-    <h1>Welcome to Angular 21 Zoneless Template</h1>
+    <h1>Welcome to Angular 21.2 Zoneless Template</h1>
     <p class="subtitle">
-      A modern, high-performance Angular 21 application template with Vite and SSR.
+      Production-ready starter with Angular 21.2, zoneless change detection, SSR, secure auth, and
+      tested API integration.
     </p>
   </div>
 
   <div class="content-card">
-    <h2>Access Restricted Content</h2>
+    <h2>Explore the Full Stack Demo</h2>
     <p>
-      The <strong>Posts</strong> section is currently locked to protect exclusive content. To view
-      the latest updates and interact with the community, you need to be a registered member.
+      This project demonstrates authenticated posts, comments, reactions, email verification, and
+      OAuth sign-in. It also includes optimistic UI updates for post/comment create, edit, and
+      delete operations.
     </p>
+
+    <div class="content-card" style="margin: 1rem 0 1.25rem 0">
+      <h3 style="margin-top: 0">Demo Account</h3>
+      <p style="margin-bottom: 0.5rem">
+        Use this account if you want to test features without registration:
+      </p>
+      <p style="margin: 0"><strong>Email:</strong> test@te.st</p>
+      <p style="margin: 0"><strong>Password:</strong> test</p>
+    </div>
 
     <div class="action-buttons">
       <a routerLink="/login" class="btn-primary">Log In</a>
@@ -19,7 +30,8 @@
     </div>
 
     <p class="small-text">
-      Don't have an account? Registration is free and takes less than a minute.
+      New here? Create an account in under a minute to test protected flows end-to-end. Current
+      baseline: strict lint + green Playwright + 100% unit test coverage.
     </p>
   </div>
 </section>

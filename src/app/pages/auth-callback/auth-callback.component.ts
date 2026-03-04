@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { sessionActions, oauthActions } from '../../store/auth/auth.actions';
+import { AuthQueryService } from '../../services/auth-query.service';
+import { WINDOW } from '../../tokens/window.token';
 
 @Component({
   selector: 'app-auth-callback',
@@ -12,29 +13,36 @@ import { sessionActions, oauthActions } from '../../store/auth/auth.actions';
 export class AuthCallbackComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private store = inject(Store);
+  private authQueryService = inject(AuthQueryService);
+  private platformId = inject(PLATFORM_ID);
+  private window = inject(WINDOW);
 
   ngOnInit(): void {
     // Check for errors in query params
     this.route.queryParams.subscribe((params) => {
       if (params['error']) {
-        this.store.dispatch(
-          oauthActions.oAuthFailure({
-            error: this.getErrorMessage(params['error']),
-          }),
-        );
+        console.error('OAuth error:', this.getErrorMessage(params['error']));
         this.router.navigate(['/login']);
         return;
       }
 
       // OAuth successful - cookies are set by backend
-      // Trigger session check to ensure we have the user data
-      this.store.dispatch(sessionActions.checkSession());
+      // Trigger query refetch to get user data
+      this.authQueryService.refetchUser();
 
-      // Redirect to home after a short delay to allow session check to initiate
-      // and cookies to be properly established
+      // Get returnUrl from sessionStorage (saved before OAuth redirect)
+      let returnUrl = '/';
+      if (isPlatformBrowser(this.platformId)) {
+        const savedReturnUrl = this.window.sessionStorage.getItem('authReturnUrl');
+        if (savedReturnUrl) {
+          returnUrl = savedReturnUrl;
+          this.window.sessionStorage.removeItem('authReturnUrl');
+        }
+      }
+
+      // Redirect after a short delay
       setTimeout(() => {
-        this.router.navigate(['/']);
+        this.router.navigate([returnUrl]);
       }, 100);
     });
   }

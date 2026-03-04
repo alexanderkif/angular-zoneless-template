@@ -9,7 +9,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
-  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
   // Use optional for URLs with runtime fallbacks
   FRONTEND_URL: z.string().url().optional(),
   API_URL: z.string().url().optional(),
@@ -49,15 +49,15 @@ export function getEnv(): Env {
  * Helper functions for environment detection
  */
 export function isLocal(): boolean {
-  return !process.env.VERCEL;
+  return !process.env['VERCEL'];
 }
 
 export function isProduction(): boolean {
-  return process.env.VERCEL_ENV === 'production';
+  return process.env['VERCEL_ENV'] === 'production';
 }
 
 export function isPreview(): boolean {
-  return process.env.VERCEL_ENV === 'preview';
+  return process.env['VERCEL_ENV'] === 'preview';
 }
 
 export function getFrontendUrl(): string {

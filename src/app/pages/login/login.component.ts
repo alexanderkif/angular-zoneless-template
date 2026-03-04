@@ -1,30 +1,33 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { form, Field, required, email as emailValidator } from '@angular/forms/signals';
-import { RouterLink, ActivatedRoute } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { AuthService } from '../../services/auth.service';
-import { loginActions, oauthActions } from '../../store/auth/auth.actions';
-import { selectIsLoading, selectError } from '../../store/auth/auth.selectors';
+import { form, FormField, required, email as emailValidator } from '@angular/forms/signals';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { AuthOauthService } from '../../services/auth-oauth.service';
+import { AuthQueryService } from '../../services/auth-query.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, Field],
+  imports: [ReactiveFormsModule, RouterLink, FormField],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
-  private store = inject(Store);
+  private authQueryService = inject(AuthQueryService);
+  private authOauthService = inject(AuthOauthService);
   private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
+  private router = inject(Router);
 
   resendMessage = signal<string | null>(null);
+  currentUserQuery = injectQuery(() => this.authQueryService.currentUserQueryOptions());
+  isAuthChecking = () => this.currentUserQuery.isPending();
 
   // Signal Forms (experimental API)
   loginModel = signal({
     email: '',
     password: '',
+    rememberMe: true, // Default: true for better UX (can be changed)
   });
   loginForm = form(this.loginModel, (schema) => {
     required(schema.email, { message: 'Email is required' });
@@ -32,46 +35,65 @@ export class LoginComponent {
     required(schema.password, { message: 'Password is required' });
   });
 
-  // Selectors as signals
-  isLoading = this.store.selectSignal(selectIsLoading);
-  error = this.store.selectSignal(selectError);
+  // Mutations
+  loginMutation = this.authQueryService.loginMutation();
+  resendMutation = this.authQueryService.resendVerificationMutation();
 
   showPassword = signal(false);
 
-  togglePasswordVisibility() {
+  togglePasswordVisibility = () => {
     this.showPassword.update((v) => !v);
-  }
-
-  onSubmit(event: Event): void {
+  };
+  toggleRememberMe = () => {
+    this.loginModel.update((m) => ({ ...m, rememberMe: !m.rememberMe }));
+  };
+  onSubmit = (event: Event): void => {
     event.preventDefault();
     if (this.loginForm.email().valid() && this.loginForm.password().valid()) {
       const email = this.loginForm.email().value();
       const password = this.loginForm.password().value();
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-      this.store.dispatch(loginActions.login({ email, password, returnUrl }));
-      this.resendMessage.set(null); // Clear previous messages
-    }
-  }
+      const rememberMe = this.loginModel().rememberMe;
+      this.resendMessage.set(null);
 
-  resendVerification(): void {
+      this.loginMutation.mutate(
+        { email, password, rememberMe },
+        {
+          onSuccess: async () => {
+            await this.authQueryService.refetchUser();
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+            this.router.navigate([returnUrl]);
+          },
+        },
+      );
+    }
+  };
+
+  resendVerification = (): void => {
     const email = this.loginForm.email().value();
     if (!email) return;
 
-    this.authService.resendVerification(email).subscribe({
-      next: (response) => {
-        this.resendMessage.set(response.message);
+    this.resendMutation.mutate(
+      { email },
+      {
+        onSuccess: (response) => {
+          this.resendMessage.set(response.message);
+        },
+        onError: (err: any) => {
+          this.resendMessage.set(err.message || 'Failed to resend verification email');
+        },
       },
-      error: (err) => {
-        this.resendMessage.set(err.message || 'Failed to resend verification email');
-      },
-    });
-  }
+    );
+  };
 
-  loginWithGithub(): void {
-    this.store.dispatch(oauthActions.githubLogin());
-  }
+  loginWithGithub = (): void => {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    this.authOauthService.loginWithGithub(returnUrl);
+  };
 
-  loginWithGoogle(): void {
-    this.store.dispatch(oauthActions.googleLogin());
-  }
+  loginWithGoogle = (): void => {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    this.authOauthService.loginWithGoogle(returnUrl);
+  };
 }

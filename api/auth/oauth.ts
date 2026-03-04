@@ -6,6 +6,13 @@ import { users, refreshTokens } from '../db/schema';
 import { handleCors } from '../_lib/cors';
 import { cleanupAndLimitSessions } from '../_lib/session-manager';
 import { getFrontendUrl, getApiUrl } from '../_lib/env';
+import {
+  buildAuthCookies,
+  buildAuthCookiesWithCleanup,
+  createRefreshTokenExpiresAt,
+  getRefreshTokenTtlSeconds,
+  hashRefreshToken,
+} from '../_lib/auth-session';
 
 async function handleGithub(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -13,10 +20,9 @@ async function handleGithub(req: VercelRequest, res: VercelResponse) {
   }
 
   const callbackUrl = `${getApiUrl()}/api/auth/callback-github`;
-  console.log('[OAuth] GitHub Callback URL:', callbackUrl);
 
   const githubAuthUrl = new URL('https://github.com/login/oauth/authorize');
-  githubAuthUrl.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
+  githubAuthUrl.searchParams.set('client_id', process.env['GITHUB_CLIENT_ID']!);
   githubAuthUrl.searchParams.set('redirect_uri', callbackUrl);
   githubAuthUrl.searchParams.set('scope', 'user:email');
 
@@ -29,10 +35,9 @@ async function handleGoogle(req: VercelRequest, res: VercelResponse) {
   }
 
   const callbackUrl = `${getApiUrl()}/api/auth/callback-google`;
-  console.log('[OAuth] Google Callback URL:', callbackUrl);
 
   const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  googleAuthUrl.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID!);
+  googleAuthUrl.searchParams.set('client_id', process.env['GOOGLE_CLIENT_ID']!);
   googleAuthUrl.searchParams.set('redirect_uri', callbackUrl);
   googleAuthUrl.searchParams.set('response_type', 'code');
   googleAuthUrl.searchParams.set('scope', 'email profile');
@@ -64,8 +69,8 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        client_id: process.env.GITHUB_CLIENT_ID,
-        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        client_id: process.env['GITHUB_CLIENT_ID'],
+        client_secret: process.env['GITHUB_CLIENT_SECRET'],
         code,
         redirect_uri: callbackUrl,
       }),
@@ -108,18 +113,19 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
         id: true,
         email: true,
         name: true,
+        sessionVersion: true,
       },
     });
 
     let userId: string;
     let userEmail: string;
-    let userName: string;
+    let userSessionVersion = 0;
 
     if (existingUser) {
       // Update existing user
       userId = existingUser.id;
       userEmail = existingUser.email;
-      userName = existingUser.name;
+      userSessionVersion = existingUser.sessionVersion ?? 0;
 
       await db
         .update(users)
@@ -144,6 +150,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
           id: users.id,
           email: users.email,
           name: users.name,
+          sessionVersion: users.sessionVersion,
         });
 
       if (!newUser) {
@@ -152,37 +159,40 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
 
       userId = newUser.id;
       userEmail = newUser.email;
-      userName = newUser.name;
+      userSessionVersion = newUser.sessionVersion ?? 0;
     }
 
     // Generate tokens
     const accessToken = jwt.sign(
-      { userId, email: userEmail },
-      process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' } as jwt.SignOptions,
+      { userId, email: userEmail, sessionVersion: userSessionVersion, sessionType: 'persistent' },
+      process.env['JWT_SECRET'] as string,
+      { expiresIn: process.env['JWT_ACCESS_EXPIRES_IN'] || '15m' } as jwt.SignOptions,
     );
 
     const refreshToken = jwt.sign(
       { userId, type: 'refresh' },
-      process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions,
+      process.env['JWT_REFRESH_SECRET'] as string,
+      { expiresIn: getRefreshTokenTtlSeconds('persistent') } as jwt.SignOptions,
     );
 
     // Clean up old/expired sessions and enforce limit
     await cleanupAndLimitSessions(userId);
 
+    const oauthExpiresAt = createRefreshTokenExpiresAt('persistent');
+
     // Store new refresh token
     await db.insert(refreshTokens).values({
       userId: userId,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      token: hashRefreshToken(refreshToken),
+      sessionType: 'persistent',
+      expiresAt: oauthExpiresAt,
     });
 
     // Set cookies
-    res.setHeader('Set-Cookie', [
-      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
-    ]);
+    res.setHeader(
+      'Set-Cookie',
+      buildAuthCookiesWithCleanup(accessToken, refreshToken, 'persistent'),
+    );
 
     // Redirect to frontend
     return res.redirect(`${frontendUrl}/auth/callback?provider=github`);
@@ -213,8 +223,8 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        client_id: process.env['GOOGLE_CLIENT_ID'],
+        client_secret: process.env['GOOGLE_CLIENT_SECRET'],
         code,
         grant_type: 'authorization_code',
         redirect_uri: callbackUrl,
@@ -255,18 +265,19 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
         id: true,
         email: true,
         name: true,
+        sessionVersion: true,
       },
     });
 
     let userId: string;
     let userEmail: string;
-    let userName: string;
+    let userSessionVersion = 0;
 
     if (existingUser) {
       // Update existing user
       userId = existingUser.id;
       userEmail = existingUser.email;
-      userName = existingUser.name;
+      userSessionVersion = existingUser.sessionVersion ?? 0;
 
       await db
         .update(users)
@@ -291,6 +302,7 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
           id: users.id,
           email: users.email,
           name: users.name,
+          sessionVersion: users.sessionVersion,
         });
 
       if (!newUser) {
@@ -299,37 +311,40 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
 
       userId = newUser.id;
       userEmail = newUser.email;
-      userName = newUser.name;
+      userSessionVersion = newUser.sessionVersion ?? 0;
     }
 
     // Generate tokens
     const accessToken = jwt.sign(
-      { userId, email: userEmail },
-      process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' } as jwt.SignOptions,
+      { userId, email: userEmail, sessionVersion: userSessionVersion, sessionType: 'persistent' },
+      process.env['JWT_SECRET'] as string,
+      { expiresIn: process.env['JWT_ACCESS_EXPIRES_IN'] || '15m' } as jwt.SignOptions,
     );
 
     const refreshToken = jwt.sign(
       { userId, type: 'refresh' },
-      process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions,
+      process.env['JWT_REFRESH_SECRET'] as string,
+      { expiresIn: getRefreshTokenTtlSeconds('persistent') } as jwt.SignOptions,
     );
 
     // Clean up old/expired sessions and enforce limit
     await cleanupAndLimitSessions(userId);
 
+    const oauthExpiresAt = createRefreshTokenExpiresAt('persistent');
+
     // Store new refresh token
     await db.insert(refreshTokens).values({
       userId: userId,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      token: hashRefreshToken(refreshToken),
+      sessionType: 'persistent',
+      expiresAt: oauthExpiresAt,
     });
 
     // Set cookies
-    res.setHeader('Set-Cookie', [
-      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
-    ]);
+    res.setHeader(
+      'Set-Cookie',
+      buildAuthCookiesWithCleanup(accessToken, refreshToken, 'persistent'),
+    );
 
     // Redirect to frontend
     return res.redirect(`${frontendUrl}/auth/callback?provider=google`);

@@ -1,12 +1,17 @@
 <nav>
   <ul>
     <li>
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+      <a
+        id="nav-home"
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
         >Home</a
       >
     </li>
     <li>
       <a
+        id="nav-posts"
         routerLink="/posts"
         routerLinkActive="active"
         [class.disabled-link]="!isAuthenticated()"
@@ -15,6 +20,6 @@
         >Posts</a
       >
     </li>
-    <li><a routerLink="/about" routerLinkActive="active">About</a></li>
+    <li><a id="nav-about" routerLink="/about" routerLinkActive="active">About</a></li>
   </ul>
 </nav>

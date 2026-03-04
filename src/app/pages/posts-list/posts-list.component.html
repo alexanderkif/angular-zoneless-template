@@ -1,15 +1,104 @@
 <section class="posts">
-  @if (postsLength() === 0 && !isLoading()) {
-    <h1>No posts found</h1>
-  } @else {
-    <h1>{{ postsLength() }} posts</h1>
-    @for (post of posts(); track post.id) {
-      <app-post [post]="post"></app-post>
-    }
-  }
-  @if (isLoading()) {
+  @if (postsQuery.isPending()) {
+    <h1>Loading posts...</h1>
     <app-post [isLoading]="true"></app-post>
-  } @else {
-    <button class="posts__load-more" (click)="loadMore()">Load More</button>
+  } @else if (postsQuery.isError()) {
+    <h1>Error loading posts</h1>
+    <p>{{ postsQuery.error().message }}</p>
+  } @else if (postsQuery.data(); as data) {
+    <h1>Posts ({{ data.pagination.total }} total)</h1>
+
+    @if (isCreateSyncPending()) {
+      <p class="posts-status" role="status" aria-live="polite">Saving post and syncing list...</p>
+    }
+
+    @for (post of data.posts; track post.id) {
+      <app-post
+        [post]="post"
+        [currentUser]="currentUserQuery.data()"
+        (edit)="handleEditPost($event)"
+        (delete)="handleDeletePost($event)"
+      ></app-post>
+    }
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+      <button
+        id="posts-prev-page"
+        class="pagination__btn"
+        (click)="goToPreviousPage()"
+        [disabled]="!data.pagination.hasPrev"
+      >
+        ← Previous
+      </button>
+
+      <span class="pagination__info">
+        Page {{ data.pagination.page }} of {{ data.pagination.totalPages }}
+      </span>
+
+      <button
+        id="posts-next-page"
+        class="pagination__btn"
+        (click)="goToNextPage()"
+        [disabled]="!data.pagination.hasNext"
+      >
+        Next →
+      </button>
+    </div>
+  }
+
+  <!-- FAB Button for Creating Posts -->
+  <button class="fab" (click)="openPostForm()" aria-label="Create new post" title="Create post">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+
+  <!-- Post Form Modal -->
+  @if (showPostForm()) {
+    <app-post-form
+      [post]="editingPost()"
+      [isSubmitting]="isPostFormSubmitting()"
+      (save)="handleSavePost($event)"
+      (cancel)="closePostForm()"
+    ></app-post-form>
+  }
+
+  @if (deleteDialogPostId()) {
+    <div class="confirm-modal-overlay" (click)="closeDeleteDialog()">
+      <section
+        class="confirm-modal"
+        role="dialog"
+        aria-modal="true"
+        (click)="$event.stopPropagation()"
+      >
+        <h3 class="confirm-modal__title">Delete post?</h3>
+        <p class="confirm-modal__text">Are you sure you want to delete this post?</p>
+        <div class="confirm-modal__actions">
+          <button type="button" class="btn-secondary-small" (click)="closeDeleteDialog()">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn-danger-small"
+            (click)="confirmDeletePost()"
+            [disabled]="deletePostMutation.isPending()"
+          >
+            Delete
+          </button>
+        </div>
+      </section>
+    </div>
   }
 </section>

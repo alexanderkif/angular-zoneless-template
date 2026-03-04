@@ -1,14 +1,24 @@
-# Authentication & Session Management
+# Authentication & Session Management (2026)
 
 ## Overview
 
-This project uses a secure, stateless authentication system based on JWTs (JSON Web Tokens) and HttpOnly cookies. It supports:
+This project uses JWT + HttpOnly cookies with server-side session control in PostgreSQL. It supports:
 
 - Email/Password Login
 - OAuth (GitHub, Google)
 - Multi-device sessions (up to 5, configurable in api/\_lib/session-manager.ts)
-- Automatic token rotation
+- Refresh token rotation
+- Session version invalidation on logout
 - Secure SSR compatibility
+
+## Demo Account
+
+For product walkthroughs without registration:
+
+- Email: `test@te.st`
+- Password: `test`
+
+Provisioned via `supabase/migrations/20260227_seed_demo_user.sql`.
 
 ## Session Management
 
@@ -35,24 +45,28 @@ const MAX_ACTIVE_SESSIONS = 5; // Modify this value (see code for details)
 
 #### On Login
 
-1. Generate JWT tokens (15m access, 7d refresh)
-2. Clean up expired tokens (fire-and-forget)
-3. Delete oldest session if limit exceeded
-4. Store new refresh token in database
-5. Set HttpOnly cookies (SameSite=Lax)
+1. Generate JWT access token (includes `sessionVersion` and `sessionType`)
+2. Generate refresh token
+3. Persist refresh session in DB with expiration based on `rememberMe`
+4. Set HttpOnly cookies (`rememberMe=true` -> persistent cookie; `false` -> session cookie)
+5. Clean up expired tokens (fire-and-forget)
+6. Delete oldest session if limit exceeded
+7. Store new refresh token in database
+8. Set HttpOnly cookies (SameSite=Lax)
 
 #### On Token Refresh
 
-1. Verify old refresh token
-2. Generate new tokens
-3. Delete old token, insert new one (token rotation)
-4. Return new tokens in cookies
+1. Verify refresh token JWT + DB session record
+2. Check refresh expiration on server
+3. Rotate refresh token (delete old / insert new)
+4. Return updated cookies
 
 #### On Logout
 
-1. Delete refresh token (fire-and-forget)
-2. Clear cookies immediately
-3. Return success (optimistic logout)
+1. Resolve user from access/refresh token
+2. Revoke all DB refresh sessions for user
+3. Increment `users.session_version` (invalidates old access tokens)
+4. Clear auth cookies
 
 ## Security Features
 
@@ -61,8 +75,10 @@ const MAX_ACTIVE_SESSIONS = 5; // Modify this value (see code for details)
 ✅ **Token Rotation** - Refresh tokens rotated on every use
 ✅ **Rate Limiting** - 5 login attempts per minute, 3 register/min
 ✅ **Argon2id** - Modern password hashing (OWASP 2025)
-✅ **Auto Cleanup** - Expired tokens deleted automatically
+✅ **Auto Cleanup** - Expired refresh sessions deleted automatically
 ✅ **Device Limit** - Max 5 concurrent sessions (configurable)
+✅ **Server Session Gate** - Protected APIs require active DB session + valid JWT
+✅ **Session Versioning** - Immediate token invalidation after logout/security events
 
 ## Error Handling
 

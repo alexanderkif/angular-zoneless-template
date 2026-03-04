@@ -1,28 +1,27 @@
 <button
+  data-testid="user-menu-toggle"
   class="user-menu__button"
   (click)="toggleMenu($event)"
   aria-label="User menu"
   aria-haspopup="true"
-  [aria-expanded]="showMenu"
+  [aria-expanded]="showMenu()"
+  [disabled]="isLoggingOut()"
 >
-  @if (isAuthLoading()) {
+  @if (isAuthLoading() || isLoggingOut()) {
     <span class="user-menu__loader"></span>
   } @else {
-    @if (userAvatar()) {
-      <img
-        [ngSrc]="userAvatar() || ''"
-        [alt]="userName()"
-        class="user-menu__avatar"
-        width="40"
-        height="40"
-        priority
-      />
-    } @else {
-      <span class="user-menu__avatar-placeholder">{{ userName().charAt(0).toUpperCase() }}</span>
-    }
+    <app-avatar
+      [src]="userAvatar()"
+      [alt]="userName()"
+      [role]="userRole()"
+      [size]="44"
+      [priority]="true"
+      className="user-menu__avatar"
+      placeholderClass="user-menu__avatar-placeholder"
+    />
   }
 </button>
-@if (showMenu) {
+@if (showMenu()) {
   <div class="user-menu__list" role="menu" (keydown.escape)="closeMenu()">
     <div class="user-menu__name">{{ userName() }}</div>
     <ul role="none">
@@ -31,6 +30,7 @@
           <button
             class="user-menu__item"
             id="login"
+            data-testid="user-menu-login"
             role="menuitem"
             (click)="handleAction('login')"
           >
@@ -42,6 +42,7 @@
           <button
             class="user-menu__item"
             id="settings"
+            data-testid="user-menu-settings"
             role="menuitem"
             (click)="handleAction('settings')"
           >
@@ -49,8 +50,19 @@
           </button>
         </li>
         <li role="none">
-          <button class="user-menu__item" id="exit" role="menuitem" (click)="handleAction('exit')">
-            Logout
+          <button
+            class="user-menu__item"
+            id="exit"
+            data-testid="user-menu-logout"
+            role="menuitem"
+            (click)="handleAction('exit')"
+            [disabled]="isLoggingOut()"
+          >
+            @if (isLoggingOut()) {
+              <span>Logging out...</span>
+            } @else {
+              <span>Logout</span>
+            }
           </button>
         </li>
       }

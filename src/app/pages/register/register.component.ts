@@ -1,20 +1,37 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  PLATFORM_ID,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { form, Field, required, email as emailValidator, minLength } from '@angular/forms/signals';
+import {
+  form,
+  FormField,
+  required,
+  email as emailValidator,
+  minLength,
+} from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { registerActions, oauthActions } from '../../store/auth/auth.actions';
-import { selectIsLoading, selectError } from '../../store/auth/auth.selectors';
+import { AuthQueryService } from '../../services/auth-query.service';
+import { API_BASE_URL } from '../../tokens/api-url.token';
+import { WINDOW } from '../../tokens/window.token';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, Field],
+  imports: [ReactiveFormsModule, RouterLink, FormField],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent {
-  private store = inject(Store);
+  private authQueryService = inject(AuthQueryService);
+  private platformId = inject(PLATFORM_ID);
+  private window = inject(WINDOW);
+  private apiUrl = inject(API_BASE_URL);
 
   // Signal for showing success message
   registrationSuccess = signal(false);
@@ -35,7 +52,6 @@ export class RegisterComponent {
     required(schema.password, { message: 'Password is required' });
     minLength(schema.password, 8, { message: 'Password must be at least 8 characters' });
     required(schema.confirmPassword, { message: 'Confirm your password' });
-    // Кастомная валидация совпадения паролей реализуется через computed и errors в шаблоне
   });
 
   // computed-сигнал для ошибки совпадения паролей
@@ -47,42 +63,51 @@ export class RegisterComponent {
   showPassword = signal(false);
   showConfirmPassword = signal(false);
 
-  togglePasswordVisibility() {
+  togglePasswordVisibility = () => {
     this.showPassword.update((v) => !v);
-  }
+  };
 
-  toggleConfirmPasswordVisibility() {
+  toggleConfirmPasswordVisibility = () => {
     this.showConfirmPassword.update((v) => !v);
-  }
+  };
 
-  // Selectors as signals
-  isLoading = this.store.selectSignal(selectIsLoading);
-  error = this.store.selectSignal(selectError);
+  // Mutations
+  registerMutation = this.authQueryService.registerMutation();
 
-  onSubmit(event: Event): void {
+  onSubmit = (event: Event): void => {
     event.preventDefault();
     if (
       this.registerForm.name().valid() &&
       this.registerForm.email().valid() &&
       this.registerForm.password().valid() &&
-      this.registerForm.confirmPassword().valid()
+      this.registerForm.confirmPassword().valid() &&
+      !this.passwordMismatch()
     ) {
       const name = this.registerForm.name().value();
       const email = this.registerForm.email().value();
       const password = this.registerForm.password().value();
+
       this.registeredEmail.set(email);
-      this.store.dispatch(registerActions.register({ name, email, password }));
-      setTimeout(() => {
-        this.registrationSuccess.set(true);
-      }, 500);
+      this.registerMutation.mutate(
+        { name, email, password },
+        {
+          onSuccess: () => {
+            this.registrationSuccess.set(true);
+          },
+        },
+      );
     }
-  }
+  };
 
-  registerWithGithub(): void {
-    this.store.dispatch(oauthActions.githubLogin());
-  }
+  registerWithGithub = (): void => {
+    if (isPlatformBrowser(this.platformId)) {
+      this.window.location.href = `${this.apiUrl}/auth/github`;
+    }
+  };
 
-  registerWithGoogle(): void {
-    this.store.dispatch(oauthActions.googleLogin());
-  }
+  registerWithGoogle = (): void => {
+    if (isPlatformBrowser(this.platformId)) {
+      this.window.location.href = `${this.apiUrl}/auth/google`;
+    }
+  };
 }

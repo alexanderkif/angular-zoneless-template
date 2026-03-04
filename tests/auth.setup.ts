@@ -15,6 +15,10 @@ setup('authenticate', async ({ page }) => {
           id: '123',
           email: 'test@example.com',
           name: 'Test User',
+          avatarUrl: null,
+          provider: 'local',
+          emailVerified: true,
+          role: 'user',
         },
       }),
     });
@@ -30,6 +34,10 @@ setup('authenticate', async ({ page }) => {
           id: '123',
           email: 'test@example.com',
           name: 'Test User',
+          avatarUrl: null,
+          provider: 'local',
+          emailVerified: true,
+          role: 'user',
         },
       }),
     });
@@ -47,6 +55,6 @@ setup('authenticate', async ({ page }) => {
   await page.goto(URL);
 
   // Verify we are logged in (Posts link enabled)
-  await expect(page.getByRole('link', { name: 'Posts' })).not.toHaveClass('disabled-link');
+  await expect(page.locator('#nav-posts')).not.toHaveClass('disabled-link');
   await page.context().storageState({ path: authFile });
 });
