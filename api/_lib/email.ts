@@ -50,7 +50,7 @@ export async function sendVerificationEmail({
 
   // Production: send real email
   try {
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
       from: `"Angular App" <${env.SMTP_USER}>`,
       to,
       subject: 'Verify your email address',
@@ -89,7 +89,7 @@ export async function sendVerificationEmail({
               <table role="presentation" style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td align="center">
-                    <a href="${verificationUrl}" 
+                    <a href="${verificationUrl}"
                        style="display: inline-block; padding: 14px 32px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
                       Verify Email Address
                     </a>
@@ -203,7 +203,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
               <table role="presentation" style="width: 100%; border-collapse: collapse; margin-top: 30px;">
                 <tr>
                   <td align="center">
-                    <a href="${frontendUrl}" 
+                    <a href="${frontendUrl}"
                        style="display: inline-block; padding: 14px 32px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">
                       Go to App
                     </a>

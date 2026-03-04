@@ -1,10 +1,6 @@
 import { Routes } from '@angular/router';
-import { provideEffects } from '@ngrx/effects';
-import { provideState } from '@ngrx/store';
 import { authGuard } from './guards/auth-guard';
 import { publicGuard } from './guards/public.guard';
-import { PostsEffects } from './store/posts/posts.effects';
-import { postsFeature } from './store/posts/posts.reducer';
 
 export const routes: Routes = [
   {
@@ -33,13 +29,18 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/posts-list/posts-list.component').then((m) => m.PostsListComponent),
     pathMatch: 'full',
-    providers: [provideState(postsFeature), provideEffects([PostsEffects])],
     canActivate: [authGuard],
   },
   {
     path: 'posts/:id',
     loadComponent: () =>
       import('./pages/post-details/post-details.component').then((m) => m.PostDetailsComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./pages/settings/settings.component').then((m) => m.SettingsComponent),
     canActivate: [authGuard],
   },
   {

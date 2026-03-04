@@ -1,4 +1,4 @@
-import { eq, gt, desc, and, lt, inArray } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, lt } from 'drizzle-orm';
 import { db } from '../db';
 import { refreshTokens } from '../db/schema';
 
@@ -9,9 +9,11 @@ const MAX_ACTIVE_SESSIONS = 5;
  * @param userId - User ID
  */
 export async function cleanupAndLimitSessions(userId: string): Promise<void> {
+  const now = new Date();
+
   // Get active tokens sorted by creation time (newest first)
   const existingTokens = await db.query.refreshTokens.findMany({
-    where: and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, new Date())),
+    where: and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, now)),
     orderBy: [desc(refreshTokens.createdAt)],
     columns: {
       id: true,
@@ -20,8 +22,8 @@ export async function cleanupAndLimitSessions(userId: string): Promise<void> {
   });
 
   // If user has max sessions, delete oldest ones
-  if (existingTokens && existingTokens.length >= MAX_ACTIVE_SESSIONS) {
-    const tokensToDelete = existingTokens.slice(MAX_ACTIVE_SESSIONS - 1);
+  if (existingTokens && existingTokens.length > MAX_ACTIVE_SESSIONS) {
+    const tokensToDelete = existingTokens.slice(MAX_ACTIVE_SESSIONS);
     await db.delete(refreshTokens).where(
       inArray(
         refreshTokens.id,
@@ -33,15 +35,16 @@ export async function cleanupAndLimitSessions(userId: string): Promise<void> {
   // Clean up expired tokens (don't await, fire-and-forget)
   void db
     .delete(refreshTokens)
-    .where(and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, new Date())));
+    .where(and(eq(refreshTokens.userId, userId), lt(refreshTokens.expiresAt, now)));
 }
 
 /**
  * Get active sessions count for user
  */
 export async function getActiveSessionsCount(userId: string): Promise<number> {
+  const now = new Date();
   const sessions = await db.query.refreshTokens.findMany({
-    where: and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, new Date())),
+    where: and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, now)),
     columns: {
       id: true,
     },

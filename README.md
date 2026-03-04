@@ -1,429 +1,149 @@
 # Angular Zoneless Template
 
-Modern Angular 21 application template with **zoneless change detection**, server-side rendering (SSR), **authentication (Email + OAuth)**, state management, and comprehensive testing setup.
+Production-ready Angular 21 template with zoneless change detection, SSR, secure authentication, and a Vercel/Supabase-friendly backend.
 
-## Features
+## Highlights
 
-- **Angular 21.0** - Latest stable version with zoneless architecture
-- **Server-Side Rendering (SSR)** - Angular Universal for improved SEO and performance
-- **Authentication** - Email + OAuth (GitHub, Google) with JWT & Drizzle ORM
-- **State Management** - NgRx Store with Effects for predictable state management
-- **Vitest** - Fast, modern test runner with native ESM support
-- **100% Test Coverage** - Comprehensive unit tests for all components, services, and logic
-- **Playwright** - End-to-end testing framework
-- **TypeScript 5.9** - Strict type checking
-- **Lazy Loading** - Route-based code splitting for optimal bundle size
-- **Signal Forms** - Modern Angular reactive forms
+- Angular 21 + standalone architecture
+- Zoneless change detection (`provideZonelessChangeDetection`)
+- SSR + hydration (including TanStack Query dehydration/rehydration)
+- Email/password + OAuth (GitHub, Google)
+- HttpOnly cookie auth with refresh token rotation
+- TanStack Query for server state, NgRx Signal Store for UI state
+- Vitest unit tests + Playwright E2E
+- Strict ESLint + TypeScript
 
-## Tech Stack
+## Stack
 
-### Core
+### Frontend
 
-- **Angular 21.0.6** - Framework
-- **TypeScript 5.9.2** - Language
-- **RxJS 7.8.0** - Reactive programming
-- **Express 5.1.0** - SSR server
+- Angular 21
+- TypeScript 5.9
+- RxJS
+- TanStack Query (`@tanstack/angular-query-experimental`)
+- NgRx Signal Store
 
-### State Management
+### Backend
 
-- **@ngrx/store 21.0.1** - State management
-- **@ngrx/effects 21.0.1** - Side effects
-- **@ngrx/store-devtools 21.0.1** - Redux DevTools integration
-
-### Authentication & Backend
-
-- **PostgreSQL** - Database (Supabase, Vercel Postgres, or any Postgres)
-- **Drizzle ORM** - Type-safe ORM for database interactions
-- **Vercel Functions** - Serverless API endpoints
-- **JWT** - Token-based authentication with refresh tokens (15m access, 7d refresh)
-- **Argon2id** - Modern password hashing (2025 OWASP recommendation)
-- **Rate Limiting** - Protection against brute force attacks (5 login/min, 3 register/min)
-- **Security Headers** - CSP, XSS protection, Frame Options, etc.
-- **OAuth** - GitHub and Google authentication
-- **Multi-Device Support** - Up to 5 concurrent sessions per user
-- **Session Management** - Auto-cleanup of expired tokens, device limit enforcement
-- **Email Verification** - Required for email registrations with Nodemailer + Gmail SMTP
-- **HttpOnly Cookies** - Secure token storage with SameSite=Lax
-- **Token Rotation** - Refresh tokens are rotated on every refresh
-- **Optimistic Logout** - Fire-and-forget logout for instant UX
+- Vercel Functions (`api/`)
+- Drizzle ORM + PostgreSQL (Supabase/Vercel Postgres)
+- JWT access/refresh token flow
+- Argon2id password hashing
+- Zod runtime validation
 
 ### Testing
 
-- **Vitest 4.0.16** - Unit test runner with native ESM support
-- **@vitest/ui 4.0.16** - Visual test interface
-- **@vitest/coverage-v8 4.0.16** - Code coverage reporting
-- **@analogjs/vite-plugin-angular 2.2.0** - Official Angular + Vitest integration
-- **Playwright 1.56.0** - E2E testing
-- **jsdom 27.4.0** - DOM testing environment
-- Uses latest Angular 21 testing APIs with zoneless change detection
+- Vitest
+- Playwright
+- ESLint
 
-## Development
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 20.11.1 or higher
-- npm 11.6.2 or higher
-- PostgreSQL database (Supabase, Vercel Postgres, or local)
+- Node.js 20+
+- npm
+- PostgreSQL database
 
-### Quick Start
+### Install
 
 ```bash
-# 1. Install dependencies
 npm install
+```
 
-# 2. Setup Database
-# - Create a Postgres database (e.g., Supabase or Vercel Postgres)
-# - Copy .env.local and add your DATABASE_URL
-# - Push schema to database:
-#   npx drizzle-kit push
+### Environment
 
-# 3. Setup Email
-# - Development: Verification links logged to console (mock mode)
-# - Production: Configure Gmail SMTP or use email service (Resend, SendGrid)
-# - See docs/EMAIL.md
+Create `.env.local` with required variables (see deployment docs), then run:
 
-# 4. Start development
+```bash
 npm run dev
 ```
 
-Visit:
+- Frontend SSR app: `http://localhost:4200`
+- API (Vercel dev): `http://localhost:3000`
 
-- Frontend: http://localhost:4200
-- API: http://localhost:3000
+### Demo Account
 
-### Installation
+Use the seeded demo user to explore posts/comments/reactions without registration:
+
+- Email: `test@te.st`
+- Password: `test`
+
+Seed is created by migration `supabase/migrations/20260227_seed_demo_user.sql`.
+
+## Scripts
+
+| Script                  | Description                                       |
+| ----------------------- | ------------------------------------------------- |
+| `npm run dev`           | Run API + SSR app together                        |
+| `npm run dev:api`       | Run Vercel API only (port 3000)                   |
+| `npm run dev:ssr`       | Run Angular app only (port 4200)                  |
+| `npm start`             | Angular dev server                                |
+| `npm run build`         | Production build                                  |
+| `npm run lint`          | ESLint (warnings treated as errors)               |
+| `npm test`              | Vitest run (includes `pretest` cleanup of `dist`) |
+| `npm run test:watch`    | Vitest watch mode                                 |
+| `npm run test:coverage` | Vitest with coverage                              |
+| `npx playwright test`   | E2E tests                                         |
+
+## Testing Notes
+
+- `npm test` is configured for unit/integration tests in `src/**`.
+- Playwright tests are in `tests/**` and use `playwright.config.ts` with project setup state.
+- Before deploy, run at minimum:
 
 ```bash
-npm install
-```
-
-### Development Server
-
-Start the development server with hot reload:
-
-```bash
-npm start
-# or
-ng serve
-```
-
-Navigate to `http://localhost:4200/`. The app will automatically reload when you change source files.
-
-### Build
-
-Build the project for production:
-
-```bash
+npm run lint
 npm run build
-```
-
-Artifacts will be stored in the `dist/` directory, optimized for production.
-
-### Watch Mode
-
-Build in watch mode for development:
-
-```bash
-# (add a watch script if needed)
-```
-
-## OAuth Setup (Optional)
-
-### GitHub
-
-1. Create OAuth App: https://github.com/settings/developers
-2. Set Homepage URL: `https://angular-zoneless-template.vercel.app`
-3. Set Callback URL: `https://angular-zoneless-template.vercel.app/api/auth/callback-github`
-4. Add credentials to `.env.local`:
-
-```env
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
-```
-
-### Google
-
-1. Create OAuth Client: https://console.cloud.google.com
-2. Add Authorized origins: `https://angular-zoneless-template.vercel.app`
-3. Add Redirect URI: `https://angular-zoneless-template.vercel.app/api/auth/callback-google`
-4. Add credentials to `.env.local`:
-
-```env
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
-```
-
-## Testing
-
-### Unit Tests
-
-Run all unit tests once:
-
-```bash
 npm test
+npx playwright test --project=chromium
 ```
 
-Run tests in watch mode:
+## Security Model
 
-```bash
-npm run test:watch
+- HttpOnly cookies for access/refresh tokens
+- Refresh token rotation on refresh endpoint
+- Logout clears cookies and revokes DB token
+- Rate limiting in API layer
+- Security headers and CORS handling in shared API utilities
+- SSR cookie forwarding via interceptor for authenticated server-side data fetching
+
+## Project Layout
+
+```text
+api/                    # Vercel serverless API
+  _lib/                 # shared backend utilities (security/cors/env/password/session)
+  auth/                 # auth handlers
+  posts/ comments/      # content APIs
+  reactions.ts          # likes/dislikes API
+  db/                   # Drizzle db + schema
+
+src/app/
+  pages/                # route pages (home/about/login/register/posts/post-details/...)
+  components/           # reusable UI components
+  services/             # HTTP + query services
+  store/                # UI signal store
+  guards/               # auth/public guards
+  interceptors/         # token refresh + SSR cookie forwarding
 ```
-
-Open interactive test UI in browser:
-
-```bash
-npm run test:ui
-```
-
-Generate coverage report:
-
-```bash
-npm run test:coverage
-```
-
-Coverage report will be generated in `coverage/` directory. Open `coverage/index.html` to view detailed results.
-
-**Current Coverage: 100%**
-
-- **216 tests** across all modules
-- 100% statements, branches, functions, and lines covered
-
-### E2E Tests
-
-Run end-to-end tests with Playwright:
-
-```bash
-npx playwright test
-```
-
-Run E2E tests in UI mode:
-
-```bash
-npx playwright test --ui
-```
-
-## Project Structure
-
-```
-api/                     # Vercel serverless functions
-  auth/                  # Auth endpoints
-    register.ts          # Email registration with verification email
-    login.ts             # Email login with session management
-    refresh.ts           # Token refresh with rotation
-    logout.ts            # Optimistic logout
-    verify-email.ts      # Email verification endpoint
-    resend-verification.ts # Resend verification email
-    github.ts            # GitHub OAuth initiation
-    google.ts            # Google OAuth initiation
-    callback-github.ts   # GitHub OAuth callback
-    callback-google.ts   # Google OAuth callback
-  user/                  # User endpoints
-    me.ts                # Get current user
-    sessions.ts          # Get active sessions
-    revoke-session.ts    # Revoke specific session
-  _lib/                  # Shared utilities
-    cors.ts              # CORS configuration
-    password.ts          # Argon2id hashing
-    env.ts               # Environment validation with Zod
-    security.ts          # Rate limiting & security headers
-    session-manager.ts   # Session cleanup & device limit
-    email.ts             # Email sending with Nodemailer (Ethereal for dev)
-  db/                    # Database configuration
-    index.ts             # Drizzle client setup
-    schema.ts            # Database schema definitions
-src/
- app/
-    store/               # NgRx state management
-       auth/             # Auth state (actions, reducer, effects, selectors)
-       posts/            # Posts state
-    services/            # Business logic services
-       auth.service.ts   # Authentication API service
-       post.service.ts   # Post data service
-    components/          # Reusable UI components
-       footer/
-       header/
-       logo/
-       panel/
-       post/
-       user-menu/
-    pages/               # Route components
-       login/            # Login page with Signal Forms
-       register/         # Registration page with email verification
-       verify-email/     # Email verification page
-       auth-callback/    # OAuth callback handler
-       about/
-       home/
-       page-not-found/
-       post-details/
-       posts-list/
-    guards/              # Route guards
-       auth.guard.ts     # Protect authenticated routes
-       public.guard.ts   # Protect public routes
-    interceptors/        # HTTP interceptors
-       token-refresh.interceptor.ts # Auto token refresh
-       ssr-cookie.interceptor.ts    # SSR cookie forwarding
-    tokens/              # Injection tokens
-       ssr.tokens.ts
-       window.token.ts
-    utils/               # Utility functions
-    app.config.ts        # App configuration
-    app.config.server.ts # SSR configuration
-    app.routes.ts        # Route definitions
-    app.ts               # Root component
-supabase/
-  migrations/            # Database migrations
-    20241222_initial_schema.sql        # Complete schema: users, refresh_tokens, email verification
- test-setup.ts           # Vitest test configuration
- vitest.config.ts        # Vitest configuration
-```
-
-## Session Management
-
-For detailed information, see [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md).
-
-### Multi-Device Strategy
-
-The authentication system supports **up to 5 concurrent sessions** per user:
-
-1. **On Login** (email/OAuth):
-   - Check active sessions count
-   - If ≥5 sessions → delete oldest session
-   - Create new refresh token
-   - Clean up expired tokens (fire-and-forget)
-
-2. **Token Lifetime**:
-   - Access token: 15 minutes
-   - Refresh token: 7 days
-   - Auto-refresh on API 401 errors
-
-3. **Session Cleanup**:
-   - Expired tokens removed on each login
-   - Token rotation on refresh (old token deleted)
-   - Fire-and-forget logout (instant UX)
-
-4. **Security Features**:
-   - HttpOnly cookies (XSS protection)
-   - SameSite=Lax (CSRF protection)
-   - Rate limiting (5 login/min, 3 register/min)
-   - Argon2id password hashing
-
-### Session Management API
-
-**Get Active Sessions:**
-
-```typescript
-GET / api / user / sessions;
-// Returns: { sessions: [{id, createdAt, expiresAt}], total: number }
-```
-
-**Revoke Session:**
-
-```typescript
-DELETE /api/user/revoke-session?sessionId=xxx
-// Deletes specific session
-```
-
-### Why 5 Devices?
-
-- **Balance**: Security vs UX
-- **Use cases**: Phone, Laptop, Tablet, Work PC, Home PC
-- **2025 Best Practice**: Most apps allow 3-10 concurrent sessions
-
-### Alternative Strategies
-
-**Single Session** (highest security):
-
-```typescript
-// In session-manager.ts, change MAX_ACTIVE_SESSIONS to 1
-const MAX_ACTIVE_SESSIONS = 1;
-```
-
-**Unlimited Sessions** (best UX):
-
-```typescript
-// Remove session limit check in cleanupAndLimitSessions()
-// Only clean expired tokens
-```
-
-## Configuration Files
-
-- **vitest.config.ts** - Vitest test runner configuration with @analogjs/vite-plugin-angular
-- **playwright.config.ts** - Playwright E2E test configuration
-- **tsconfig.json** - TypeScript compiler options
-- **tsconfig.spec.json** - TypeScript configuration for tests
-- **angular.json** - Angular CLI configuration
-
-## Key Concepts
-
-### Zoneless Change Detection
-
-This project uses Angular`'s experimental zoneless mode for better performance:
-
-- Manual change detection control
-- Reduced overhead from Zone.js
-- Signal-based reactivity
-
-### Lazy Loading
-
-Routes are configured with lazy loading for optimal initial load time:
-
-```typescript
-loadComponent: () => import(`'./pages/home/home.component`')
-  .then((m) => m.HomeComponent)
-```
-
-### State Management Pattern
-
-- **Actions** - Events that describe state changes
-- **Reducers** - Pure functions that handle state transitions
-- **Effects** - Side effects like HTTP requests
-- **Selectors** - Derived state queries
-
-## Scripts Reference
-
-| Script                  | Description                            |
-| ----------------------- | -------------------------------------- |
-| `npm run dev`           | Start both API and Angular dev servers |
-| `npm run dev:api`       | Start Vercel API only (port 3000)      |
-| `npm run dev:ssr`       | Start Angular SSR only (port 4200)     |
-| `npm start`             | Start Angular development server       |
-| `npm run build`         | Production build                       |
-| `npm test`              | Run unit tests once                    |
-| `npm run test:watch`    | Run tests in watch mode                |
-| `npm run test:ui`       | Open test UI with coverage             |
-| `npm run test:coverage` | Generate coverage report               |
-| `npx playwright test`   | Run E2E tests                          |
 
 ## Deployment
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel deployment and environment variables.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full production setup and env vars.
 
-### Vercel Production Deploy
+Related docs:
 
-1. Deploy to Vercel:
+- [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)
+- [docs/EMAIL.md](docs/EMAIL.md)
+- [docs/REMEMBER-ME.md](docs/REMEMBER-ME.md)
+- [docs/SETUP-POSTS.md](docs/SETUP-POSTS.md)
 
-```bash
-vercel --prod
-```
+## Status
 
-2. Add environment variables in Vercel Dashboard (Settings → Environment Variables):
-   - `DATABASE_URL` (Connection string to your Postgres DB)
-   - `JWT_SECRET`
-   - `JWT_REFRESH_SECRET`
-   - `SMTP_USER`, `SMTP_PASS`, `SMTP_HOST`, `SMTP_PORT` (for production email)
-   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (if using GitHub OAuth)
-   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (if using Google OAuth)
+Current baseline checks expected before release:
 
-3. Update OAuth callback URLs to production domain in GitHub/Google OAuth settings
-
-## Additional Resources
-
-- [Angular Documentation](https://angular.dev)
-- [Angular CLI](https://angular.dev/tools/cli)
-- [NgRx Documentation](https://ngrx.io)
-- [Vitest Documentation](https://vitest.dev)
-- [Playwright Documentation](https://playwright.dev)
-
-## License
-
-This project is open source and available under the MIT License.
+- Lint clean
+- Unit tests green
+- Unit coverage 100% (statements/branches/functions/lines)
+- Playwright chromium green
+- Production build successful

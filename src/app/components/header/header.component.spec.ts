@@ -1,22 +1,32 @@
-import { HttpClient } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { provideMockStore } from '@ngrx/store/testing';
+import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { HeaderComponent } from './header.component';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
   let fixture: ComponentFixture<HeaderComponent>;
+  let queryClient: QueryClient;
 
   beforeEach(async () => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
     await TestBed.configureTestingModule({
       imports: [HeaderComponent],
       providers: [
         provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTanStackQuery(queryClient),
         { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
-        { provide: HttpClient, useValue: {} },
-        provideMockStore({ initialState: {} }),
       ],
     }).compileComponents();
 

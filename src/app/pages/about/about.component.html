@@ -2,32 +2,37 @@
   <h1>About This Project</h1>
 
   <p>
-    This is a modern <strong>Angular 21</strong> application template featuring
-    <strong>zoneless change detection</strong>, server-side rendering (SSR), and a robust
-    authentication system.
+    This template is built around <strong>Angular 21.2</strong> with
+    <strong>zoneless change detection</strong>, SSR hydration, and a secure API-first authentication
+    flow.
+  </p>
+
+  <p>
+    For quick evaluation, a pre-seeded demo account is available:
+    <strong>test@te.st / test</strong>.
   </p>
 
   <h2>Key Features</h2>
   <ul>
     <li>
-      <strong>Angular 21 + Signals</strong>: Leveraging the latest stable version with zoneless
-      architecture, Signals-based reactivity, and functional patterns.
+      <strong>Angular 21.2 + Signals</strong>: Standalone components, signal-driven UI state, and
+      modern routing patterns.
     </li>
     <li>
-      <strong>Server-Side Rendering (SSR)</strong>: Optimized hydration with Event Replay for a
-      seamless user experience from initial load.
+      <strong>SSR + Hydration</strong>: Server rendering with TransferState/TanStack hydration to
+      avoid duplicate client fetches.
     </li>
     <li>
-      <strong>Secure Authentication</strong>: Multi-provider OAuth (GitHub, Google) and
-      Email/Password with HttpOnly cookie rotation and CSRF protection.
+      <strong>Secure Authentication</strong>: Email/password and OAuth (GitHub, Google) with
+      HttpOnly cookies, refresh token rotation, server-side session checks, and rate limiting.
     </li>
     <li>
-      <strong>State Management</strong>: Modern NgRx with Action Groups and selectSignal for
-      reactive state bridging.
+      <strong>State Management</strong>: TanStack Query for server state + NgRx Signal Store for
+      local UI state.
     </li>
     <li>
-      <strong>Performance First</strong>: Optimized image loading (NgOptimizedImage) and
-      standardized accessibility (WCAG compliance).
+      <strong>Quality Gate</strong>: Vitest unit tests (100% coverage), Playwright E2E checks,
+      strict linting, and production build checks.
     </li>
   </ul>
 
@@ -35,11 +40,11 @@
   <div class="tech-grid">
     <div class="tech-item">
       <h3>Core</h3>
-      <p>Angular 21, TypeScript 5.9, RxJS 7.8, Vite 7.3, ESM</p>
+      <p>Angular 21.2, TypeScript 5.9, RxJS 7.8, Vite 7, SSR</p>
     </div>
     <div class="tech-item">
       <h3>State & Data</h3>
-      <p>NgRx 21, Signals, Signal Forms, Drizzle ORM</p>
+      <p>TanStack Query, NgRx Signal Store, Signals, Drizzle ORM</p>
     </div>
     <div class="tech-item">
       <h3>Backend & Auth</h3>
@@ -47,7 +52,7 @@
     </div>
     <div class="tech-item">
       <h3>Testing</h3>
-      <p>Vitest, Playwright, 100% Coverage Target</p>
+      <p>Vitest, Playwright, ESLint, CI-ready checks</p>
     </div>
   </div>
 </section>
