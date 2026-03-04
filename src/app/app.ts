@@ -1,9 +1,10 @@
-import { afterNextRender, Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Store } from '@ngrx/store';
+import { injectQuery } from '@tanstack/angular-query-experimental';
 import { FooterComponent } from './components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';
-import { selectIsLoading } from './store/auth/auth.selectors';
+import { AuthQueryService } from './services/auth-query.service';
+import { hydrateTanStackQuery } from './ssr-tanstack-hydration';
 
 @Component({
   selector: 'app-root',
@@ -13,36 +14,13 @@ import { selectIsLoading } from './store/auth/auth.selectors';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  private store = inject(Store);
+  private authQueryService = inject(AuthQueryService);
 
   protected readonly title = signal('angular-test-app');
-  protected readonly isAuthLoading = this.store.selectSignal(selectIsLoading);
+  protected readonly userQuery = injectQuery(() => this.authQueryService.currentUserQueryOptions());
+  protected readonly isAuthLoading = this.userQuery.isPending;
 
   constructor() {
-    afterNextRender(() => console.log('AppComponent constructor afterNextRender !!!'));
-  }
-
-  ngOnInit(): void {
-    console.log('AppComponent ngOnInit !');
-  }
-
-  ngOnChanges(): void {
-    console.log('AppComponent ngOnChanges !');
-  }
-
-  ngDoCheck(): void {
-    console.log('AppComponent ngDoCheck ===');
-  }
-
-  ngAfterViewInit(): void {
-    console.log('AppComponent ngAfterViewInit ***');
-  }
-
-  ngAfterContentInit(): void {
-    console.log('AppComponent ngAfterContentInit $$$');
-  }
-
-  ngOnDestroy(): void {
-    console.log('AppComponent ngOnDestroy ###');
+    hydrateTanStackQuery();
   }
 }

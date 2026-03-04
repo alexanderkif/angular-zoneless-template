@@ -1,31 +1,28 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { of, throwError } from 'rxjs';
+import { AuthQueryService } from '../../services/auth-query.service';
 import { AuthService } from '../../services/auth.service';
-import { loginActions } from '../../store/auth/auth.actions';
 import { VerifyEmailComponent } from './verify-email';
 
 describe('VerifyEmailComponent', () => {
   let component: VerifyEmailComponent;
   let fixture: ComponentFixture<VerifyEmailComponent>;
   let authServiceMock: any;
+  let authQueryServiceMock: any;
   let routerMock: any;
-  let storeMock: any;
   let activatedRouteMock: any;
 
   beforeEach(async () => {
     authServiceMock = {
-      verifyEmail: vi.fn(),
-      resendVerificationByToken: vi.fn(),
       cancelRegistration: vi.fn(),
+    };
+    authQueryServiceMock = {
+      verifyEmailMutation: vi.fn(() => ({ mutate: vi.fn() })),
+      resendVerificationMutation: vi.fn(() => ({ mutate: vi.fn() })),
     };
     routerMock = {
       navigate: vi.fn(),
-    };
-    storeMock = {
-      dispatch: vi.fn(),
     };
     activatedRouteMock = {
       snapshot: {
@@ -39,9 +36,9 @@ describe('VerifyEmailComponent', () => {
       imports: [VerifyEmailComponent],
       providers: [
         provideZonelessChangeDetection(),
+        { provide: AuthQueryService, useValue: authQueryServiceMock },
         { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock },
-        { provide: Store, useValue: storeMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
       ],
     }).compileComponents();
@@ -59,26 +56,6 @@ describe('VerifyEmailComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should verify email successfully', () => {
-    vi.useFakeTimers();
-    const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
-    authServiceMock.verifyEmail.mockReturnValue(
-      of({
-        message: 'Success',
-        user: mockUser,
-      }),
-    );
-
-    component.ngOnInit();
-
-    expect(component.status()).toBe('success');
-    expect(storeMock.dispatch).toHaveBeenCalledWith(loginActions.loginSuccess({ user: mockUser }));
-
-    vi.advanceTimersByTime(2000);
-
-    expect(routerMock.navigate).toHaveBeenCalledWith(['/']);
-  });
-
   it('should handle missing token', () => {
     activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue(null);
 
@@ -86,26 +63,42 @@ describe('VerifyEmailComponent', () => {
 
     expect(component.status()).toBe('error');
     expect(component.message()).toBe('Invalid verification link');
-    expect(authServiceMock.verifyEmail).not.toHaveBeenCalled();
   });
 
-  it('should handle verification error', () => {
-    authServiceMock.verifyEmail.mockReturnValue(throwError(() => ({ message: 'Invalid token' })));
+  it('should verify token and navigate on success', () => {
+    vi.useFakeTimers();
+    const mutate = vi.fn((token: string, options: any) => {
+      options.onSuccess({ message: 'Verified!' });
+    });
+    component.verifyEmailMutation = { mutate } as any;
+
+    component.ngOnInit();
+
+    expect(mutate).toHaveBeenCalledWith('valid-token', expect.any(Object));
+    expect(component.status()).toBe('success');
+    expect(component.message()).toBe('Verified!');
+
+    vi.advanceTimersByTime(2000);
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('should set error on verification failure', () => {
+    const mutate = vi.fn((_token: string, options: any) => {
+      options.onError(new Error('verify failed'));
+    });
+    component.verifyEmailMutation = { mutate } as any;
 
     component.ngOnInit();
 
     expect(component.status()).toBe('error');
-    expect(component.message()).toBe('Invalid token');
+    expect(component.message()).toBe('verify failed');
   });
 
-  it('should use default success message if response message is missing', () => {
-    vi.useFakeTimers();
-    const mockUser = { id: '1', email: 'test@example.com', name: 'Test' };
-    authServiceMock.verifyEmail.mockReturnValue(
-      of({
-        user: mockUser,
-      }),
-    );
+  it('should use default verification success message when response message is empty', () => {
+    const mutate = vi.fn((_token: string, options: any) => {
+      options.onSuccess({ message: '' });
+    });
+    component.verifyEmailMutation = { mutate } as any;
 
     component.ngOnInit();
 
@@ -113,8 +106,11 @@ describe('VerifyEmailComponent', () => {
     expect(component.message()).toBe('Email verified successfully!');
   });
 
-  it('should use default error message if error message is missing', () => {
-    authServiceMock.verifyEmail.mockReturnValue(throwError(() => ({})));
+  it('should use default verification error message when error has no message', () => {
+    const mutate = vi.fn((_token: string, options: any) => {
+      options.onError({} as any);
+    });
+    component.verifyEmailMutation = { mutate } as any;
 
     component.ngOnInit();
 
@@ -122,102 +118,109 @@ describe('VerifyEmailComponent', () => {
     expect(component.message()).toBe('Failed to verify email');
   });
 
-  it('should resend verification by token successfully', () => {
-    authServiceMock.resendVerificationByToken.mockReturnValue(of({ message: 'New link sent' }));
+  it('should resend verification with token', () => {
+    const mutate = vi.fn((_payload: any, options: any) => {
+      options.onSuccess({ message: 'resent' });
+    });
+    component.resendMutation = { mutate } as any;
 
     component.resendVerification();
 
-    expect(authServiceMock.resendVerificationByToken).toHaveBeenCalledWith('valid-token');
-    expect(component.message()).toBe('New link sent');
+    expect(mutate).toHaveBeenCalledWith({ token: 'valid-token' }, expect.any(Object));
+    expect(component.status()).toBe('error');
+    expect(component.message()).toBe('resent');
   });
 
-  it('should handle resend verification error', () => {
-    authServiceMock.resendVerificationByToken.mockReturnValue(
-      throwError(() => ({ message: 'Failed to resend' })),
-    );
+  it('should handle resend error', () => {
+    const mutate = vi.fn((_payload: any, options: any) => {
+      options.onError(new Error('resend failed'));
+    });
+    component.resendMutation = { mutate } as any;
 
     component.resendVerification();
 
-    expect(authServiceMock.resendVerificationByToken).toHaveBeenCalledWith('valid-token');
-    expect(component.message()).toBe('Failed to resend');
+    expect(component.message()).toBe('resend failed');
   });
 
-  it('should use default error message on resend verification failure if message is missing', () => {
-    authServiceMock.resendVerificationByToken.mockReturnValue(throwError(() => ({})));
+  it('should use default resend error message when missing', () => {
+    const mutate = vi.fn((_payload: any, options: any) => {
+      options.onError({} as any);
+    });
+    component.resendMutation = { mutate } as any;
 
     component.resendVerification();
 
-    expect(authServiceMock.resendVerificationByToken).toHaveBeenCalledWith('valid-token');
     expect(component.message()).toBe('Failed to resend verification link');
   });
 
-  it('should cancel registration successfully', () => {
+  it('should skip resend when token is missing', () => {
+    activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue(null);
+    const mutate = vi.fn();
+    component.resendMutation = { mutate } as any;
+
+    component.resendVerification();
+
+    expect(mutate).not.toHaveBeenCalled();
+  });
+
+  it('should cancel registration and navigate on success', () => {
     vi.useFakeTimers();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    authServiceMock.cancelRegistration.mockReturnValue(of({ message: 'Registration cancelled' }));
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+
+    authServiceMock.cancelRegistration.mockReturnValue({
+      subscribe: ({ next }: any) => next({ message: 'cancelled' }),
+    });
 
     component.cancelRegistration();
 
     expect(authServiceMock.cancelRegistration).toHaveBeenCalledWith('valid-token');
-    expect(component.message()).toBe('Registration cancelled');
+    expect(component.status()).toBe('error');
+    expect(component.message()).toBe('cancelled');
 
     vi.advanceTimersByTime(2000);
     expect(routerMock.navigate).toHaveBeenCalledWith(['/register']);
   });
 
-  it('should not cancel registration if user cancels confirm', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-
-    component.cancelRegistration();
-
-    expect(authServiceMock.cancelRegistration).not.toHaveBeenCalled();
-  });
-
   it('should handle cancel registration error', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    authServiceMock.cancelRegistration.mockReturnValue(
-      throwError(() => ({ message: 'Failed to cancel' })),
-    );
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+
+    authServiceMock.cancelRegistration.mockReturnValue({
+      subscribe: ({ error }: any) => error(new Error('cancel failed')),
+    });
 
     component.cancelRegistration();
 
-    expect(authServiceMock.cancelRegistration).toHaveBeenCalledWith('valid-token');
-    expect(component.message()).toBe('Failed to cancel');
+    expect(component.status()).toBe('error');
+    expect(component.message()).toBe('cancel failed');
   });
 
-  it('should use default error message on cancel registration failure if message is missing', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    authServiceMock.cancelRegistration.mockReturnValue(throwError(() => ({})));
+  it('should use default cancel error message when missing', () => {
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+
+    authServiceMock.cancelRegistration.mockReturnValue({
+      subscribe: ({ error }: any) => error({}),
+    });
 
     component.cancelRegistration();
 
-    expect(authServiceMock.cancelRegistration).toHaveBeenCalledWith('valid-token');
+    expect(component.status()).toBe('error');
     expect(component.message()).toBe('Failed to cancel registration');
   });
 
-  it('should not resend verification if token is missing', () => {
+  it('should not cancel registration when token is missing', () => {
     activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue(null);
-    component.resendVerification();
-    expect(authServiceMock.resendVerificationByToken).not.toHaveBeenCalled();
-  });
-
-  it('should not cancel registration if token is missing', () => {
-    activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue(null);
-    const confirmSpy = vi.spyOn(window, 'confirm');
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
 
     component.cancelRegistration();
 
     expect(authServiceMock.cancelRegistration).not.toHaveBeenCalled();
-    expect(confirmSpy).not.toHaveBeenCalled();
   });
 
-  it('should not cancel registration if token is undefined', () => {
-    activatedRouteMock.snapshot.queryParamMap.get.mockReturnValue(undefined);
-    const confirmSpy = vi.spyOn(window, 'confirm');
+  it('should not cancel registration when user declines confirmation', () => {
+    vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
 
     component.cancelRegistration();
 
     expect(authServiceMock.cancelRegistration).not.toHaveBeenCalled();
-    expect(confirmSpy).not.toHaveBeenCalled();
   });
 });

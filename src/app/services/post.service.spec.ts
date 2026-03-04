@@ -1,83 +1,86 @@
-import { HttpClient } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Observable, of } from 'rxjs';
-import { getRandomInt } from '../utils/utils';
-import { PostService, Post } from './post.service';
+import { PostService } from './post.service';
 
 describe('PostService', () => {
   let service: PostService;
-  let httpClientMock: { get: ReturnType<typeof vi.fn> };
-
-  const mockPosts: Post[] = [
-    { id: 1, title: 'Post 1', body: 'Body 1', userId: 1 },
-    { id: 2, title: 'Post 2', body: 'Body 2', userId: 2 },
-    { id: 3, title: 'Post 3', body: 'Body 3', userId: 3 },
-    { id: 4, title: 'Post 4', body: 'Body 4', userId: 4 },
-    { id: 5, title: 'Post 5', body: 'Body 5', userId: 5 },
-  ];
+  let httpMock: HttpTestingController;
 
   beforeEach(() => {
-    httpClientMock = {
-      get: vi.fn((url: string): Observable<Post | Post[] | null> => {
-        if (url.includes('/posts/')) {
-          const id = url.split('/posts/')[1] || null;
-          return id ? of(mockPosts.find((post) => post.id.toString() === id) || null) : of(null);
-        }
-        if (url.includes('/posts?_limit=')) {
-          const limit = +url.split('/posts?_limit=')[1].split('&')[0];
-          const start = +url.split('&_start=')[1] || 0;
-          return of(mockPosts.slice(start, limit + start));
-        }
-        return of(null);
-      }),
-    };
-
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
-        {
-          provide: HttpClient,
-          useValue: httpClientMock,
-        },
+        PostService,
+        provideHttpClient(),
+        provideHttpClientTesting(),
       ],
     });
+
     service = TestBed.inject(PostService);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+  afterEach(() => {
+    httpMock.verify();
   });
 
-  describe('getPosts', () => {
-    it('should fetch posts with a custom limit', () => {
-      const limit = getRandomInt(1, mockPosts.length);
-      const start = getRandomInt(0, mockPosts.length - limit);
+  it('should create post', () => {
+    service.createPost({ title: 'T', content: 'C' }).subscribe();
 
-      service.getPosts(start, limit).subscribe((posts) => {
-        expect(posts).toEqual(mockPosts.slice(start, limit + start));
-      });
-    });
-    it('should fetch posts with the default limit', () => {
-      service.getPosts().subscribe((posts) => {
-        expect(posts).toEqual(mockPosts.slice(0, 5));
-      });
-    });
+    const req = httpMock.expectOne('http://localhost:3000/api/posts');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ title: 'T', content: 'C' });
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({ post: { id: '1' } });
   });
 
-  describe('getPost', () => {
-    it('should fetch a single post by ID', () => {
-      const id = getRandomInt(1, mockPosts.length).toString();
+  it('should update post', () => {
+    service.updatePost('p1', { title: 'TT' }).subscribe();
 
-      service.getPost(id).subscribe((post) => {
-        expect(post).toEqual(mockPosts[+id - 1]);
-      });
-    });
+    const req = httpMock.expectOne('http://localhost:3000/api/posts/p1');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ title: 'TT' });
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({ post: { id: 'p1' } });
+  });
 
-    it('should return null if ID is null', () => {
-      service.getPost(null).subscribe((post) => {
-        expect(post).toBeNull();
-      });
-    });
+  it('should delete post', () => {
+    service.deletePost('p2').subscribe();
+
+    const req = httpMock.expectOne('http://localhost:3000/api/posts/p2');
+    expect(req.request.method).toBe('DELETE');
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({});
+  });
+
+  it('should create comment', () => {
+    service.createComment({ postId: 'p1', content: 'comment' }).subscribe();
+
+    const req = httpMock.expectOne('http://localhost:3000/api/comments');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ postId: 'p1', content: 'comment' });
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({ comment: { id: 'c1' } });
+  });
+
+  it('should update comment', () => {
+    service.updateComment('c1', { content: 'updated' }).subscribe();
+
+    const req = httpMock.expectOne('http://localhost:3000/api/comments/c1');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ content: 'updated' });
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({ comment: { id: 'c1' } });
+  });
+
+  it('should delete comment', () => {
+    service.deleteComment('c2').subscribe();
+
+    const req = httpMock.expectOne('http://localhost:3000/api/comments/c2');
+    expect(req.request.method).toBe('DELETE');
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({});
   });
 });

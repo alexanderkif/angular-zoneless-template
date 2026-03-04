@@ -1,20 +1,42 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { registerActions, oauthActions } from '../../store/auth/auth.actions';
+import { ActivatedRoute, Router } from '@angular/router';
+import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { Subject } from 'rxjs';
+import { AuthQueryService } from '../../services/auth-query.service';
+import { WINDOW } from '../../tokens/window.token';
 import { RegisterComponent } from './register.component';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
   let fixture: ComponentFixture<RegisterComponent>;
-  let storeMock: any;
   let activatedRouteMock: any;
+  let windowMock: any;
+  let queryClient: QueryClient;
+  let routerMock: any;
+  let registerMutateFn: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
-    storeMock = {
-      dispatch: vi.fn(),
-      selectSignal: vi.fn().mockReturnValue(() => false),
+    registerMutateFn = vi.fn();
+
+    const authQueryServiceMock = {
+      registerMutation: () => ({
+        mutate: registerMutateFn,
+        isPending: vi.fn(() => false),
+        error: vi.fn(() => null),
+        data: vi.fn(() => null),
+        isError: vi.fn(() => false),
+        isSuccess: vi.fn(() => false),
+      }),
+    };
+
+    routerMock = {
+      navigate: vi.fn(),
+      events: new Subject(),
+      createUrlTree: vi.fn(),
+      serializeUrl: vi.fn(() => ''),
     };
 
     activatedRouteMock = {
@@ -22,15 +44,39 @@ describe('RegisterComponent', () => {
         queryParamMap: {
           get: vi.fn(),
         },
+        queryParams: {},
       },
     };
+
+    windowMock = {
+      location: {
+        href: 'http://localhost:4200',
+      },
+      sessionStorage: {
+        setItem: vi.fn(),
+        getItem: vi.fn(),
+        removeItem: vi.fn(),
+      },
+    };
+
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
 
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [
         provideZonelessChangeDetection(),
-        { provide: Store, useValue: storeMock },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTanStackQuery(queryClient),
+        { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: WINDOW, useValue: windowMock },
+        { provide: AuthQueryService, useValue: authQueryServiceMock },
       ],
     }).compileComponents();
 
@@ -63,8 +109,7 @@ describe('RegisterComponent', () => {
     expect(component.passwordMismatch()).toBe(false);
   });
 
-  it('should dispatch register action on valid submit', () => {
-    vi.useFakeTimers();
+  it('should call registerMutation on valid submit', () => {
     component.registerModel.set({
       name: 'Test User',
       email: 'test@example.com',
@@ -74,21 +119,21 @@ describe('RegisterComponent', () => {
 
     component.onSubmit({ preventDefault: () => {} } as any);
 
-    expect(storeMock.dispatch).toHaveBeenCalledWith(
-      registerActions.register({
+    expect(registerMutateFn).toHaveBeenCalledWith(
+      {
         name: 'Test User',
         email: 'test@example.com',
         password: 'password123',
-      }),
+      },
+      expect.any(Object),
     );
 
-    vi.advanceTimersByTime(500);
+    const options = registerMutateFn.mock.calls[0][1] as { onSuccess?: () => void };
+    options.onSuccess?.();
     expect(component.registrationSuccess()).toBe(true);
-    expect(component.registeredEmail()).toBe('test@example.com');
-    vi.useRealTimers();
   });
 
-  it('should not dispatch register action on invalid submit', () => {
+  it('should not call registerMutation on invalid submit', () => {
     component.registerModel.set({
       name: '',
       email: 'invalid',
@@ -98,17 +143,24 @@ describe('RegisterComponent', () => {
 
     component.onSubmit({ preventDefault: () => {} } as any);
 
-    expect(storeMock.dispatch).not.toHaveBeenCalled();
+    expect(registerMutateFn).not.toHaveBeenCalled();
   });
 
-  it('should dispatch githubLogin action', () => {
+  it('should redirect to OAuth endpoints for social registration', () => {
     component.registerWithGithub();
-    expect(storeMock.dispatch).toHaveBeenCalledWith(oauthActions.githubLogin());
+    expect(windowMock.location.href).toContain('/auth/github');
+
+    component.registerWithGoogle();
+    expect(windowMock.location.href).toContain('/auth/google');
   });
 
-  it('should dispatch googleLogin action', () => {
+  it('should not redirect social registration on server platform', () => {
+    (component as any).platformId = 'server';
+
+    component.registerWithGithub();
     component.registerWithGoogle();
-    expect(storeMock.dispatch).toHaveBeenCalledWith(oauthActions.googleLogin());
+
+    expect(windowMock.location.href).toBe('http://localhost:4200');
   });
 
   it('should toggle password visibility', () => {

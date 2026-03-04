@@ -20,6 +20,9 @@
       "destination": "/api/auth?action=cancel-registration"
     },
 
+    { "source": "/api/posts/:id", "destination": "/api/posts?id=:id" },
+    { "source": "/api/comments/:id", "destination": "/api/comments?id=:id" },
+
     { "source": "/api/auth/github", "destination": "/api/auth/oauth?action=github" },
     { "source": "/api/auth/google", "destination": "/api/auth/oauth?action=google" },
     {

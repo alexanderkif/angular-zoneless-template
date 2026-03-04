@@ -1,7 +1,7 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { selectIsAuthenticated } from '../../store/auth/auth.selectors';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+import { AuthQueryService } from '../../services/auth-query.service';
 
 @Component({
   selector: 'app-panel',
@@ -11,6 +11,7 @@ import { selectIsAuthenticated } from '../../store/auth/auth.selectors';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PanelComponent {
-  private store = inject(Store);
-  public isAuthenticated = this.store.selectSignal(selectIsAuthenticated);
+  private authQueryService = inject(AuthQueryService);
+  public readonly userQuery = injectQuery(this.authQueryService.currentUserQueryOptions);
+  public readonly isAuthenticated = computed(() => !!this.userQuery.data());
 }

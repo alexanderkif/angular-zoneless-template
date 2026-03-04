@@ -1,9 +1,7 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-
-import { Store } from '@ngrx/store';
+import { AuthQueryService } from '../../services/auth-query.service';
 import { AuthService } from '../../services/auth.service';
-import { loginActions } from '../../store/auth/auth.actions';
 
 @Component({
   selector: 'app-verify-email',
@@ -19,7 +17,10 @@ export class VerifyEmailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private store = inject(Store);
+  private authQueryService = inject(AuthQueryService);
+
+  verifyEmailMutation = this.authQueryService.verifyEmailMutation();
+  resendMutation = this.authQueryService.resendVerificationMutation();
 
   ngOnInit() {
     const token = this.route.snapshot.queryParamMap.get('token');
@@ -30,21 +31,18 @@ export class VerifyEmailComponent implements OnInit {
       return;
     }
 
-    // Call verification endpoint
-    this.authService.verifyEmail(token).subscribe({
-      next: (response) => {
+    // Call verification endpoint with TanStack Query mutation
+    this.verifyEmailMutation.mutate(token, {
+      onSuccess: (response) => {
         this.status.set('success');
         this.message.set(response.message || 'Email verified successfully!');
-
-        // Update store with logged in user
-        this.store.dispatch(loginActions.loginSuccess({ user: response.user }));
 
         // Redirect to home after 2 seconds
         setTimeout(() => {
           this.router.navigate(['/']);
         }, 2000);
       },
-      error: (error) => {
+      onError: (error: Error) => {
         this.status.set('error');
         this.message.set(error.message || 'Failed to verify email');
       },
@@ -58,17 +56,18 @@ export class VerifyEmailComponent implements OnInit {
     this.status.set('loading');
     this.message.set('Sending new verification link...');
 
-    this.authService.resendVerificationByToken(token).subscribe({
-      next: (response) => {
-        this.status.set('error'); // Keep error state to show message, but maybe with a success icon?
-        // Actually, let's use a new state or just update message
-        this.message.set(response.message);
-        // We stay on the error screen but with updated message
+    this.resendMutation.mutate(
+      { token },
+      {
+        onSuccess: (response) => {
+          this.status.set('error'); // Keep error state to show message
+          this.message.set(response.message);
+        },
+        onError: (error: Error) => {
+          this.message.set(error.message || 'Failed to resend verification link');
+        },
       },
-      error: (error) => {
-        this.message.set(error.message || 'Failed to resend verification link');
-      },
-    });
+    );
   }
 
   cancelRegistration() {

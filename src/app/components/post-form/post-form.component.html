@@ -1,0 +1,87 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ post() ? 'Edit Post' : 'Create Post' }}</h2>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onCancel()"
+        aria-label="Close"
+        [disabled]="isSubmitting()"
+      >
+        ×
+      </button>
+    </div>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="post-form"
+      [attr.aria-busy]="isSubmitting()"
+    >
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          placeholder="Enter post title..."
+          [disabled]="isSubmitting()"
+          [class.error]="form.controls.title.invalid && form.controls.title.touched"
+        />
+        @if (form.controls.title.errors && form.controls.title.touched) {
+          <div class="error-message">
+            @if (form.controls.title.errors['required']) {
+              Title is required
+            }
+            @if (form.controls.title.errors['maxlength']) {
+              Maximum 200 characters
+            }
+          </div>
+        }
+        <div class="char-counter">{{ form.controls.title.value.length }} / 200</div>
+      </div>
+
+      <div class="form-group">
+        <label for="content">Content</label>
+        <textarea
+          id="content"
+          formControlName="content"
+          placeholder="Enter post content..."
+          rows="12"
+          [disabled]="isSubmitting()"
+          [class.error]="form.controls.content.invalid && form.controls.content.touched"
+        ></textarea>
+        @if (form.controls.content.errors && form.controls.content.touched) {
+          <div class="error-message">
+            @if (form.controls.content.errors['required']) {
+              Content is required
+            }
+            @if (form.controls.content.errors['maxlength']) {
+              Maximum 50000 characters
+            }
+          </div>
+        }
+        <div class="char-counter">{{ form.controls.content.value.length }} / 50000</div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSubmitting()">
+          @if (isSubmitting()) {
+            Saving...
+          } @else {
+            {{ post() ? 'Save' : 'Create Post' }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

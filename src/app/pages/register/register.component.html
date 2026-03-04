@@ -23,9 +23,9 @@
     } @else {
       <h1>Create Account</h1>
 
-      @if (error()) {
+      @if (registerMutation.error()) {
         <div class="error-message">
-          {{ error() }}
+          {{ registerMutation.error()!.message }}
         </div>
       }
 
@@ -34,8 +34,9 @@
           <label for="name">Full Name</label>
           <input
             id="name"
+            data-testid="register-name"
             type="text"
-            [field]="registerForm.name"
+            [formField]="registerForm.name"
             placeholder="Enter your full name"
             [class.invalid]="!registerForm.name().valid() && registerForm.name().touched()"
           />
@@ -52,8 +53,9 @@
           <label for="email">Email</label>
           <input
             id="email"
+            data-testid="register-email"
             type="email"
-            [field]="registerForm.email"
+            [formField]="registerForm.email"
             placeholder="Enter your email"
             [class.invalid]="!registerForm.email().valid() && registerForm.email().touched()"
           />
@@ -71,8 +73,9 @@
           <div class="password-wrapper">
             <input
               id="password"
+              data-testid="register-password"
               [type]="showPassword() ? 'text' : 'password'"
-              [field]="registerForm.password"
+              [formField]="registerForm.password"
               placeholder="Create a password"
               [class.invalid]="
                 !registerForm.password().valid() && registerForm.password().touched()
@@ -131,8 +134,9 @@
           <div class="password-wrapper">
             <input
               id="confirmPassword"
+              data-testid="register-confirm-password"
               [type]="showConfirmPassword() ? 'text' : 'password'"
-              [field]="registerForm.confirmPassword"
+              [formField]="registerForm.confirmPassword"
               placeholder="Confirm your password"
               [class.invalid]="
                 !registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()
@@ -193,6 +197,7 @@
 
         <button
           type="submit"
+          data-testid="register-submit"
           class="btn-primary"
           [disabled]="
             !registerForm.name().valid() ||
@@ -200,10 +205,10 @@
             !registerForm.password().valid() ||
             !registerForm.confirmPassword().valid() ||
             passwordMismatch() ||
-            isLoading()
+            registerMutation.isPending()
           "
         >
-          @if (isLoading()) {
+          @if (registerMutation.isPending()) {
             <span>Creating account...</span>
           } @else {
             <span>Sign Up</span>
@@ -220,7 +225,7 @@
           type="button"
           class="btn-github"
           (click)="registerWithGithub()"
-          [disabled]="isLoading()"
+          [disabled]="registerMutation.isPending()"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -234,7 +239,7 @@
           type="button"
           class="btn-google"
           (click)="registerWithGoogle()"
-          [disabled]="isLoading()"
+          [disabled]="registerMutation.isPending()"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path

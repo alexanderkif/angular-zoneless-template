@@ -1,11 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import jwt from 'jsonwebtoken';
-import { eq, gt, desc, and } from 'drizzle-orm';
-import { db } from '../db';
-import { users, refreshTokens } from '../db/schema';
-import { handleCors } from '../_lib/cors';
-import { getEnv } from '../_lib/env';
-import { setSecurityHeaders } from '../_lib/security';
+import { and, desc, eq, gt } from 'drizzle-orm';
+import { db } from '../../server/db';
+import { users, refreshTokens } from '../../server/db/schema';
+import { resolveAuthenticatedUser } from '../../server/_lib/auth-user';
+import { handleCors } from '../../server/_lib/cors';
+import { setSecurityHeaders } from '../../server/_lib/security';
 
 async function handleMe(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -13,27 +12,23 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const env = getEnv();
-    const accessToken = req.cookies.access_token;
+    const auth = await resolveAuthenticatedUser(req, true);
 
-    if (!accessToken) {
+    if (!auth.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const decoded = jwt.verify(accessToken, env.JWT_SECRET) as {
-      userId: string;
-      email: string;
-    };
-
     // Drizzle Query
     const user = await db.query.users.findFirst({
-      where: eq(users.id, decoded.userId),
+      where: eq(users.id, auth.userId),
       columns: {
         id: true,
         email: true,
         name: true,
         avatarUrl: true,
         provider: true,
+        emailVerified: true,
+        role: true,
         createdAt: true,
         lastLogin: true,
       },
@@ -45,10 +40,7 @@ async function handleMe(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ user });
   } catch (error) {
-    console.error('Get user error:', error);
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
+    console.error('❌ [API] Get user error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -59,26 +51,18 @@ async function handleSessions(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const env = getEnv();
-    const accessToken = req.cookies?.access_token;
-
-    if (!accessToken) {
+    const auth = await resolveAuthenticatedUser(req);
+    if (!auth.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    let decoded;
-    try {
-      decoded = jwt.verify(accessToken, env.JWT_SECRET) as { userId: string };
-    } catch {
-      return res.status(401).json({ error: 'Invalid token' });
     }
 
     // Drizzle Query
     const sessions = await db.query.refreshTokens.findMany({
-      where: and(eq(refreshTokens.userId, decoded.userId), gt(refreshTokens.expiresAt, new Date())),
+      where: and(eq(refreshTokens.userId, auth.userId), gt(refreshTokens.expiresAt, new Date())),
       orderBy: [desc(refreshTokens.createdAt)],
       columns: {
         id: true,
+        sessionType: true,
         createdAt: true,
         expiresAt: true,
       },
@@ -103,18 +87,9 @@ async function handleRevokeSession(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const env = getEnv();
-    const accessToken = req.cookies?.access_token;
-
-    if (!accessToken) {
+    const auth = await resolveAuthenticatedUser(req);
+    if (!auth.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    let decoded;
-    try {
-      decoded = jwt.verify(accessToken, env.JWT_SECRET) as { userId: string };
-    } catch {
-      return res.status(401).json({ error: 'Invalid token' });
     }
 
     const { sessionId } = req.query;
@@ -126,7 +101,7 @@ async function handleRevokeSession(req: VercelRequest, res: VercelResponse) {
     // Drizzle Query
     await db
       .delete(refreshTokens)
-      .where(and(eq(refreshTokens.id, sessionId), eq(refreshTokens.userId, decoded.userId)));
+      .where(and(eq(refreshTokens.id, sessionId), eq(refreshTokens.userId, auth.userId)));
 
     return res.status(200).json({ success: true });
   } catch (error) {

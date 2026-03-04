@@ -2,20 +2,33 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { eq, and } from 'drizzle-orm';
-import { db } from '../db';
-import { users, refreshTokens } from '../db/schema';
-import { handleCors } from '../_lib/cors';
-import { verifyPassword, hashPassword } from '../_lib/password';
-import { getEnv } from '../_lib/env';
-import { rateLimit, setSecurityHeaders } from '../_lib/security';
-import { cleanupAndLimitSessions } from '../_lib/session-manager';
-import { sendVerificationEmail, sendWelcomeEmail } from '../_lib/email';
+import { and, eq, or, sql } from 'drizzle-orm';
+import { db } from '../../server/db';
+import { users, refreshTokens } from '../../server/db/schema';
+import { handleCors } from '../../server/_lib/cors';
+import { verifyPassword, hashPassword } from '../../server/_lib/password';
+import { getEnv } from '../../server/_lib/env';
+import { rateLimit, setSecurityHeaders } from '../../server/_lib/security';
+import { cleanupAndLimitSessions, revokeAllSessions } from '../../server/_lib/session-manager';
+import { sendVerificationEmail, sendWelcomeEmail } from '../../server/_lib/email';
+import {
+  buildAuthCookies,
+  buildAuthCookiesWithCleanup,
+  buildClearedAuthCookies,
+  createRefreshTokenExpiresAt,
+  getRefreshTokenTtlSeconds,
+  hashRefreshToken,
+  isSessionIdleExpired,
+  isRefreshTokenExpired,
+  sessionTypeFromRememberMe,
+  type SessionType,
+} from '../../server/_lib/auth-session';
 
 // Schemas
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  rememberMe: z.boolean().optional().default(true), // Default true for better UX
 });
 
 const registerSchema = z.object({
@@ -62,6 +75,8 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
         passwordHash: true,
         provider: true,
         emailVerified: true,
+        role: true,
+        sessionVersion: true,
       },
     });
 
@@ -92,33 +107,46 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Generate tokens
-    const accessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-    } as jwt.SignOptions);
+    const sessionType = sessionTypeFromRememberMe(body.rememberMe);
 
+    // Generate access token
+    const accessToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        sessionVersion: user.sessionVersion ?? 0,
+        sessionType,
+      },
+      env.JWT_SECRET,
+      {
+        expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+      } as jwt.SignOptions,
+    );
+
+    const refreshTokenTtlSeconds = getRefreshTokenTtlSeconds(sessionType);
     const refreshToken = jwt.sign({ userId: user.id, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
-      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+      expiresIn: refreshTokenTtlSeconds,
     } as jwt.SignOptions);
 
     // Clean up old/expired sessions and enforce limit
     await cleanupAndLimitSessions(user.id);
 
-    // Store new refresh token and update last login in parallel
-    await Promise.all([
-      db.insert(refreshTokens).values({
-        userId: user.id,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      }),
-      db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, user.id)),
-    ]);
+    const expiresAt = createRefreshTokenExpiresAt(sessionType);
 
-    // Set httpOnly cookies with SameSite=Lax for better OAuth compatibility
-    res.setHeader('Set-Cookie', [
-      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
-    ]);
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      token: hashRefreshToken(refreshToken),
+      sessionType,
+      expiresAt,
+    });
+
+    await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, user.id));
+
+    // Set cookies
+    res.setHeader(
+      'Set-Cookie',
+      buildAuthCookiesWithCleanup(accessToken, refreshToken, sessionType),
+    );
 
     return res.status(200).json({
       user: {
@@ -126,10 +154,13 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
+        provider: user.provider,
+        emailVerified: user.emailVerified,
+        role: user.role,
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ [API] Login error:', error);
 
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.issues });
@@ -209,6 +240,9 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
         email: user.email,
         name: user.name,
         avatarUrl: null,
+        provider: 'email',
+        emailVerified: false,
+        role: 'user',
       },
       message: 'Registration successful. Please check your email to verify your account.',
     });
@@ -229,27 +263,98 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const refreshToken = req.cookies.refresh_token;
+    const env = getEnv();
+    const refreshToken = req.cookies['refresh_token'];
+    const accessToken = req.cookies['access_token'];
+    const refreshTokenHash = refreshToken ? hashRefreshToken(refreshToken) : null;
 
-    // Delete refresh token from database (don't wait for it)
-    if (refreshToken) {
-      db.delete(refreshTokens)
-        .where(eq(refreshTokens.token, refreshToken))
-        .then(
-          () => {}, // Success - ignore
-          (err: unknown) => console.error('Failed to delete token:', err),
-        );
+    let userIdFromAccessToken: string | null = null;
+    if (accessToken) {
+      try {
+        const decoded = jwt.verify(accessToken, env.JWT_SECRET, {
+          ignoreExpiration: true,
+        } as jwt.VerifyOptions) as {
+          userId: string;
+        };
+        userIdFromAccessToken = decoded.userId;
+      } catch (_err: unknown) {}
     }
 
-    // Clear cookies
-    res.setHeader('Set-Cookie', [
-      'access_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
-      'refresh_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
-    ]);
+    if (!userIdFromAccessToken && refreshToken) {
+      try {
+        const decodedRefresh = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET, {
+          ignoreExpiration: true,
+        } as jwt.VerifyOptions) as {
+          userId: string;
+          type?: string;
+        };
+
+        if (decodedRefresh.type === 'refresh' && decodedRefresh.userId) {
+          userIdFromAccessToken = decodedRefresh.userId;
+        }
+      } catch (_err: unknown) {}
+    }
+
+    if (!userIdFromAccessToken && refreshTokenHash) {
+      try {
+        const storedSession = await db.query.refreshTokens.findFirst({
+          where: or(
+            eq(refreshTokens.token, refreshTokenHash),
+            eq(refreshTokens.token, refreshToken ?? ''),
+          ),
+          columns: {
+            userId: true,
+          },
+        });
+
+        if (storedSession?.userId) {
+          userIdFromAccessToken = storedSession.userId;
+        }
+      } catch (_err: unknown) {}
+    }
+
+    // CRITICAL: Must await deletion of refresh token from database
+    // This prevents security issue where user can reuse old tokens after logout
+    if (refreshToken) {
+      try {
+        await db
+          .delete(refreshTokens)
+          .where(
+            or(
+              eq(refreshTokens.token, refreshToken),
+              eq(refreshTokens.token, refreshTokenHash ?? ''),
+            ),
+          );
+      } catch (err: unknown) {
+        console.error('❌ [API] Failed to delete token from DB:', err);
+        // Continue to clear cookies even if DB delete fails
+      }
+    }
+
+    // Defense-in-depth: if access token is available, revoke all user sessions.
+    // This guarantees logout takes priority over remember-me persistence.
+    if (userIdFromAccessToken) {
+      try {
+        await Promise.all([
+          revokeAllSessions(userIdFromAccessToken),
+          db
+            .update(users)
+            .set({ sessionVersion: sql`${users.sessionVersion} + 1` })
+            .where(eq(users.id, userIdFromAccessToken)),
+        ]);
+      } catch (err: unknown) {
+        console.error('❌ [API] Failed to revoke all sessions during logout:', err);
+      }
+    }
+
+    // Clear cookies with Max-Age=0 (best practice for deletion)
+    res.setHeader('Set-Cookie', buildClearedAuthCookies());
 
     return res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('❌ [API] Logout error:', error);
+    // Even if error, try to clear cookies
+    res.setHeader('Set-Cookie', buildClearedAuthCookies());
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -262,7 +367,8 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
   try {
     const env = getEnv();
     // Get refresh token from cookies
-    const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.cookies['refresh_token'];
+    const refreshTokenHash = refreshToken ? hashRefreshToken(refreshToken) : null;
 
     if (!refreshToken) {
       return res.status(401).json({ error: 'No refresh token provided' });
@@ -280,7 +386,17 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
 
     // Check if refresh token exists in database
     const storedToken = await db.query.refreshTokens.findFirst({
-      where: and(eq(refreshTokens.token, refreshToken), eq(refreshTokens.userId, decoded.userId)),
+      where: and(
+        eq(refreshTokens.userId, decoded.userId),
+        or(eq(refreshTokens.token, refreshToken), eq(refreshTokens.token, refreshTokenHash ?? '')),
+      ),
+      columns: {
+        token: true,
+        userId: true,
+        sessionType: true,
+        expiresAt: true,
+        createdAt: true,
+      },
     });
 
     if (!storedToken) {
@@ -288,16 +404,56 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     }
 
     // Check if token is expired
-    if (new Date(storedToken.expiresAt) < new Date()) {
+    if (isRefreshTokenExpired(storedToken.expiresAt)) {
       // Delete expired token
-      await db.delete(refreshTokens).where(eq(refreshTokens.token, refreshToken));
+      await db
+        .delete(refreshTokens)
+        .where(
+          and(
+            eq(refreshTokens.userId, decoded.userId),
+            or(
+              eq(refreshTokens.token, refreshToken),
+              eq(refreshTokens.token, refreshTokenHash ?? ''),
+            ),
+          ),
+        );
+      res.setHeader('Set-Cookie', buildClearedAuthCookies());
       return res.status(401).json({ error: 'Refresh token expired' });
+    }
+
+    if (
+      storedToken.sessionType === 'session' &&
+      storedToken.createdAt &&
+      isSessionIdleExpired(storedToken.createdAt)
+    ) {
+      await db
+        .delete(refreshTokens)
+        .where(
+          and(
+            eq(refreshTokens.userId, decoded.userId),
+            or(
+              eq(refreshTokens.token, refreshToken),
+              eq(refreshTokens.token, refreshTokenHash ?? ''),
+            ),
+          ),
+        );
+      res.setHeader('Set-Cookie', buildClearedAuthCookies());
+      return res.status(401).json({ error: 'Session expired due to inactivity' });
     }
 
     // Get user
     const user = await db.query.users.findFirst({
       where: eq(users.id, decoded.userId),
-      columns: { id: true, email: true, name: true, avatarUrl: true },
+      columns: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        provider: true,
+        emailVerified: true,
+        role: true,
+        sessionVersion: true,
+      },
     });
 
     if (!user) {
@@ -305,29 +461,52 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     }
 
     // Generate new tokens (token rotation)
-    const newAccessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-    } as jwt.SignOptions);
+    const newAccessToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        sessionVersion: user.sessionVersion ?? 0,
+        sessionType: (storedToken.sessionType as SessionType) || 'persistent',
+      },
+      env.JWT_SECRET,
+      {
+        expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+      } as jwt.SignOptions,
+    );
 
+    const sessionType = (storedToken.sessionType as SessionType) || 'persistent';
+    const refreshTokenTtlSeconds = getRefreshTokenTtlSeconds(sessionType);
     const newRefreshToken = jwt.sign({ userId: user.id, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
-      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+      expiresIn: refreshTokenTtlSeconds,
     } as jwt.SignOptions);
+    const nextExpiresAt = createRefreshTokenExpiresAt(sessionType);
 
     // Delete old refresh token and store new one (rotation) in parallel
     await Promise.all([
-      db.delete(refreshTokens).where(eq(refreshTokens.token, refreshToken)),
+      db
+        .delete(refreshTokens)
+        .where(
+          and(
+            eq(refreshTokens.userId, decoded.userId),
+            or(
+              eq(refreshTokens.token, refreshToken),
+              eq(refreshTokens.token, refreshTokenHash ?? ''),
+            ),
+          ),
+        ),
       db.insert(refreshTokens).values({
         userId: user.id,
-        token: newRefreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        token: hashRefreshToken(newRefreshToken),
+        sessionType,
+        expiresAt: nextExpiresAt,
       }),
     ]);
 
     // Set new cookies
-    res.setHeader('Set-Cookie', [
-      `access_token=${newAccessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${newRefreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
-    ]);
+    res.setHeader(
+      'Set-Cookie',
+      buildAuthCookiesWithCleanup(newAccessToken, newRefreshToken, sessionType),
+    );
 
     return res.status(200).json({
       user: {
@@ -335,6 +514,9 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
+        provider: user.provider,
+        emailVerified: user.emailVerified,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -342,10 +524,7 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
 
     if (error instanceof jwt.JsonWebTokenError) {
       // Clear invalid cookies
-      res.setHeader('Set-Cookie', [
-        'access_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
-        'refresh_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
-      ]);
+      res.setHeader('Set-Cookie', buildClearedAuthCookies());
       return res.status(401).json({ error: 'Invalid token' });
     }
 
@@ -376,6 +555,9 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
         avatarUrl: true,
         emailVerified: true,
         tokenExpiresAt: true,
+        provider: true,
+        role: true,
+        sessionVersion: true,
       },
     });
 
@@ -404,29 +586,41 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
       .where(eq(users.id, user.id));
 
     // Generate tokens for automatic login
-    const accessToken = jwt.sign({ userId: user.id, email: user.email }, env.JWT_SECRET, {
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-    } as jwt.SignOptions);
+    const accessToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        sessionVersion: user.sessionVersion ?? 0,
+        sessionType: 'persistent',
+      },
+      env.JWT_SECRET,
+      {
+        expiresIn: env.JWT_ACCESS_EXPIRES_IN,
+      } as jwt.SignOptions,
+    );
 
     const refreshToken = jwt.sign({ userId: user.id, type: 'refresh' }, env.JWT_REFRESH_SECRET, {
-      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+      expiresIn: getRefreshTokenTtlSeconds('persistent'),
     } as jwt.SignOptions);
 
     // Clean up old sessions and enforce limit
     await cleanupAndLimitSessions(user.id);
 
     // Store refresh token
+    const emailVerificationExpiresAt = createRefreshTokenExpiresAt('persistent');
+
     await db.insert(refreshTokens).values({
       userId: user.id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      token: hashRefreshToken(refreshToken),
+      sessionType: 'persistent',
+      expiresAt: emailVerificationExpiresAt,
     });
 
     // Set httpOnly cookies
-    res.setHeader('Set-Cookie', [
-      `access_token=${accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${15 * 60}`,
-      `refresh_token=${refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`,
-    ]);
+    res.setHeader(
+      'Set-Cookie',
+      buildAuthCookiesWithCleanup(accessToken, refreshToken, 'persistent'),
+    );
 
     // Send welcome email
     try {
@@ -443,6 +637,9 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
+        provider: user.provider,
+        emailVerified: user.emailVerified,
+        role: user.role,
       },
     });
   } catch (error) {

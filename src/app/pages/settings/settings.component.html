@@ -1,0 +1,27 @@
+<section class="settings">
+  <h1>User Settings</h1>
+
+  <div class="settings__section">
+    <h2>Posts Display</h2>
+
+    <div class="settings__item">
+      <label for="postsLimit">Posts per page:</label>
+      <select
+        id="postsLimit"
+        [value]="uiStore.postsLimit()"
+        (change)="onLimitChange($event)"
+        class="settings__select"
+      >
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+
+    <p class="settings__info">
+      Currently showing <strong>{{ uiStore.postsLimit() }}</strong> posts per page.
+    </p>
+  </div>
+</section>

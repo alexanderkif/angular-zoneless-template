@@ -1,10 +1,283 @@
 <section class="post-details">
-  <a routerLink="/posts" class="btn-secondary" style="margin-bottom: var(--spacing-lg)">
+  <a
+    routerLink="/posts"
+    class="btn-secondary"
+    style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md); display: inline-block"
+  >
     &larr; Back to Posts
   </a>
-  @if (post$ | async; as post) {
-    <h1 class="post-details__title">{{ post.title }}</h1>
-    <p class="post-details__body">{{ post.body }}</p>
+
+  @if (postQuery.isPending() && !postQuery.data()) {
+    <p class="post-details__body">Loading post...</p>
+  } @else if (postQuery.isError()) {
+    <p class="post-details__body">Error loading post: {{ postQuery.error().message }}</p>
+  } @else if (postQuery.data(); as data) {
+    <!-- Используем компонент app-post в режиме детального просмотра -->
+    <app-post
+      [post]="data.post"
+      [currentUser]="currentUser()"
+      [detailsMode]="true"
+      (edit)="startEditingPost()"
+      (delete)="requestDeletePost(data.post.id)"
+    ></app-post>
+
+    <section class="comments-section">
+      @if (postQuery.isFetching() && data.comments.length === 0) {
+        <h2>Comments</h2>
+        <p class="post-details__body">Loading comments...</p>
+      } @else {
+        <h2>Comments ({{ data.comments.length }})</h2>
+      }
+
+      <form class="comment-form" #commentForm="ngForm" (ngSubmit)="submitComment(newCommentText)">
+        <textarea
+          #commentContent
+          name="content"
+          [(ngModel)]="newCommentText"
+          placeholder="Add a comment..."
+          rows="3"
+          required
+          minlength="1"
+          maxlength="10000"
+        ></textarea>
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="createCommentMutation.isPending() || !newCommentText.trim()"
+        >
+          @if (createCommentMutation.isPending()) {
+            Posting...
+          } @else {
+            Post Comment
+          }
+        </button>
+      </form>
+
+      @if (!postQuery.isFetching() || data.comments.length > 0) {
+        @if (data.comments.length > 0) {
+          <div class="comments-list">
+            @for (comment of data.comments; track comment.id) {
+              <article class="comment">
+                <div class="comment-header">
+                  <div class="author-info">
+                    <app-avatar
+                      [src]="comment.author.avatarUrl"
+                      [alt]="comment.author.name"
+                      [role]="comment.author.role ?? 'user'"
+                    />
+                    <div>
+                      <span class="author-name">{{ comment.author.name }}</span>
+                      <time class="comment-date" [attr.datetime]="comment.createdAt">
+                        {{ comment.createdAt | date: 'medium' }}
+                      </time>
+                    </div>
+                  </div>
+
+                  <div class="comment-actions">
+                    @if (canEditComment(comment.author.id)) {
+                      <button
+                        class="btn-edit-small"
+                        (click)="startEditingComment(comment.id, comment.content)"
+                        [disabled]="editingCommentId !== null"
+                        aria-label="Edit comment"
+                        title="Edit comment"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path
+                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                          ></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                    }
+                    @if (canDeleteComment(comment.author.id)) {
+                      <button
+                        class="btn-delete"
+                        (click)="requestDeleteComment(comment.id)"
+                        [disabled]="deleteCommentMutation.isPending()"
+                        aria-label="Delete comment"
+                        title="Delete comment"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path
+                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                          ></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                @if (editingCommentId === comment.id) {
+                  <div class="edit-comment-form">
+                    <textarea
+                      name="editComment"
+                      [(ngModel)]="editCommentContent"
+                      placeholder="Edit comment..."
+                      rows="3"
+                      class="edit-comment-textarea"
+                      maxlength="10000"
+                    ></textarea>
+                    <div class="edit-actions">
+                      <button
+                        type="button"
+                        class="btn-secondary-small"
+                        (click)="cancelEditingComment()"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-primary-small"
+                        (click)="saveComment(comment.id)"
+                        [disabled]="updateCommentMutation.isPending() || !editCommentContent.trim()"
+                      >
+                        @if (updateCommentMutation.isPending()) {
+                          Saving...
+                        } @else {
+                          Save
+                        }
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="comment-content">{{ comment.content }}</p>
+                  @if (comment.updatedAt !== comment.createdAt) {
+                    <p class="edited-small">Edited: {{ comment.updatedAt | date: 'medium' }}</p>
+                  }
+
+                  <div class="comment-reactions">
+                    <button
+                      class="btn-reaction"
+                      (click)="reactToComment(comment.id, 'like')"
+                      [class.active]="getCommentUserReaction(comment.id) === 'like'"
+                      [disabled]="!currentUser()"
+                      aria-label="Like comment"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
+                        ></path>
+                      </svg>
+                      <span>{{ getCommentLikes(comment.id) }}</span>
+                    </button>
+
+                    <button
+                      class="btn-reaction"
+                      (click)="reactToComment(comment.id, 'dislike')"
+                      [class.active]="getCommentUserReaction(comment.id) === 'dislike'"
+                      [disabled]="!currentUser()"
+                      aria-label="Dislike comment"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"
+                        ></path>
+                      </svg>
+                      <span>{{ getCommentDislikes(comment.id) }}</span>
+                    </button>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="no-comments">No comments yet. Be the first to comment!</p>
+        }
+      }
+    </section>
+
+    <!-- Post Form Modal -->
+    @if (showPostForm()) {
+      <app-post-form
+        [post]="data.post"
+        [isSubmitting]="updatePostMutation.isPending()"
+        (save)="handleSavePost($event)"
+        (cancel)="closePostForm()"
+      ></app-post-form>
+    }
+
+    @if (deleteDialog(); as dialog) {
+      <div class="confirm-modal-overlay" (click)="closeDeleteDialog()">
+        <section
+          class="confirm-modal"
+          role="dialog"
+          aria-modal="true"
+          (click)="$event.stopPropagation()"
+        >
+          <h3 class="confirm-modal__title">
+            @if (dialog.type === 'post') {
+              Delete post?
+            } @else {
+              Delete comment?
+            }
+          </h3>
+          <p class="confirm-modal__text">
+            @if (dialog.type === 'post') {
+              Are you sure you want to delete this post?
+            } @else {
+              Are you sure you want to delete this comment?
+            }
+          </p>
+          <div class="confirm-modal__actions">
+            <button type="button" class="btn-secondary-small" (click)="closeDeleteDialog()">
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn-danger-small"
+              (click)="confirmDelete()"
+              [disabled]="deletePostMutation.isPending() || deleteCommentMutation.isPending()"
+            >
+              Delete
+            </button>
+          </div>
+        </section>
+      </div>
+    }
   } @else {
     <p class="post-details__body">No post found</p>
   }
