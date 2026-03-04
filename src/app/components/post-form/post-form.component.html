@@ -26,7 +26,6 @@
           id="title"
           formControlName="title"
           placeholder="Enter post title..."
-          [disabled]="isSubmitting()"
           [class.error]="form.controls.title.invalid && form.controls.title.touched"
         />
         @if (form.controls.title.errors && form.controls.title.touched) {
@@ -49,7 +48,6 @@
           formControlName="content"
           placeholder="Enter post content..."
           rows="12"
-          [disabled]="isSubmitting()"
           [class.error]="form.controls.content.invalid && form.controls.content.touched"
         ></textarea>
         @if (form.controls.content.errors && form.controls.content.touched) {

@@ -40,6 +40,14 @@ export class PostFormComponent {
         });
       }
     });
+
+    effect(() => {
+      if (this.isSubmitting()) {
+        this.form.disable({ emitEvent: false });
+      } else {
+        this.form.enable({ emitEvent: false });
+      }
+    });
   }
 
   onSubmit = () => {
