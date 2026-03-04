@@ -3,10 +3,11 @@ import postgres from 'postgres';
 import * as schema from './schema';
 import * as dotenv from 'dotenv';
 
-// Load environment variables from .env.local if not already set
-if (!process.env['DATABASE_URL']) {
-  dotenv.config({ path: '.env.local' });
-  // Fallback to .env if .env.local doesn't exist or doesn't have the var
+const isVercelRuntime = Boolean(process.env['VERCEL']);
+
+// Local development: prefer .env.local values even if shell has stale vars.
+if (!isVercelRuntime) {
+  dotenv.config({ path: '.env.local', override: true });
   if (!process.env['DATABASE_URL']) {
     dotenv.config({ path: '.env' });
   }
@@ -24,5 +25,6 @@ const client = postgres(connectionString, {
   max: 1, // Limit to 1 connection for serverless/local dev to avoid issues
   idle_timeout: 20, // Close idle connections after 20s
   connect_timeout: 10,
+  ssl: connectionString.includes('supabase.com') ? 'require' : undefined,
 });
 export const db = drizzle(client, { schema });

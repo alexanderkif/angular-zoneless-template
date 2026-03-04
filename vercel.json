@@ -1,6 +1,41 @@
 {
+  "version": 2,
+  "public": true,
   "buildCommand": "npm run build",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; form-action 'self'"
+        }
+      ]
+    }
+  ],
   "functions": {
+    "api/index.js": {
+      "runtime": "@vercel/node@5.5.16",
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": "dist/angular-test-app/**"
+    },
     "api/**/*.ts": {
       "runtime": "@vercel/node@5.5.16"
     }
@@ -37,10 +72,15 @@
     { "source": "/api/user/me", "destination": "/api/user?action=me" },
     { "source": "/api/user/sessions", "destination": "/api/user?action=sessions" },
     { "source": "/api/user/revoke-session", "destination": "/api/user?action=revoke-session" },
-
-    {
-      "source": "/((?!api).*)",
-      "destination": "/"
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*\\.js)", "destination": "/$1" },
+    { "source": "/(.*\\.css)", "destination": "/$1" },
+    { "source": "/(.*\\.png)", "destination": "/$1" },
+    { "source": "/(.*\\.jpg)", "destination": "/$1" },
+    { "source": "/(.*\\.ico)", "destination": "/$1" },
+    { "source": "/(.*\\.svg)", "destination": "/$1" },
+    { "source": "/(.*\\.woff)", "destination": "/$1" },
+    { "source": "/(.*\\.woff2)", "destination": "/$1" },
+    { "source": "/(.*)", "destination": "/api/index" }
   ]
 }

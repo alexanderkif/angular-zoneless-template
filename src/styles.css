@@ -49,6 +49,10 @@
   --container-width: 71rem; /* 1136px */
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Global resets */
 * {
   box-sizing: border-box;
@@ -92,6 +96,23 @@ body {
   line-height: 1.5;
   color: var(--color-text);
   background-color: var(--color-background);
+}
+
+/* App shell layout is global to avoid late style injection CLS. */
+app-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+main.main {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: var(--header-height) auto 0 auto;
+  padding: 0 var(--spacing-xl);
 }
 
 /* Reset list styles globally */
@@ -153,4 +174,10 @@ li {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+@media (max-width: 480px) {
+  main.main {
+    padding: 0 var(--spacing-md);
+  }
 }

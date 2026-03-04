@@ -50,6 +50,65 @@ const cancelRegistrationSchema = z.object({
   token: z.string(),
 });
 
+function getDbErrorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+
+  const maybeError = error as { cause?: unknown; code?: unknown };
+
+  if (typeof maybeError.code === 'string') {
+    return maybeError.code;
+  }
+
+  if (maybeError.cause && typeof maybeError.cause === 'object') {
+    const cause = maybeError.cause as { code?: unknown };
+    if (typeof cause.code === 'string') {
+      return cause.code;
+    }
+  }
+
+  return undefined;
+}
+
+function isDbAuthFailure(error: unknown): boolean {
+  const code = getDbErrorCode(error);
+  if (code === '28P01') {
+    return true;
+  }
+
+  if (error instanceof Error) {
+    return error.message.toLowerCase().includes('password authentication failed');
+  }
+
+  return false;
+}
+
+function isDbUnavailable(error: unknown): boolean {
+  const code = getDbErrorCode(error);
+
+  if (code === 'CONNECT_TIMEOUT' || code === 'XX000') {
+    return true;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes('connect_timeout') ||
+      message.includes('circuit breaker open') ||
+      message.includes('unable to establish connection to upstream database')
+    );
+  }
+
+  return false;
+}
+
+function logDatabaseFailure(context: string, error: unknown): void {
+  const code = getDbErrorCode(error) ?? 'unknown';
+  const message =
+    error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error';
+
+  console.error(`❌ [API] ${context} DB error (${code}): ${message}`);
+}
+
 // Handlers
 async function handleLogin(req: VercelRequest, res: VercelResponse) {
   // Rate limiting: max 5 login attempts per minute
@@ -160,6 +219,20 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
       },
     });
   } catch (error) {
+    if (isDbUnavailable(error)) {
+      logDatabaseFailure('Login', error);
+      return res.status(503).json({
+        error: 'Database unavailable. Check Supabase connectivity and DATABASE_URL.',
+      });
+    }
+
+    if (isDbAuthFailure(error)) {
+      logDatabaseFailure('Login', error);
+      return res.status(503).json({
+        error: 'Database authentication failed. Update DATABASE_URL and restart API server.',
+      });
+    }
+
     console.error('❌ [API] Login error:', error);
 
     if (error instanceof z.ZodError) {
@@ -520,6 +593,20 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
       },
     });
   } catch (error) {
+    if (isDbUnavailable(error)) {
+      logDatabaseFailure('Refresh', error);
+      return res.status(503).json({
+        error: 'Database unavailable. Check Supabase connectivity and DATABASE_URL.',
+      });
+    }
+
+    if (isDbAuthFailure(error)) {
+      logDatabaseFailure('Refresh', error);
+      return res.status(503).json({
+        error: 'Database authentication failed. Update DATABASE_URL and restart API server.',
+      });
+    }
+
     console.error('Refresh token error:', error);
 
     if (error instanceof jwt.JsonWebTokenError) {
