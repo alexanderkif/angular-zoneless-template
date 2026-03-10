@@ -16,13 +16,15 @@ import {
   minLength,
 } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
+import { ButtonComponent } from '../../components/ui/button/button.component';
+import { LinkButtonComponent } from '../../components/ui/link-button/link-button.component';
 import { AuthQueryService } from '../../services/auth-query.service';
 import { API_BASE_URL } from '../../tokens/api-url.token';
 import { WINDOW } from '../../tokens/window.token';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, FormField],
+  imports: [ButtonComponent, LinkButtonComponent, ReactiveFormsModule, RouterLink, FormField],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

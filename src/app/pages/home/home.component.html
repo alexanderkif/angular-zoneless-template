@@ -25,8 +25,8 @@
     </div>
 
     <div class="action-buttons">
-      <a routerLink="/login" class="btn-primary">Log In</a>
-      <a routerLink="/register" class="btn-secondary">Register</a>
+      <app-link-button [routerLink]="'/login'">Log In</app-link-button>
+      <app-link-button [routerLink]="'/register'" variant="secondary">Register</app-link-button>
     </div>
 
     <p class="small-text">

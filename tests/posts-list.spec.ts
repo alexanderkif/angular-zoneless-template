@@ -141,7 +141,7 @@ test.describe('Posts list page', () => {
     await detailsButton.click();
     await expect(page).toHaveURL(/\/posts\/1/);
 
-    await expect(page.getByRole('link', { name: '← Back to Posts' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /back to posts/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Comments (0)' })).toBeVisible();
   });
 });

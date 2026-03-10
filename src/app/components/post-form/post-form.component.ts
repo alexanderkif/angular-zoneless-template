@@ -1,10 +1,11 @@
 import { Component, effect, input, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { Post } from '../../services/post.service';
+import { ButtonComponent } from '../ui/button/button.component';
 
 @Component({
   selector: 'app-post-form',
-  imports: [ReactiveFormsModule],
+  imports: [ButtonComponent, ReactiveFormsModule],
   templateUrl: './post-form.component.html',
   styleUrl: './post-form.component.css',
 })

@@ -10,6 +10,7 @@ import { injectMutation, injectQuery } from '@tanstack/angular-query-experimenta
 import { lastValueFrom } from 'rxjs';
 import { PostComponent } from '../../components/post/post.component';
 import { PostFormComponent } from '../../components/post-form/post-form.component';
+import { ButtonComponent } from '../../components/ui/button/button.component';
 import type { AuthUser } from '../../services/auth-query.service';
 import { AuthQueryService } from '../../services/auth-query.service';
 import { PostQueryService } from '../../services/post-query.service';
@@ -292,7 +293,7 @@ export const createDeletePostMutationInjectionFactory =
 
 @Component({
   selector: 'app-posts-list',
-  imports: [PostComponent, PostFormComponent],
+  imports: [ButtonComponent, PostComponent, PostFormComponent],
   templateUrl: './posts-list.component.html',
   styleUrl: './posts-list.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -18,7 +18,7 @@
             <li>Wait a few minutes and check again</li>
           </ul>
         </div>
-        <a routerLink="/login" class="btn-primary">Go to Login</a>
+        <app-link-button [routerLink]="'/login'">Go to Login</app-link-button>
       </div>
     } @else {
       <h1>Create Account</h1>
@@ -195,10 +195,9 @@
           }
         </div>
 
-        <button
+        <app-button
           type="submit"
           data-testid="register-submit"
-          class="btn-primary"
           [disabled]="
             !registerForm.name().valid() ||
             !registerForm.email().valid() ||
@@ -213,7 +212,7 @@
           } @else {
             <span>Sign Up</span>
           }
-        </button>
+        </app-button>
       </form>
 
       <div class="divider">

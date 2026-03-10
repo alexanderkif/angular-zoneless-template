@@ -1,11 +1,13 @@
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ButtonComponent } from '../../components/ui/button/button.component';
+import { LinkButtonComponent } from '../../components/ui/link-button/link-button.component';
 import { AuthQueryService } from '../../services/auth-query.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-verify-email',
-  imports: [RouterLink],
+  imports: [ButtonComponent, LinkButtonComponent],
   templateUrl: './verify-email.html',
   styleUrl: './verify-email.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

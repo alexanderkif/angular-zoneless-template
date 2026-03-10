@@ -13,14 +13,14 @@
           {{ loginMutation.error()?.message }}
           @if (loginMutation.error()?.message?.includes('Email not verified')) {
             <div style="margin-top: 10px">
-              <button
+              <app-button
                 type="button"
+                variant="secondary"
                 (click)="resendVerification()"
-                class="btn-secondary"
                 style="width: 100%; font-size: 0.9rem"
               >
                 Resend Verification Email
-              </button>
+              </app-button>
             </div>
           }
         </div>
@@ -138,10 +138,9 @@
           </label>
         </div>
 
-        <button
+        <app-button
           type="submit"
           data-testid="login-submit"
-          class="btn-primary"
           [disabled]="
             !loginForm.email().valid() || !loginForm.password().valid() || loginMutation.isPending()
           "
@@ -151,7 +150,7 @@
           } @else {
             <span>Sign In</span>
           }
-        </button>
+        </app-button>
       </form>
 
       <div class="divider">

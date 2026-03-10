@@ -67,7 +67,7 @@ import { Component, ChangeDetectionStrategy, signal, input } from '@angular/core
         align-items: center;
         justify-content: center;
         background-color: var(--color-surface);
-        border: 2px solid var(--color-accent);
+        border: 1px solid var(--color-accent);
         color: var(--color-accent);
         font-size: 0.55rem;
         font-weight: 700;

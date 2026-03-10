@@ -23,27 +23,29 @@
 
     <!-- Pagination Controls -->
     <div class="pagination">
-      <button
+      <app-button
         id="posts-prev-page"
-        class="pagination__btn"
+        variant="secondary"
+        size="sm"
         (click)="goToPreviousPage()"
         [disabled]="!data.pagination.hasPrev"
       >
         ← Previous
-      </button>
+      </app-button>
 
       <span class="pagination__info">
         Page {{ data.pagination.page }} of {{ data.pagination.totalPages }}
       </span>
 
-      <button
+      <app-button
         id="posts-next-page"
-        class="pagination__btn"
+        variant="secondary"
+        size="sm"
         (click)="goToNextPage()"
         [disabled]="!data.pagination.hasNext"
       >
         Next →
-      </button>
+      </app-button>
     </div>
   }
 
@@ -86,17 +88,18 @@
         <h3 class="confirm-modal__title">Delete post?</h3>
         <p class="confirm-modal__text">Are you sure you want to delete this post?</p>
         <div class="confirm-modal__actions">
-          <button type="button" class="btn-secondary-small" (click)="closeDeleteDialog()">
+          <app-button type="button" variant="secondary" size="sm" (click)="closeDeleteDialog()">
             Cancel
-          </button>
-          <button
+          </app-button>
+          <app-button
             type="button"
-            class="btn-danger-small"
+            variant="danger"
+            size="sm"
             (click)="confirmDeletePost()"
             [disabled]="deletePostMutation.isPending()"
           >
             Delete
-          </button>
+          </app-button>
         </div>
       </section>
     </div>

@@ -28,7 +28,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 8rem;
+  width: 6rem;
   height: 100%;
   background: var(--color-accent-gradient);
   color: white;
@@ -46,8 +46,13 @@
     padding: 0;
   }
   .logo-badge {
-    width: 4rem;
     font-size: 0.9rem;
     text-align: center;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .logo-link {
+    display: none;
   }
 }

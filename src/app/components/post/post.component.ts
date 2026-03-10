@@ -16,6 +16,7 @@ import { PostQueryService } from '../../services/post-query.service';
 import type { Post } from '../../services/post.service';
 import { UiStore } from '../../store/ui/ui.store';
 import { AvatarComponent } from '../avatar/avatar.component';
+import { IconButtonComponent } from '../ui/icon-button/icon-button.component';
 
 type PostsPaginationStore = {
   postsPage: () => number;
@@ -64,7 +65,7 @@ export const createDetailsModeGetter = (component: PostComponent) => () => compo
 
 @Component({
   selector: 'app-post',
-  imports: [DatePipe, AvatarComponent],
+  imports: [DatePipe, AvatarComponent, IconButtonComponent],
   templateUrl: './post.component.html',
   styleUrl: './post.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

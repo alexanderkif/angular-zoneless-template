@@ -3,12 +3,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { form, FormField, required, email as emailValidator } from '@angular/forms/signals';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { injectQuery } from '@tanstack/angular-query-experimental';
+import { ButtonComponent } from '../../components/ui/button/button.component';
 import { AuthOauthService } from '../../services/auth-oauth.service';
 import { AuthQueryService } from '../../services/auth-query.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, FormField],
+  imports: [ButtonComponent, ReactiveFormsModule, RouterLink, FormField],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

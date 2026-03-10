@@ -10,11 +10,14 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { AvatarComponent } from '../../components/avatar/avatar.component';
 import { PostComponent } from '../../components/post/post.component';
 import { PostFormComponent } from '../../components/post-form/post-form.component';
+import { ButtonComponent } from '../../components/ui/button/button.component';
+import { IconButtonComponent } from '../../components/ui/icon-button/icon-button.component';
+import { LinkButtonComponent } from '../../components/ui/link-button/link-button.component';
 import { AuthQueryService } from '../../services/auth-query.service';
 import { PostQueryService } from '../../services/post-query.service';
 import { PostService } from '../../services/post.service';
@@ -239,7 +242,16 @@ export const createReactToCommentMutationOptions = (
 
 @Component({
   selector: 'app-post-details',
-  imports: [RouterLink, DatePipe, FormsModule, AvatarComponent, PostComponent, PostFormComponent],
+  imports: [
+    ButtonComponent,
+    IconButtonComponent,
+    LinkButtonComponent,
+    DatePipe,
+    FormsModule,
+    AvatarComponent,
+    PostComponent,
+    PostFormComponent,
+  ],
   templateUrl: './post-details.component.html',
   styleUrl: './post-details.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
