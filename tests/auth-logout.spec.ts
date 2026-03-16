@@ -66,13 +66,29 @@ test.describe('Auth logout flow', () => {
     const rememberMeCheckbox = page.getByTestId('login-remember-me');
     await expect(rememberMeCheckbox).toBeChecked();
 
-    await page.getByTestId('login-email').fill('test@example.com');
+    // For type="email" in Chromium + Angular Signal Forms: each character typed via
+    // pressSequentially triggers an Angular CD cycle that calls element.value = signalValue,
+    // resetting the cursor to position 0. The next keystroke then replaces all content.
+    // Fix: set value + dispatch input event atomically in a single JS evaluation so the
+    // signal updates synchronously before any CD cycle can run and reset the cursor.
+    const emailInput = page.getByTestId('login-email');
+    await emailInput.focus();
+    await emailInput.evaluate((el) => {
+      (el as HTMLInputElement).value = 'test@example.com';
+      el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    });
+    await emailInput.press('Tab');
     await page.getByTestId('login-password').fill('password123');
+    await page.getByTestId('login-password').press('Tab');
 
-    await Promise.all([
-      page.waitForResponse('**/api/auth/login'),
-      page.getByTestId('login-submit').click(),
-    ]);
+    // app-button uses display:contents — the disabled state is on the inner <button>,
+    // not on the host element. Target the inner button for a reliable enabled check.
+    const submitBtn = page.getByTestId('login-submit').locator('button');
+    await expect(submitBtn).toBeEnabled({ timeout: 5000 });
+
+    const loginResponse = page.waitForResponse('**/api/auth/login');
+    await submitBtn.click();
+    await loginResponse;
 
     await expect(page).toHaveURL('/');
 

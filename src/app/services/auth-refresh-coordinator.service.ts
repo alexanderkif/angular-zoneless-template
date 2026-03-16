@@ -29,6 +29,13 @@ export class AuthRefreshCoordinatorService {
       await lastValueFrom(
         this.http.post<void>(`${this.apiUrl}/auth/refresh`, {}, { withCredentials: true }),
       );
+      // Posts and comments were fetched in parallel with the user query before the token
+      // was refreshed, so they have userReaction: null. Re-fetch them now that the new
+      // access token cookie is set.
+      await Promise.all([
+        this.queryClient.invalidateQueries({ queryKey: ['posts'] }),
+        this.queryClient.invalidateQueries({ queryKey: ['comments'] }),
+      ]);
     } catch (error) {
       this.queryClient.setQueryData(['auth', 'currentUser'], null);
       throw error;

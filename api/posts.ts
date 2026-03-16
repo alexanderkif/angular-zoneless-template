@@ -23,9 +23,11 @@ const updatePostSchema = z.object({
   content: z.string().min(1).max(50000).optional(),
 });
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const resolvePostId = (req: VercelRequest): string | null => {
   const id = req.query['id'];
-  if (typeof id === 'string' && id.trim()) return id;
+  if (typeof id === 'string' && UUID_REGEX.test(id)) return id;
   return null;
 };
 
@@ -238,7 +240,10 @@ const handleUpdatePost = async (req: VercelRequest, postId: string, res: VercelR
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  await db.update(posts).set(data).where(eq(posts.id, postId));
+  await db
+    .update(posts)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(posts.id, postId));
 
   const updatedPost = await db
     .select({

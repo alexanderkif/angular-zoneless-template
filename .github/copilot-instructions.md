@@ -13,12 +13,12 @@ Modern Angular 21 application with **Zoneless Change Detection**, SSR, and a Ver
 - **Dependency Injection**: Use the `inject()` function instead of constructor injection.
 - **Forms**: Use Signal-based forms from `@angular/forms/signals` (e.g., `form()`, `Field`). See [src/app/pages/login/login.component.ts](src/app/pages/login/login.component.ts).
 
-### 2. State Management (NgRx)
+### 2. State Management
 
-- **Feature-based**: Use `createFeature` for state, reducers, and selectors.
-- **Action Groups**: Use `createActionGroup` for related actions.
-- **Selectors**: Use `store.selectSignal()` in components to get signals from the store.
-- **Example**: [src/app/store/auth/auth.reducer.ts](src/app/store/auth/auth.reducer.ts).
+- **UI State**: Use `@ngrx/signals` `signalStore` with `withState`, `withMethods`, `withComputed` and `patchState`. See [src/app/store/ui/ui.store.ts](src/app/store/ui/ui.store.ts).
+- **Server State**: Use **TanStack Query** (`injectQuery`, `injectMutation`) for all API data — caching, pagination, optimistic updates. See [src/app/services/auth-query.service.ts](src/app/services/auth-query.service.ts).
+- **No classic NgRx**: Do NOT use `createFeature`, `createActionGroup`, `createReducer`, `createEffect` or `Store` — these are not used in this project.
+- **Inject stores**: Use `inject(UiStore)` in components to access signal store state directly as signals.
 
 ### 3. Backend (Vercel Functions)
 
@@ -29,7 +29,7 @@ Modern Angular 21 application with **Zoneless Change Detection**, SSR, and a Ver
 
 ### 4. SSR & Hydration
 
-- **Hydration**: Enabled with `provideClientHydration(withEventReplay())`.
+- **Hydration**: Enabled with `provideClientHydration(withHttpTransferCacheOptions(...))`.
 - **SSR-Awareness**: Use `isPlatformBrowser(inject(PLATFORM_ID))` or the `WINDOW` token for browser-only code.
 - **Interceptors**: [src/app/interceptors/ssr-cookie.interceptor.ts](src/app/interceptors/ssr-cookie.interceptor.ts) forwards cookies from SSR to API.
 
@@ -50,6 +50,7 @@ Modern Angular 21 application with **Zoneless Change Detection**, SSR, and a Ver
 ## Coding Conventions
 
 - **Arrow Functions**: Preferred for all functions (enforced by ESLint).
+- **Component Inputs**: Use signal-based `input()`, `output()`, `viewChild()` instead of `@Input()`, `@Output()`, `@ViewChild()` decorators.
 - **Imports**: Alphabetized (enforced by ESLint).
 - **Types**: Strict TypeScript. Avoid `any`. Use Zod for runtime validation in API.
 - **Security**: Always use `withCredentials: true` for API calls to include HttpOnly cookies.

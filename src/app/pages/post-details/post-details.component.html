@@ -40,11 +40,12 @@
         <h2>Comments ({{ data.comments.length }})</h2>
       }
 
-      <form class="comment-form" #commentForm="ngForm" (ngSubmit)="submitComment(newCommentText)">
+      <form class="comment-form" #commentForm="ngForm" (ngSubmit)="submitComment(newCommentText())">
         <textarea
           #commentContent
           name="content"
-          [(ngModel)]="newCommentText"
+          [ngModel]="newCommentText()"
+          (ngModelChange)="newCommentText.set($event)"
           placeholder="Add a comment..."
           rows="3"
           required
@@ -53,7 +54,7 @@
         ></textarea>
         <app-button
           type="submit"
-          [disabled]="createCommentMutation.isPending() || !newCommentText.trim()"
+          [disabled]="createCommentMutation.isPending() || !newCommentText().trim()"
         >
           @if (createCommentMutation.isPending()) {
             Posting...
@@ -87,7 +88,7 @@
                     @if (canEditComment(comment.author.id)) {
                       <app-icon-button
                         (click)="startEditingComment(comment.id, comment.content)"
-                        [disabled]="editingCommentId !== null"
+                        [disabled]="editingCommentId() !== null"
                         aria-label="Edit comment"
                         title="Edit comment"
                       >
@@ -140,11 +141,12 @@
                   </div>
                 </div>
 
-                @if (editingCommentId === comment.id) {
+                @if (editingCommentId() === comment.id) {
                   <div class="edit-comment-form">
                     <textarea
                       name="editComment"
-                      [(ngModel)]="editCommentContent"
+                      [ngModel]="editCommentContent()"
+                      (ngModelChange)="editCommentContent.set($event)"
                       placeholder="Edit comment..."
                       rows="3"
                       class="edit-comment-textarea"
@@ -163,7 +165,9 @@
                         type="button"
                         size="sm"
                         (click)="saveComment(comment.id)"
-                        [disabled]="updateCommentMutation.isPending() || !editCommentContent.trim()"
+                        [disabled]="
+                          updateCommentMutation.isPending() || !editCommentContent().trim()
+                        "
                       >
                         @if (updateCommentMutation.isPending()) {
                           Saving...

@@ -6,7 +6,6 @@ import {
 } from '@angular/common/http';
 import {
   ApplicationConfig,
-  InjectionToken,
   inject,
   isDevMode,
   provideAppInitializer,
@@ -45,8 +44,6 @@ declare global {
   }
 }
 
-const TANSTACK_QUERY_CLIENT = new InjectionToken<QueryClient>('TANSTACK_QUERY_CLIENT');
-
 const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -77,11 +74,7 @@ export const appConfig: ApplicationConfig = {
         headerName: 'X-XSRF-TOKEN',
       }),
     ),
-    {
-      provide: TANSTACK_QUERY_CLIENT,
-      useFactory: createQueryClient,
-    },
-    provideTanStackQuery(TANSTACK_QUERY_CLIENT),
+    provideTanStackQuery(createQueryClient()),
     provideAppInitializer(() => {
       // Connect to TanStack Query DevTools browser extension (in development only)
       if (isDevMode() && typeof window !== 'undefined') {

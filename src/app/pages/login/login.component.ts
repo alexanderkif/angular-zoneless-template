@@ -63,7 +63,8 @@ export class LoginComponent {
             await this.authQueryService.refetchUser();
             await new Promise((resolve) => setTimeout(resolve, 100));
 
-            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+            const raw = this.route.snapshot.queryParams['returnUrl'];
+            const returnUrl = typeof raw === 'string' && raw.startsWith('/') ? raw : '/';
             this.router.navigate([returnUrl]);
           },
         },
@@ -81,8 +82,10 @@ export class LoginComponent {
         onSuccess: (response) => {
           this.resendMessage.set(response.message);
         },
-        onError: (err: any) => {
-          this.resendMessage.set(err.message || 'Failed to resend verification email');
+        onError: (error: unknown) => {
+          this.resendMessage.set(
+            error instanceof Error ? error.message : 'Failed to resend verification email',
+          );
         },
       },
     );

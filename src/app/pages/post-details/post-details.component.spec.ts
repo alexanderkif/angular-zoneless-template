@@ -1,7 +1,7 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { QueryClient } from '@tanstack/angular-query-experimental';
+import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { of, throwError } from 'rxjs';
 import { AuthQueryService } from '../../services/auth-query.service';
 import { PostService } from '../../services/post.service';
@@ -34,7 +34,7 @@ describe('PostDetailsComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: QueryClient, useValue: queryClient },
+        provideTanStackQuery(queryClient),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -158,21 +158,21 @@ describe('PostDetailsComponent', () => {
     (component as any).updateCommentMutation = { mutate };
 
     component.startEditingComment('c1', 'old');
-    expect(component.editingCommentId).toBe('c1');
-    expect(component.editCommentContent).toBe('old');
+    expect(component.editingCommentId()).toBe('c1');
+    expect(component.editCommentContent()).toBe('old');
 
-    component.editCommentContent = 'new';
+    component.editCommentContent.set('new');
     component.saveComment('c1');
     expect(mutate).toHaveBeenCalledWith({ commentId: 'c1', content: 'new' });
 
     component.cancelEditingComment();
-    expect(component.editingCommentId).toBeNull();
+    expect(component.editingCommentId()).toBeNull();
   });
 
   it('should not save empty comment', () => {
     const mutate = vi.fn();
     (component as any).updateCommentMutation = { mutate };
-    component.editCommentContent = '   ';
+    component.editCommentContent.set('   ');
     component.saveComment('c1');
     expect(mutate).not.toHaveBeenCalled();
   });
@@ -180,14 +180,14 @@ describe('PostDetailsComponent', () => {
   it('should submit comment and clear input on success', () => {
     const mutate = vi.fn();
     (component as any).createCommentMutation = { mutate };
-    component.newCommentText = 'hello';
+    component.newCommentText.set('hello');
 
     component.submitComment('hello');
 
     expect(mutate).toHaveBeenCalled();
     const options = mutate.mock.calls[0]?.[1] as { onSuccess?: () => void };
     options?.onSuccess?.();
-    expect(component.newCommentText).toBe('');
+    expect(component.newCommentText()).toBe('');
   });
 
   it('should skip submit for empty comment', () => {
@@ -782,12 +782,12 @@ describe('PostDetailsComponent', () => {
     });
 
     component.startEditingComment('c1', 'old');
-    component.editCommentContent = 'new';
+    component.editCommentContent.set('new');
     component.saveComment('c1');
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(component.editingCommentId).toBe('c1');
-    expect(component.editCommentContent).toBe('new');
+    expect(component.editingCommentId()).toBe('c1');
+    expect(component.editCommentContent()).toBe('new');
   });
 });

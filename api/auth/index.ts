@@ -326,6 +326,10 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid input', details: error.issues });
     }
 
+    if (getDbErrorCode(error) === '23505') {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -554,9 +558,9 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     } as jwt.SignOptions);
     const nextExpiresAt = createRefreshTokenExpiresAt(sessionType);
 
-    // Delete old refresh token and store new one (rotation) in parallel
-    await Promise.all([
-      db
+    // Delete old refresh token and store new one atomically (rotation)
+    await db.transaction(async (tx) => {
+      await tx
         .delete(refreshTokens)
         .where(
           and(
@@ -566,14 +570,14 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
               eq(refreshTokens.token, refreshTokenHash ?? ''),
             ),
           ),
-        ),
-      db.insert(refreshTokens).values({
+        );
+      await tx.insert(refreshTokens).values({
         userId: user.id,
         token: hashRefreshToken(newRefreshToken),
         sessionType,
         expiresAt: nextExpiresAt,
-      }),
-    ]);
+      });
+    });
 
     // Set new cookies
     res.setHeader(
@@ -725,7 +729,7 @@ async function handleVerifyEmail(req: VercelRequest, res: VercelResponse) {
         name: user.name,
         avatarUrl: user.avatarUrl,
         provider: user.provider,
-        emailVerified: user.emailVerified,
+        emailVerified: true,
         role: user.role,
       },
     });

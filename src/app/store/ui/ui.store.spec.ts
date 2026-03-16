@@ -58,4 +58,15 @@ describe('UiStore', () => {
     expect(store.postsLimit()).toBe(20);
     expect(store.postsPage()).toBe(1);
   });
+
+  it('hasPrevPage should reflect whether current page is > 1', () => {
+    expect(store.hasPrevPage()).toBe(false);
+
+    store.setPostsPage(2);
+    expect(store.hasPrevPage()).toBe(true);
+
+    store.prevPostsPage();
+    expect(store.postsPage()).toBe(1);
+    expect(store.hasPrevPage()).toBe(false);
+  });
 });

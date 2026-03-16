@@ -1,6 +1,6 @@
 import type { VercelRequest } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { and, eq, gt, or } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 import { db } from '../db';
 import { refreshTokens, users } from '../db/schema';
 import { getEnv } from './env';
@@ -44,7 +44,7 @@ export const resolveAuthenticatedUser = async (
       where: and(
         eq(refreshTokens.userId, decodedRefresh.userId),
         gt(refreshTokens.expiresAt, new Date()),
-        or(eq(refreshTokens.token, refreshToken), eq(refreshTokens.token, refreshTokenHash)),
+        eq(refreshTokens.token, refreshTokenHash),
       ),
       columns: {
         userId: true,
@@ -85,7 +85,7 @@ export const resolveAuthenticatedUser = async (
     where: and(
       eq(refreshTokens.userId, decoded.userId),
       gt(refreshTokens.expiresAt, new Date()),
-      or(eq(refreshTokens.token, refreshToken), eq(refreshTokens.token, refreshTokenHash)),
+      eq(refreshTokens.token, refreshTokenHash),
     ),
     columns: {
       userId: true,

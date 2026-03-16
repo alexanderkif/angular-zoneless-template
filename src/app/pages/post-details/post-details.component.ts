@@ -12,6 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { lastValueFrom } from 'rxjs';
 import { AvatarComponent } from '../../components/avatar/avatar.component';
 import { PostComponent } from '../../components/post/post.component';
 import { PostFormComponent } from '../../components/post-form/post-form.component';
@@ -32,12 +33,12 @@ export const createCommentMutationOptions = (
   getPostId: () => string,
 ) => ({
   mutationFn: (content: string) =>
-    postService
-      .createComment({
+    lastValueFrom(
+      postService.createComment({
         postId: getPostId(),
         content,
-      })
-      .toPromise(),
+      }),
+    ),
   onSuccess: async () => {
     await postQueryService.invalidatePost(getPostId());
   },
@@ -49,7 +50,7 @@ export const createDeleteCommentMutationOptions = (
   queryClient: QueryClient,
   getPostId: () => string,
 ) => ({
-  mutationFn: (commentId: string) => postService.deleteComment(commentId).toPromise(),
+  mutationFn: (commentId: string) => lastValueFrom(postService.deleteComment(commentId)),
   onMutate: async (commentId: string) => {
     const queryKey = ['posts', 'detail', getPostId()];
     await queryClient.cancelQueries({ queryKey });
@@ -87,7 +88,7 @@ export const createDeletePostMutationOptions = (
   queryClient: QueryClient,
   router: Router,
 ) => ({
-  mutationFn: (postId: string) => postService.deletePost(postId).toPromise(),
+  mutationFn: (postId: string) => lastValueFrom(postService.deletePost(postId)),
   onMutate: async (postId: string) => {
     const detailQueryKey = ['posts', 'detail', postId];
 
@@ -145,7 +146,9 @@ export const createUpdatePostMutationOptions = (
   showPostForm: WritableSignal<boolean>,
 ) => ({
   mutationFn: (data: { postId: string; title: string; content: string }) =>
-    postService.updatePost(data.postId, { title: data.title, content: data.content }).toPromise(),
+    lastValueFrom(
+      postService.updatePost(data.postId, { title: data.title, content: data.content }),
+    ),
   onMutate: async (
     variables: { postId: string; title: string; content: string },
     context: { client: { cancelQueries: (params: { queryKey: string[] }) => Promise<void> } },
@@ -185,7 +188,7 @@ export const createUpdateCommentMutationOptions = (
   restoreEditingComment: (commentId: string, content: string) => void,
 ) => ({
   mutationFn: (data: { commentId: string; content: string }) =>
-    postService.updateComment(data.commentId, { content: data.content }).toPromise(),
+    lastValueFrom(postService.updateComment(data.commentId, { content: data.content })),
   onMutate: async (variables: { commentId: string; content: string }) => {
     const queryKey = ['posts', 'detail', getPostId()];
     await queryClient.cancelQueries({ queryKey });
@@ -282,8 +285,8 @@ export class PostDetailsComponent implements OnDestroy {
   } | null>(null);
 
   // Editing state for comments
-  editingCommentId: string | null = null;
-  editCommentContent = '';
+  editingCommentId = signal<string | null>(null);
+  editCommentContent = signal('');
 
   // Локальное состояние реакций на комментарии
   private localCommentReactions = signal<
@@ -365,7 +368,7 @@ export class PostDetailsComponent implements OnDestroy {
     createReactToCommentMutationOptions(this.postQueryService, this.postId),
   );
 
-  newCommentText = '';
+  newCommentText = signal('');
 
   currentUser = computed(() => this.currentUserQuery.data());
 
@@ -464,19 +467,19 @@ export class PostDetailsComponent implements OnDestroy {
 
   // Comment editing
   startEditingComment(commentId: string, content: string) {
-    this.editCommentContent = content;
-    this.editingCommentId = commentId;
+    this.editCommentContent.set(content);
+    this.editingCommentId.set(commentId);
   }
 
   cancelEditingComment() {
-    this.editingCommentId = null;
+    this.editingCommentId.set(null);
   }
 
   saveComment(commentId: string) {
-    if (this.editCommentContent.trim()) {
+    if (this.editCommentContent().trim()) {
       this.updateCommentMutation.mutate({
         commentId,
-        content: this.editCommentContent,
+        content: this.editCommentContent(),
       });
     }
   }
@@ -485,7 +488,7 @@ export class PostDetailsComponent implements OnDestroy {
     if (content.trim()) {
       this.createCommentMutation.mutate(content, {
         onSuccess: () => {
-          this.newCommentText = '';
+          this.newCommentText.set('');
         },
       });
     }

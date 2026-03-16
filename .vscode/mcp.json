@@ -16,6 +16,10 @@
       "command": "npx",
       "args": ["playwright", "run-test-mcp-server"],
       "cwd": "${workspaceFolder}"
+    },
+    "docfork": {
+      "command": "npx",
+      "args": ["-y", "docfork"]
     }
   },
   "inputs": []

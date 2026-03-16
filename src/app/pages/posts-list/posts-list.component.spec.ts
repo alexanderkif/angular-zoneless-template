@@ -42,6 +42,8 @@ describe('PostsListComponent', () => {
 
     fixture = TestBed.createComponent(PostsListComponent);
     component = fixture.componentInstance;
+    // scrollIntoView is not implemented in JSDOM
+    Element.prototype.scrollIntoView = vi.fn();
     fixture.whenStable();
   });
 
@@ -593,7 +595,9 @@ describe('PostsListComponent', () => {
         },
       }),
     );
-    const invalidateSpy = vi.spyOn(postQueryService, 'invalidatePosts').mockResolvedValueOnce();
+    const invalidateSpy = vi
+      .spyOn(postQueryService, 'invalidatePosts')
+      .mockResolvedValueOnce(undefined);
 
     const userDataSpy = vi.fn(() => ({
       id: 'u1',

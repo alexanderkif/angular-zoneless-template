@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   signal,
+  viewChild,
   type WritableSignal,
 } from '@angular/core';
 import { injectMutation, injectQuery } from '@tanstack/angular-query-experimental';
@@ -304,6 +306,8 @@ export class PostsListComponent {
   private authQueryService = inject(AuthQueryService);
   readonly uiStore = inject(UiStore);
 
+  private postsSection = viewChild<ElementRef<HTMLElement>>('postsSection');
+
   // Состояние модального окна формы
   showPostForm = signal(false);
   editingPost = signal<Post | null>(null);
@@ -361,6 +365,7 @@ export class PostsListComponent {
     const currentData = this.postsQuery.data();
     if (currentData?.pagination.hasNext) {
       this.uiStore.nextPostsPage();
+      this.postsSection()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       // Prefetch next page for better UX
       this.postQueryService.prefetchNextPage(this.uiStore.postsPage(), this.uiStore.postsLimit());
     }
@@ -369,6 +374,7 @@ export class PostsListComponent {
   goToPreviousPage = () => {
     if (this.uiStore.postsPage() > 1) {
       this.uiStore.prevPostsPage();
+      this.postsSection()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       // Prefetch previous page
       this.postQueryService.prefetchPreviousPage(
         this.uiStore.postsPage(),

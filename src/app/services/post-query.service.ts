@@ -137,7 +137,7 @@ export class PostQueryService {
   invalidatePost = async (id: string) => {
     const queryKey = ['posts', 'detail', id];
     await this.queryClient.cancelQueries({ queryKey });
-    this.queryClient.invalidateQueries({ queryKey });
+    await this.queryClient.invalidateQueries({ queryKey });
   };
 
   /**

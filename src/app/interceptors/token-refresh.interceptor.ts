@@ -14,12 +14,14 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
       if (
         error.status === 401 &&
         isPlatformBrowser(platformId) &&
+        !req.headers.has('X-Skip-Refresh') &&
         !req.url.includes('/auth/refresh') &&
         !req.url.includes('/auth/login') &&
         !req.url.includes('/auth/register') &&
         !req.url.includes('/auth/logout')
       ) {
-        return from(refreshCoordinator.refreshSession()).pipe(switchMap(() => next(req)));
+        const retryReq = req.clone({ setHeaders: { 'X-Skip-Refresh': '1' } });
+        return from(refreshCoordinator.refreshSession()).pipe(switchMap(() => next(retryReq)));
       }
 
       return throwError(() => error);

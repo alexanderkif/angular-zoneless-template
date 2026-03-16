@@ -3,11 +3,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  Input,
-  Output,
-  EventEmitter,
-  signal,
+  input,
   OnDestroy,
+  output,
+  signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
@@ -60,8 +59,8 @@ export const createPostReactionMutationInjectionFactory =
   () =>
     createPostReactionMutationOptions(postQueryService, queryClient, uiStore, getPost, detailsMode);
 
-export const createPostGetter = (component: PostComponent) => () => component.post;
-export const createDetailsModeGetter = (component: PostComponent) => () => component.detailsMode;
+export const createPostGetter = (component: PostComponent) => () => component.post();
+export const createDetailsModeGetter = (component: PostComponent) => () => component.detailsMode();
 
 @Component({
   selector: 'app-post',
@@ -71,12 +70,12 @@ export const createDetailsModeGetter = (component: PostComponent) => () => compo
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostComponent implements OnDestroy {
-  @Input() post?: Post;
-  @Input() currentUser?: AuthUser | null;
-  @Input() isLoading = false;
-  @Input() detailsMode = false;
-  @Output() edit = new EventEmitter<Post>();
-  @Output() delete = new EventEmitter<string>();
+  post = input<Post>();
+  currentUser = input<AuthUser | null>();
+  isLoading = input(false);
+  detailsMode = input(false);
+  edit = output<Post>();
+  delete = output<string>();
 
   private router = inject(Router);
   private postQueryService = inject(PostQueryService);
@@ -100,7 +99,7 @@ export class PostComponent implements OnDestroy {
     // Отправляем pending реакцию немедленно перед уничтожением компонента
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
-      if (this.pendingReaction !== null && this.post) {
+      if (this.pendingReaction !== null && this.post()) {
         this.reactionMutation.mutate(this.pendingReaction);
       }
     }
@@ -119,25 +118,31 @@ export class PostComponent implements OnDestroy {
 
   // Проверка прав
   canEdit() {
-    if (!this.currentUser || !this.post) return false;
-    return this.currentUser.id === this.post.author.id || this.currentUser.role === 'admin';
+    const user = this.currentUser();
+    const post = this.post();
+    if (!user || !post) return false;
+    return user.id === post.author.id || user.role === 'admin';
   }
 
   canDelete() {
-    if (!this.currentUser || !this.post) return false;
-    return this.currentUser.id === this.post.author.id || this.currentUser.role === 'admin';
+    const user = this.currentUser();
+    const post = this.post();
+    if (!user || !post) return false;
+    return user.id === post.author.id || user.role === 'admin';
   }
 
   handleEdit(event: Event) {
     event.stopPropagation();
-    if (!this.post) return;
-    this.edit.emit(this.post);
+    const post = this.post();
+    if (!post) return;
+    this.edit.emit(post);
   }
 
   handleDelete(event: Event) {
     event.stopPropagation();
-    if (!this.post) return;
-    this.delete.emit(this.post.id);
+    const post = this.post();
+    if (!post) return;
+    this.delete.emit(post.id);
   }
 
   openDetails(id: string) {
@@ -166,7 +171,7 @@ export class PostComponent implements OnDestroy {
 
   handleLike(event: Event) {
     event.stopPropagation();
-    if (!this.post) return;
+    if (!this.post()) return;
 
     // Получаем текущую реакцию (локальную или из поста)
     const currentReaction = this.getUserReaction();
@@ -196,7 +201,7 @@ export class PostComponent implements OnDestroy {
 
   handleDislike(event: Event) {
     event.stopPropagation();
-    if (!this.post) return;
+    if (!this.post()) return;
 
     // Получаем текущую реакцию (локальную или из поста)
     const currentReaction = this.getUserReaction();
@@ -227,18 +232,18 @@ export class PostComponent implements OnDestroy {
   getLikes() {
     const local = this.localReaction();
     if (local) return local.likes;
-    return this.post?.likes ?? 0;
+    return this.post()?.likes ?? 0;
   }
 
   getDislikes() {
     const local = this.localReaction();
     if (local) return local.dislikes;
-    return this.post?.dislikes ?? 0;
+    return this.post()?.dislikes ?? 0;
   }
 
   getUserReaction() {
     const local = this.localReaction();
     if (local) return local.userReaction;
-    return this.post?.userReaction ?? null;
+    return this.post()?.userReaction ?? null;
   }
 }

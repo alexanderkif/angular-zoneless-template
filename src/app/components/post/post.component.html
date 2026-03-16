@@ -1,18 +1,18 @@
-@if (isLoading) {
+@if (isLoading()) {
   <article class="post skeleton">
     <h1 class="title">Loading...</h1>
     <p class="text">Please wait while we fetch the content.</p>
   </article>
-} @else if (post; as postData) {
+} @else if (post(); as postData) {
   <article
     class="post"
-    [class.details-mode]="detailsMode"
+    [class.details-mode]="detailsMode()"
     (click)="openDetails(postData.id)"
     (keydown.enter)="openDetails(postData.id)"
     (keydown.space)="$event.preventDefault(); openDetails(postData.id)"
-    [tabindex]="detailsMode ? -1 : 0"
-    [attr.role]="detailsMode ? 'article' : 'button'"
-    [attr.aria-label]="detailsMode ? null : 'View details for ' + postData.title"
+    [tabindex]="detailsMode() ? -1 : 0"
+    [attr.role]="detailsMode() ? 'article' : 'button'"
+    [attr.aria-label]="detailsMode() ? null : 'View details for ' + postData.title"
   >
     <div class="post-header">
       <div class="author-info">
@@ -29,7 +29,7 @@
         </time>
       </div>
 
-      @if (currentUser) {
+      @if (currentUser()) {
         @if (canEdit() || canDelete()) {
           <div class="post-actions-header">
             @if (canEdit()) {

@@ -58,15 +58,15 @@ describe('PostComponent', () => {
   });
 
   it('should deny edit/delete when user or post is missing', () => {
-    component.currentUser = null;
-    component.post = undefined;
+    fixture.componentRef.setInput('currentUser', null);
+    fixture.componentRef.setInput('post', undefined);
 
     expect(component.canEdit()).toBe(false);
     expect(component.canDelete()).toBe(false);
   });
 
   it('should allow edit/delete for author and admin', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p1',
       title: 'T',
       content: 'C',
@@ -79,9 +79,9 @@ describe('PostComponent', () => {
         avatarUrl: null,
         role: 'user',
       },
-    } as any;
+    } as any);
 
-    component.currentUser = {
+    fixture.componentRef.setInput('currentUser', {
       id: 'u1',
       email: 'a@a.com',
       name: 'Author',
@@ -89,11 +89,11 @@ describe('PostComponent', () => {
       provider: 'local',
       emailVerified: true,
       role: 'user',
-    };
+    });
     expect(component.canEdit()).toBe(true);
     expect(component.canDelete()).toBe(true);
 
-    component.currentUser = {
+    fixture.componentRef.setInput('currentUser', {
       id: 'admin',
       email: 'admin@a.com',
       name: 'Admin',
@@ -101,13 +101,13 @@ describe('PostComponent', () => {
       provider: 'local',
       emailVerified: true,
       role: 'admin',
-    };
+    });
     expect(component.canEdit()).toBe(true);
     expect(component.canDelete()).toBe(true);
   });
 
   it('should deny edit/delete for non-author non-admin user', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p1',
       title: 'T',
       content: 'C',
@@ -120,9 +120,9 @@ describe('PostComponent', () => {
         avatarUrl: null,
         role: 'user',
       },
-    } as any;
+    } as any);
 
-    component.currentUser = {
+    fixture.componentRef.setInput('currentUser', {
       id: 'other-user',
       email: 'other@example.com',
       name: 'Other',
@@ -130,14 +130,14 @@ describe('PostComponent', () => {
       provider: 'local',
       emailVerified: true,
       role: 'user',
-    };
+    });
 
     expect(component.canEdit()).toBe(false);
     expect(component.canDelete()).toBe(false);
   });
 
   it('should emit edit event and stop propagation', () => {
-    component.post = {
+    const postData = {
       id: 'p1',
       title: 'T',
       content: 'C',
@@ -145,6 +145,7 @@ describe('PostComponent', () => {
       updatedAt: new Date().toISOString(),
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
     } as any;
+    fixture.componentRef.setInput('post', postData);
 
     const stopPropagation = vi.fn();
     const editSpy = vi.fn();
@@ -153,18 +154,18 @@ describe('PostComponent', () => {
     component.handleEdit({ stopPropagation } as any);
 
     expect(stopPropagation).toHaveBeenCalled();
-    expect(editSpy).toHaveBeenCalledWith(component.post);
+    expect(editSpy).toHaveBeenCalledWith(postData);
   });
 
   it('should emit delete event and stop propagation', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p1',
       title: 'T',
       content: 'C',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     const stopPropagation = vi.fn();
     const deleteSpy = vi.fn();
@@ -177,7 +178,7 @@ describe('PostComponent', () => {
   });
 
   it('should no-op handleEdit/handleDelete when post is missing', () => {
-    component.post = undefined;
+    fixture.componentRef.setInput('post', undefined);
     const stopPropagation = vi.fn();
     const editSpy = vi.fn();
     const deleteSpy = vi.fn();
@@ -193,7 +194,7 @@ describe('PostComponent', () => {
   });
 
   it('should use post reaction values when local state is empty', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p1',
       title: 'T',
       content: 'C',
@@ -203,7 +204,7 @@ describe('PostComponent', () => {
       dislikes: 2,
       userReaction: 1,
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     expect(component.getLikes()).toBe(4);
     expect(component.getDislikes()).toBe(2);
@@ -211,7 +212,7 @@ describe('PostComponent', () => {
   });
 
   it('should handle like/dislike reactions with optimistic local updates', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p1',
       title: 'T',
       content: 'C',
@@ -221,7 +222,7 @@ describe('PostComponent', () => {
       dislikes: 0,
       userReaction: null,
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     const stopPropagation = vi.fn();
     const syncSpy = vi.spyOn(component as any, 'syncReactionToServer');
@@ -243,7 +244,7 @@ describe('PostComponent', () => {
   });
 
   it('should convert like to dislike path in handleDislike', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p2',
       title: 'T',
       content: 'C',
@@ -253,7 +254,7 @@ describe('PostComponent', () => {
       dislikes: 0,
       userReaction: 1,
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     const stopPropagation = vi.fn();
     component.handleDislike({ stopPropagation } as any);
@@ -265,7 +266,7 @@ describe('PostComponent', () => {
   });
 
   it('should convert dislike to like path in handleLike', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p4',
       title: 'T',
       content: 'C',
@@ -275,7 +276,7 @@ describe('PostComponent', () => {
       dislikes: 2,
       userReaction: -1,
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     const stopPropagation = vi.fn();
     component.handleLike({ stopPropagation } as any);
@@ -287,7 +288,7 @@ describe('PostComponent', () => {
   });
 
   it('should toggle dislike off when already disliked', () => {
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p3',
       title: 'T',
       content: 'C',
@@ -297,7 +298,7 @@ describe('PostComponent', () => {
       dislikes: 2,
       userReaction: -1,
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     const stopPropagation = vi.fn();
     component.handleDislike({ stopPropagation } as any);
@@ -308,7 +309,7 @@ describe('PostComponent', () => {
   });
 
   it('should ignore like/dislike when post is missing', () => {
-    component.post = undefined;
+    fixture.componentRef.setInput('post', undefined);
     const stopPropagation = vi.fn();
     const syncSpy = vi.spyOn(component as any, 'syncReactionToServer');
 
@@ -322,14 +323,14 @@ describe('PostComponent', () => {
   it('should flush pending reaction on destroy', () => {
     const mutate = vi.fn();
     (component as any).reactionMutation = { mutate };
-    component.post = {
+    fixture.componentRef.setInput('post', {
       id: 'p1',
       title: 'T',
       content: 'C',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       author: { id: 'u1', name: 'A', email: 'a@a.com', avatarUrl: null, role: 'user' },
-    } as any;
+    } as any);
 
     const timer = setTimeout(() => {}, 1000);
     (component as any).debounceTimer = timer;
@@ -434,7 +435,7 @@ describe('PostComponent', () => {
   it('should clear timer on destroy without mutating when post missing', () => {
     const mutate = vi.fn();
     (component as any).reactionMutation = { mutate };
-    component.post = undefined;
+    fixture.componentRef.setInput('post', undefined);
 
     const timer = setTimeout(() => {}, 1000);
     (component as any).debounceTimer = timer;
@@ -446,7 +447,7 @@ describe('PostComponent', () => {
   });
 
   it('should return default values when no post and no local reaction', () => {
-    component.post = undefined;
+    fixture.componentRef.setInput('post', undefined);
 
     expect(component.getLikes()).toBe(0);
     expect(component.getDislikes()).toBe(0);
@@ -472,8 +473,8 @@ describe('PostComponent', () => {
   });
 
   it('should create getters for post and detailsMode', () => {
-    component.post = { id: 'px' } as any;
-    component.detailsMode = true;
+    fixture.componentRef.setInput('post', { id: 'px' } as any);
+    fixture.componentRef.setInput('detailsMode', true);
 
     const postGetter = createPostGetter(component);
     const detailsModeGetter = createDetailsModeGetter(component);
