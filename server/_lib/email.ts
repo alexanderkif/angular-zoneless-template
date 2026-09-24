@@ -2,6 +2,15 @@ import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { getEnv, getFrontendUrl, isLocal } from './env';
 
+/** Экранирует пользовательские значения перед вставкой в HTML письма. */
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 export interface SendVerificationEmailParams {
   to: string;
   name: string;
@@ -77,7 +86,7 @@ export async function sendVerificationEmail({
           <tr>
             <td style="padding: 20px 40px;">
               <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.5;">
-                Hello <strong>${name}</strong>,
+                Hello <strong>${escapeHtml(name)}</strong>,
               </p>
               <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.5;">
                 Thanks for signing up! Please verify your email address by clicking the button below:
@@ -195,7 +204,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
           <tr>
             <td style="padding: 40px;">
               <h1 style="margin: 0 0 20px 0; color: #333333; font-size: 28px; font-weight: 600;">
-                Welcome, ${name}! 🎉
+                Welcome, ${escapeHtml(name)}! 🎉
               </h1>
               <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.5;">
                 Your email has been verified successfully!
