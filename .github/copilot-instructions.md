@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Modern Angular 21 application with **Zoneless Change Detection**, SSR, and a Vercel/Supabase backend.
+Modern Angular 22 application with **Zoneless Change Detection**, SSR, and a Vercel/Supabase backend.
 
 ## Core Architecture & Patterns
 
@@ -15,10 +15,11 @@ Modern Angular 21 application with **Zoneless Change Detection**, SSR, and a Ver
 
 ### 2. State Management
 
-- **UI State**: Use `@ngrx/signals` `signalStore` with `withState`, `withMethods`, `withComputed` and `patchState`. See [src/app/store/ui/ui.store.ts](src/app/store/ui/ui.store.ts).
-- **Server State**: Use **TanStack Query** (`injectQuery`, `injectMutation`) for all API data — caching, pagination, optimistic updates. See [src/app/services/auth-query.service.ts](src/app/services/auth-query.service.ts).
+- **Server State**: Use Angular's built-in `resource()` / `httpResource()` / `rxResource()` (there is NO TanStack). Paginated data lives in a Signal Store with an in-memory page cache. See [src/app/features/posts/posts.store.ts](src/app/features/posts/posts.store.ts) and [src/app/core/auth/session.service.ts](src/app/core/auth/session.service.ts).
+- **State**: Use `@ngrx/signals` `signalStore` (`withState`, `withProps`, `withComputed`, `withMethods`, `patchState`) + `withDevtools` from `@ngrx-toolkit/core`. See [src/app/features/posts/posts.store.ts](src/app/features/posts/posts.store.ts).
+- **UI State**: Keep local UI state in component `signal()`s (there is no global UI store).
 - **No classic NgRx**: Do NOT use `createFeature`, `createActionGroup`, `createReducer`, `createEffect` or `Store` — these are not used in this project.
-- **Inject stores**: Use `inject(UiStore)` in components to access signal store state directly as signals.
+- **No TanStack**: Do NOT (re)introduce `@tanstack/*` — it was removed in favor of Angular resources.
 
 ### 3. Backend (Vercel Functions)
 

@@ -1,27 +1,30 @@
 # Angular Zoneless Template
 
-Production-ready Angular 21 template with zoneless change detection, SSR, secure authentication, and a Vercel/Supabase-friendly backend.
+Production-ready Angular 22 template with zoneless change detection, SSR, secure authentication, and a Vercel/Supabase-friendly backend.
 
 ## Highlights
 
-- Angular 21 + standalone architecture
+- Angular 22 + standalone architecture
 - Zoneless change detection (`provideZonelessChangeDetection`)
-- SSR + hydration (including TanStack Query dehydration/rehydration)
+- SSR + hydration (resource TransferState via `id`)
+- Server state via built-in `resource()` / `httpResource()` / `rxResource()` (no TanStack)
+- State via NgRx Signal Store (`@ngrx/signals`) + Redux DevTools (`@ngrx-toolkit/core`)
+- Signal Forms (`form()` + `[formField]`)
 - Email/password + OAuth (GitHub, Google)
 - HttpOnly cookie auth with refresh token rotation
-- TanStack Query for server state, NgRx Signal Store for UI state
-- Vitest unit tests + Playwright E2E
+- Vitest unit tests (100% coverage) + Playwright E2E
 - Strict ESLint + TypeScript
 
 ## Stack
 
 ### Frontend
 
-- Angular 21
-- TypeScript 5.9
+- Angular 22
+- TypeScript 6.0
 - RxJS
-- TanStack Query (`@tanstack/angular-query-experimental`)
-- NgRx Signal Store
+- Angular resources (`resource` / `httpResource` / `rxResource`)
+- NgRx Signal Store (`@ngrx/signals`) + `@ngrx-toolkit/core` (DevTools)
+- Signal Forms (`@angular/forms/signals`)
 
 ### Backend
 
@@ -119,10 +122,11 @@ api/                    # Vercel serverless API
   db/                   # Drizzle db + schema
 
 src/app/
+  core/auth/            # SessionService (resource())
+  features/posts/       # PostsStore (Signal Store + resources)
   pages/                # route pages (home/about/login/register/posts/post-details/...)
   components/           # reusable UI components
-  services/             # HTTP + query services
-  store/                # UI signal store
+  services/             # transport services (HTTP)
   guards/               # auth/public guards
   interceptors/         # token refresh + SSR cookie forwarding
 ```
