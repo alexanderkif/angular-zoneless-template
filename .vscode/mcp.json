@@ -2,11 +2,7 @@
   "servers": {
     "angular-cli": {
       "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
-    },
-    "tanstack": {
-      "command": "npx",
-      "args": ["@tanstack/cli", "mcp"]
+      "args": ["-y", "@angular/cli@22", "mcp"]
     },
     "supabase": {
       "url": "https://mcp.supabase.com/mcp?project_ref=yxiirmcplqkwjwknsfue"
@@ -16,10 +12,6 @@
       "command": "npx",
       "args": ["playwright", "run-test-mcp-server"],
       "cwd": "${workspaceFolder}"
-    },
-    "docfork": {
-      "command": "npx",
-      "args": ["-y", "docfork"]
     }
   },
   "inputs": []
