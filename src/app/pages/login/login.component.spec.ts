@@ -1,12 +1,10 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { Subject } from 'rxjs';
+
+import { SessionService } from '../../core/auth/session.service';
 import { AuthOauthService } from '../../services/auth-oauth.service';
-import { AuthQueryService } from '../../services/auth-query.service';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
@@ -15,39 +13,9 @@ describe('LoginComponent', () => {
   let routerMock: any;
   let activatedRouteStub: any;
   let authOauthServiceMock: any;
-  let queryClient: QueryClient;
-  let loginMutateFn: ReturnType<typeof vi.fn>;
-  let resendMutateFn: ReturnType<typeof vi.fn>;
-  let refetchUserFn: ReturnType<typeof vi.fn>;
+  let sessionMock: any;
 
   beforeEach(async () => {
-    loginMutateFn = vi.fn();
-    resendMutateFn = vi.fn();
-    refetchUserFn = vi.fn(async () => undefined);
-    const authQueryServiceMock = {
-      currentUserQueryOptions: () => ({
-        queryKey: ['auth', 'currentUser'],
-        queryFn: async () => null,
-      }),
-      loginMutation: () => ({
-        mutate: loginMutateFn,
-        isPending: vi.fn(() => false),
-        error: vi.fn(() => null),
-        data: vi.fn(() => null),
-        isError: vi.fn(() => false),
-        isSuccess: vi.fn(() => false),
-      }),
-      resendVerificationMutation: () => ({
-        mutate: resendMutateFn,
-        isPending: vi.fn(() => false),
-        error: vi.fn(() => null),
-        data: vi.fn(() => null),
-        isError: vi.fn(() => false),
-        isSuccess: vi.fn(() => false),
-      }),
-      refetchUser: refetchUserFn,
-    };
-
     routerMock = {
       navigate: vi.fn(),
       events: new Subject(),
@@ -66,24 +34,35 @@ describe('LoginComponent', () => {
       loginWithGoogle: vi.fn(),
     };
 
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
+    sessionMock = {
+      currentUser: {
+        value: signal(null),
+        isLoading: vi.fn(() => false),
+        status: vi.fn(() => 'resolved'),
+        error: vi.fn(() => null),
       },
-    });
+      login: vi.fn(async () => ({
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User',
+        avatarUrl: null,
+        provider: 'local',
+        emailVerified: true,
+        role: 'user',
+      })),
+      resendVerification: vi.fn(async () => ({ message: 'Email sent' })),
+      loginState: { isPending: signal(false), error: signal<Error | null>(null) },
+      resendState: { isPending: signal(false), error: signal<Error | null>(null) },
+    };
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
         { provide: AuthOauthService, useValue: authOauthServiceMock },
-        { provide: AuthQueryService, useValue: authQueryServiceMock },
+        { provide: SessionService, useValue: sessionMock },
       ],
     }).compileComponents();
 
@@ -96,30 +75,23 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should call loginMutation on valid submit', () => {
+  it('should call session.login on valid submit', async () => {
     component.loginModel.set({
       email: 'test@example.com',
       password: 'password123',
       rememberMe: true,
     });
 
-    component.onSubmit({ preventDefault: () => {} } as any);
+    await component.onSubmit({ preventDefault: () => {} } as Event);
 
-    expect(loginMutateFn).toHaveBeenCalledWith(
-      {
-        email: 'test@example.com',
-        password: 'password123',
-        rememberMe: true,
-      },
-      expect.any(Object),
-    );
-
-    const options = loginMutateFn.mock.calls[0][1] as { onSuccess?: () => Promise<void> };
-    expect(options.onSuccess).toBeDefined();
+    expect(sessionMock.login).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123',
+      rememberMe: true,
+    });
   });
 
-  it('should navigate to returnUrl in login success callback', async () => {
-    vi.useFakeTimers();
+  it('should navigate to returnUrl after successful login', async () => {
     activatedRouteStub.snapshot.queryParams = { returnUrl: '/protected' };
 
     component.loginModel.set({
@@ -128,21 +100,13 @@ describe('LoginComponent', () => {
       rememberMe: true,
     });
 
-    component.onSubmit({ preventDefault: () => {} } as any);
+    await component.onSubmit({ preventDefault: () => {} } as Event);
 
-    const options = loginMutateFn.mock.calls[0][1] as { onSuccess?: () => Promise<void> };
-    const callbackPromise = options.onSuccess?.();
-    await Promise.resolve();
-    vi.advanceTimersByTime(100);
-    await callbackPromise;
-
-    expect(refetchUserFn).toHaveBeenCalled();
+    expect(sessionMock.login).toHaveBeenCalled();
     expect(routerMock.navigate).toHaveBeenCalledWith(['/protected']);
-    vi.useRealTimers();
   });
 
   it('should navigate to root if returnUrl is missing', async () => {
-    vi.useFakeTimers();
     activatedRouteStub.snapshot.queryParams = {};
 
     component.loginModel.set({
@@ -151,25 +115,17 @@ describe('LoginComponent', () => {
       rememberMe: true,
     });
 
-    component.onSubmit({ preventDefault: () => {} } as any);
+    await component.onSubmit({ preventDefault: () => {} } as Event);
 
-    const options = loginMutateFn.mock.calls[0][1] as { onSuccess?: () => Promise<void> };
-    const callbackPromise = options.onSuccess?.();
-    await Promise.resolve();
-    vi.advanceTimersByTime(100);
-    await callbackPromise;
-
-    expect(refetchUserFn).toHaveBeenCalled();
     expect(routerMock.navigate).toHaveBeenCalledWith(['/']);
-    vi.useRealTimers();
   });
 
-  it('should not call loginMutation on invalid submit', () => {
+  it('should not call session.login on invalid submit', async () => {
     component.loginModel.set({ email: 'invalid-email', password: '', rememberMe: true });
 
-    component.onSubmit({ preventDefault: () => {} } as any);
+    await component.onSubmit({ preventDefault: () => {} } as Event);
 
-    expect(loginMutateFn).not.toHaveBeenCalled();
+    expect(sessionMock.login).not.toHaveBeenCalled();
   });
 
   it('should delegate social login to AuthOauthService with returnUrl', () => {
@@ -192,41 +148,41 @@ describe('LoginComponent', () => {
     expect(authOauthServiceMock.loginWithGoogle).toHaveBeenCalledWith(undefined);
   });
 
-  it('should call resendMutation on resend verification', () => {
+  it('should set resend message on successful resend', async () => {
     component.loginModel.set({ email: 'test@example.com', password: '', rememberMe: true });
 
-    component.resendVerification();
+    await component.resendVerification();
 
-    expect(resendMutateFn).toHaveBeenCalledWith({ email: 'test@example.com' }, expect.any(Object));
-
-    const options = resendMutateFn.mock.calls[0][1] as {
-      onSuccess?: (response: { message: string }) => void;
-      onError?: (error: Error) => void;
-    };
-
-    options.onSuccess?.({ message: 'Email sent' });
+    expect(sessionMock.resendVerification).toHaveBeenCalledWith({ email: 'test@example.com' });
     expect(component.resendMessage()).toBe('Email sent');
+  });
 
-    options.onError?.(new Error('Failed'));
+  it('should set error message when resend fails', async () => {
+    sessionMock.resendVerification.mockRejectedValueOnce(new Error('Failed'));
+
+    component.loginModel.set({ email: 'test@example.com', password: '', rememberMe: true });
+
+    await component.resendVerification();
+
     expect(component.resendMessage()).toBe('Failed');
   });
 
-  it('should use default resend error message when error has no message', () => {
-    component.loginModel.set({ email: 'test@example.com', password: '', rememberMe: true });
-    component.resendVerification();
+  it('should use default resend error message when error has no message', async () => {
+    sessionMock.resendVerification.mockRejectedValueOnce({});
 
-    const options = resendMutateFn.mock.calls[0][1] as {
-      onError?: (error: { message?: string }) => void;
-    };
-    options.onError?.({});
+    component.loginModel.set({ email: 'test@example.com', password: '', rememberMe: true });
+
+    await component.resendVerification();
 
     expect(component.resendMessage()).toBe('Failed to resend verification email');
   });
 
-  it('should not call resendMutation if email is empty', () => {
+  it('should not call resendVerification if email is empty', async () => {
     component.loginModel.set({ email: '', password: '', rememberMe: true });
-    component.resendVerification();
-    expect(resendMutateFn).not.toHaveBeenCalled();
+
+    await component.resendVerification();
+
+    expect(sessionMock.resendVerification).not.toHaveBeenCalled();
   });
 
   it('should toggle password visibility', () => {

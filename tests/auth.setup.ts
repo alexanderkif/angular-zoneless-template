@@ -55,6 +55,6 @@ setup('authenticate', async ({ page }) => {
   await page.goto(URL);
 
   // Verify we are logged in (Posts link enabled)
-  await expect(page.locator('#nav-posts')).not.toHaveClass('disabled-link');
+  await expect(page.locator('#nav-posts')).not.toHaveClass('panel__link--disabled');
   await page.context().storageState({ path: authFile });
 });

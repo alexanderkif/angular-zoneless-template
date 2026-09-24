@@ -83,4 +83,24 @@ describe('PostService', () => {
     expect(req.request.withCredentials).toBe(true);
     req.flush({});
   });
+
+  it('should toggle a post reaction', () => {
+    service.toggleReaction('post', 'p1', 1).subscribe();
+
+    const req = httpMock.expectOne('http://localhost:3000/api/reactions');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ targetType: 'post', targetId: 'p1', reaction: 1 });
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({ success: true, likes: 2, dislikes: 0 });
+  });
+
+  it('should toggle a comment reaction', () => {
+    service.toggleReaction('comment', 'c1', -1).subscribe();
+
+    const req = httpMock.expectOne('http://localhost:3000/api/reactions');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ targetType: 'comment', targetId: 'c1', reaction: -1 });
+    expect(req.request.withCredentials).toBe(true);
+    req.flush({ success: true, likes: 0, dislikes: 1 });
+  });
 });

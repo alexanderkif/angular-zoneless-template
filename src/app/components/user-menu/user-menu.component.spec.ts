@@ -1,83 +1,79 @@
-import { provideZonelessChangeDetection } from '@angular/core';
-import { signal } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { AuthQueryService } from '../../services/auth-query.service';
-import { UiStore } from '../../store/ui/ui.store';
+import { SessionService } from '../../core/auth/session.service';
+import { ThemeService } from '../../core/theme/theme.service';
 import { UserMenuComponent } from './user-menu.component';
+
+type MockUser = {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+  provider: string;
+  emailVerified: boolean;
+  role: 'user' | 'admin';
+};
+
+const defaultUser: MockUser = {
+  id: '1',
+  name: 'Test User',
+  email: 'test@example.com',
+  avatarUrl: 'avatar.png',
+  provider: 'email',
+  emailVerified: true,
+  role: 'user',
+};
+
+const createSessionMock = (user: MockUser | null = defaultUser) => {
+  const currentUserValue = signal<MockUser | null>(user);
+  const logoutPending = signal(false);
+  const logoutError = signal<Error | null>(null);
+
+  return {
+    currentUser: {
+      value: currentUserValue,
+      isLoading: signal(false),
+      status: signal('resolved'),
+      error: signal<Error | null>(null),
+      reload: vi.fn(),
+    },
+    ensureUser: vi.fn(async () => currentUserValue()),
+    reloadCurrentUser: vi.fn(),
+    refreshSession: vi.fn(async () => currentUserValue()),
+    logoutState: { isPending: logoutPending, error: logoutError },
+    logout: vi.fn(async () => {
+      currentUserValue.set(null);
+    }),
+  };
+};
+
+const createThemeMock = () => ({
+  preference: signal<'light' | 'dark' | 'system'>('system'),
+  resolved: signal<'light' | 'dark'>('light'),
+  setPreference: vi.fn(),
+  toggle: vi.fn(),
+});
 
 describe('UserMenuComponent', () => {
   let component: UserMenuComponent;
   let fixture: ComponentFixture<UserMenuComponent>;
   let router: { navigate: ReturnType<typeof vi.fn>; url: string };
-  let mockAuthQueryService: any;
-  let mockUiStore: any;
-  let mockLogoutMutate: ReturnType<typeof vi.fn>;
-  let queryClient: QueryClient;
-  const currentUserQueryKey = ['auth', 'currentUser'] as const;
+  let sessionMock: ReturnType<typeof createSessionMock>;
+  let themeMock: ReturnType<typeof createThemeMock>;
 
   beforeEach(async () => {
     router = { navigate: vi.fn(), url: '/current-url' };
-    mockLogoutMutate = vi.fn();
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-
-    queryClient.setQueryData(currentUserQueryKey, {
-      id: '1',
-      name: 'Test User',
-      email: 'test@example.com',
-      avatarUrl: 'avatar.png',
-      provider: 'email',
-      emailVerified: true,
-      role: 'user',
-    });
-
-    mockAuthQueryService = {
-      currentUserQueryOptions: vi.fn(() => ({
-        queryKey: currentUserQueryKey,
-        queryFn: async () =>
-          queryClient.getQueryData(currentUserQueryKey) ?? {
-            id: '1',
-            name: 'Test User',
-            email: 'test@example.com',
-            avatarUrl: 'avatar.png',
-            provider: 'email',
-            emailVerified: true,
-            role: 'user',
-          },
-      })),
-      logoutMutation: vi.fn(() => ({
-        mutate: mockLogoutMutate,
-        isPending: vi.fn(() => false),
-        error: vi.fn(() => null),
-        isError: vi.fn(() => false),
-      })),
-    };
-
-    mockUiStore = {
-      isUserMenuOpen: signal(false),
-      toggleUserMenu: vi.fn(() => {
-        const current = mockUiStore.isUserMenuOpen();
-        mockUiStore.isUserMenuOpen.set(!current);
-      }),
-      closeUserMenu: vi.fn(() => {
-        mockUiStore.isUserMenuOpen.set(false);
-      }),
-    };
+    sessionMock = createSessionMock();
+    themeMock = createThemeMock();
 
     await TestBed.configureTestingModule({
       imports: [UserMenuComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideTanStackQuery(queryClient),
         { provide: Router, useValue: router },
-        { provide: AuthQueryService, useValue: mockAuthQueryService },
-        { provide: UiStore, useValue: mockUiStore },
+        { provide: SessionService, useValue: sessionMock },
+        { provide: ThemeService, useValue: themeMock },
       ],
     }).compileComponents();
 
@@ -90,88 +86,109 @@ describe('UserMenuComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should expose the current user name, avatar and role', () => {
+    expect(component.userName()).toBe('Test User');
+    expect(component.userAvatar()).toBe('avatar.png');
+    expect(component.userRole()).toBe('user');
+  });
+
   it('should toggle the menu visibility when toggleMenu is called', () => {
     const mockEvent = new Event('click');
-    vi.spyOn(mockEvent, 'stopPropagation');
+    const stopPropagation = vi.spyOn(mockEvent, 'stopPropagation');
 
     expect(component.showMenu()).toBe(false);
 
     component.toggleMenu(mockEvent);
-    expect(mockUiStore.toggleUserMenu).toHaveBeenCalled();
-    expect(mockEvent.stopPropagation).toHaveBeenCalled();
+    expect(component.showMenu()).toBe(true);
+    expect(stopPropagation).toHaveBeenCalled();
+
+    component.toggleMenu(mockEvent);
+    expect(component.showMenu()).toBe(false);
   });
 
-  it('should navigate to login when login is clicked', () => {
-    component.handleAction('login');
+  it('should navigate to login when login is clicked', async () => {
+    component.showMenu.set(true);
+
+    await component.handleAction('login');
 
     expect(router.navigate).toHaveBeenCalledWith(['/login'], {
       queryParams: { returnUrl: '/current-url' },
     });
-    expect(mockUiStore.closeUserMenu).toHaveBeenCalled();
+    expect(component.showMenu()).toBe(false);
   });
 
-  it('should navigate to settings when settings is clicked', () => {
-    component.handleAction('settings');
+  it('should navigate to settings when settings is clicked', async () => {
+    component.showMenu.set(true);
+
+    await component.handleAction('settings');
 
     expect(router.navigate).toHaveBeenCalledWith(['/settings']);
-    expect(mockUiStore.closeUserMenu).toHaveBeenCalled();
+    expect(component.showMenu()).toBe(false);
   });
 
-  it('should call logout mutation and keep user on public routes on exit', () => {
-    component.handleAction('exit');
+  it('should call logout and keep user on public routes on exit', async () => {
+    component.showMenu.set(true);
 
-    // Verify logout mutation was called
-    expect(mockLogoutMutate).toHaveBeenCalled();
+    await component.handleAction('exit');
 
-    // Get the onSettled callback and call it to simulate completion
-    const mutateCall = mockLogoutMutate.mock.calls[0];
-    const options = mutateCall[1];
-    expect(options).toBeDefined();
-    expect(options.onSettled).toBeDefined();
-
-    // Simulate logout completion
-    options.onSettled();
-
-    // Verify no forced redirect on public route
-    expect(router.navigate).not.toHaveBeenCalledWith(['/']);
-    expect(mockUiStore.closeUserMenu).toHaveBeenCalled();
+    expect(sessionMock.logout).toHaveBeenCalled();
+    expect(component.showMenu()).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should redirect to login from protected route on exit', () => {
+  it('should redirect to login from protected route on exit', async () => {
     router.url = '/posts/123';
 
-    component.handleAction('exit');
+    await component.handleAction('exit');
 
-    const mutateCall = mockLogoutMutate.mock.calls[0];
-    const options = mutateCall[1];
-    options.onSettled();
-
+    expect(sessionMock.logout).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/login'], {
       queryParams: { returnUrl: '/posts/123' },
     });
   });
 
   it('should close the menu when closeMenu is called', () => {
-    mockUiStore.isUserMenuOpen.set(true);
+    component.showMenu.set(true);
 
     component.closeMenu();
 
-    expect(mockUiStore.closeUserMenu).toHaveBeenCalled();
+    expect(component.showMenu()).toBe(false);
   });
 
   it('should return guest defaults when user data is missing', () => {
-    queryClient.setQueryData(currentUserQueryKey, null);
+    sessionMock.currentUser.value.set(null);
 
-    const localFixture = TestBed.createComponent(UserMenuComponent);
-    const localComponent = localFixture.componentInstance;
-
-    expect(localComponent.userName()).toBe('Guest');
-    expect(localComponent.userAvatar()).toBeNull();
-    expect(localComponent.userRole()).toBe('user');
+    expect(component.userName()).toBe('Guest');
+    expect(component.userAvatar()).toBeNull();
+    expect(component.userRole()).toBe('user');
   });
 
-  it('should ignore unknown actions', () => {
-    component.handleAction('unknown-action');
+  it('should reflect logout pending state', () => {
+    expect(component.isLoggingOut()).toBe(false);
+
+    sessionMock.logoutState.isPending.set(true);
+
+    expect(component.isLoggingOut()).toBe(true);
+  });
+
+  it('should ignore unknown actions', async () => {
+    await component.handleAction('unknown-action');
+
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should toggle the theme from the menu', () => {
+    component.toggleTheme();
+
+    expect(themeMock.toggle).toHaveBeenCalled();
+  });
+
+  it('should reflect the resolved theme', () => {
+    expect(component.isDark()).toBe(false);
+
+    themeMock.resolved.set('dark');
+    fixture.detectChanges();
+
+    expect(component.isDark()).toBe(true);
   });
 });

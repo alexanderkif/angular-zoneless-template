@@ -1,10 +1,9 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, ActivatedRoute } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
+
+import { SessionService } from '../../core/auth/session.service';
 import { WINDOW } from '../../tokens/window.token';
 import { AuthCallbackComponent } from './auth-callback.component';
 
@@ -14,7 +13,7 @@ describe('AuthCallbackComponent', () => {
   let routerMock: any;
   let activatedRouteStub: any;
   let windowMock: any;
-  let queryClient: QueryClient;
+  let sessionMock: any;
 
   beforeEach(async () => {
     routerMock = {
@@ -32,24 +31,19 @@ describe('AuthCallbackComponent', () => {
       },
     };
 
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    sessionMock = {
+      reloadCurrentUser: vi.fn(() => true),
+    };
 
     await TestBed.configureTestingModule({
       imports: [AuthCallbackComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
         { provide: WINDOW, useValue: windowMock },
         { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: SessionService, useValue: sessionMock },
       ],
     }).compileComponents();
 
@@ -88,6 +82,7 @@ describe('AuthCallbackComponent', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 150));
 
+    expect(sessionMock.reloadCurrentUser).toHaveBeenCalled();
     expect(routerMock.navigate).toHaveBeenCalledWith(['/']);
     // removeItem should not be called when there's no saved returnUrl
   });
@@ -117,13 +112,11 @@ describe('AuthCallbackComponent', () => {
       imports: [AuthCallbackComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
         { provide: WINDOW, useValue: serverWindowMock },
         { provide: PLATFORM_ID, useValue: 'server' },
+        { provide: SessionService, useValue: sessionMock },
       ],
     }).compileComponents();
 

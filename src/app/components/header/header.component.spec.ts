@@ -1,41 +1,65 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideRouter } from '@angular/router';
+import { SessionService } from '../../core/auth/session.service';
 import { HeaderComponent } from './header.component';
+
+type MockUser = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  role: 'user' | 'admin';
+};
+
+const createSessionMock = () => {
+  const currentUserValue = signal<MockUser | null>(null);
+
+  return {
+    currentUser: {
+      value: currentUserValue,
+      isLoading: signal(false),
+      status: signal('resolved'),
+      error: signal<Error | null>(null),
+      reload: vi.fn(),
+    },
+    ensureUser: vi.fn(async () => currentUserValue()),
+    reloadCurrentUser: vi.fn(),
+    refreshSession: vi.fn(async () => currentUserValue()),
+    logoutState: { isPending: signal(false), error: signal<Error | null>(null) },
+    logout: vi.fn(async () => {
+      currentUserValue.set(null);
+    }),
+  };
+};
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
   let fixture: ComponentFixture<HeaderComponent>;
-  let queryClient: QueryClient;
 
   beforeEach(async () => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-
     await TestBed.configureTestingModule({
       imports: [HeaderComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
-        { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
+        provideRouter([]),
+        { provide: SessionService, useValue: createSessionMock() },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
-    fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render logo, panel and user-menu', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('app-logo')).toBeTruthy();
+    expect(compiled.querySelector('app-panel')).toBeTruthy();
+    expect(compiled.querySelector('app-user-menu')).toBeTruthy();
   });
 });

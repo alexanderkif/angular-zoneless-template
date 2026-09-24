@@ -27,7 +27,7 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     // baseURL: 'http://localhost:3000',
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:4200',
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:4300',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -84,10 +84,12 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run your local dev server before starting the tests.
+     Dedicated port (4300), so E2E never reuses the developer's `npm run dev` SSR
+     server on 4200 (which would break the CSR auth flow). */
   webServer: {
-    command: 'npx ng serve --port 4200 --configuration=csr',
-    url: 'http://localhost:4200',
+    command: 'npx ng serve --port 4300 --configuration=csr',
+    url: 'http://localhost:4300',
     reuseExistingServer: !process.env.CI,
   },
 });

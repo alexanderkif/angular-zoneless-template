@@ -59,7 +59,7 @@ test.describe('App Navigation', () => {
 
   test('should display navigation links', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('.logo-link')).toBeVisible();
+    await expect(page.locator('.logo__link')).toBeVisible();
     await expect(page.locator('#nav-home')).toBeVisible();
     await expect(page.locator('#nav-posts')).toBeVisible();
     await expect(page.locator('#nav-about')).toBeVisible();
@@ -70,7 +70,7 @@ test.describe('App Navigation', () => {
     await page.locator('#nav-home').click();
     await expect(page).toHaveURL(URL);
     await expect(
-      page.getByRole('heading', { name: /Welcome to Angular 21(\.2)? Zoneless Template/ }),
+      page.getByRole('heading', { name: /Welcome to Angular 22 Zoneless Template/ }),
     ).toBeVisible();
   });
 
