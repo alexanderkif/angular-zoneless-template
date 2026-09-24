@@ -1,14 +1,14 @@
 <section class="settings">
-  <h1>User Settings</h1>
+  <h1 class="settings__title">User Settings</h1>
 
   <div class="settings__section">
-    <h2>Posts Display</h2>
+    <h2 class="settings__section-title">Posts Display</h2>
 
     <div class="settings__item">
-      <label for="postsLimit">Posts per page:</label>
+      <label class="settings__label" for="postsLimit">Posts per page:</label>
       <select
         id="postsLimit"
-        [value]="uiStore.postsLimit()"
+        [value]="postsStore.limit()"
         (change)="onLimitChange($event)"
         class="settings__select"
       >
@@ -21,7 +21,7 @@
     </div>
 
     <p class="settings__info">
-      Currently showing <strong>{{ uiStore.postsLimit() }}</strong> posts per page.
+      Currently showing <strong class="settings__limit">{{ postsStore.limit() }}</strong> posts per page.
     </p>
   </div>
 </section>

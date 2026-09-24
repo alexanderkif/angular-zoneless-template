@@ -1,35 +1,35 @@
-<section class="home-container">
-  <div class="hero">
-    <h1>Welcome to Angular 21.2 Zoneless Template</h1>
-    <p class="subtitle">
-      Production-ready starter with Angular 21.2, zoneless change detection, SSR, secure auth, and
+<section class="home">
+  <div class="home__hero">
+    <h1 class="home__title">Welcome to Angular 22 Zoneless Template</h1>
+    <p class="home__subtitle">
+      Production-ready starter with Angular 22, zoneless change detection, SSR, secure auth, and
       tested API integration.
     </p>
   </div>
 
-  <div class="content-card">
-    <h2>Explore the Full Stack Demo</h2>
-    <p>
+  <div class="home__card">
+    <h2 class="home__card-title">Explore the Full Stack Demo</h2>
+    <p class="home__card-text">
       This project demonstrates authenticated posts, comments, reactions, email verification, and
       OAuth sign-in. It also includes optimistic UI updates for post/comment create, edit, and
       delete operations.
     </p>
 
-    <div class="content-card" style="margin: 1rem 0 1.25rem 0">
+    <div class="home__card" style="margin: 1rem 0 1.25rem 0">
       <h3 style="margin-top: 0">Demo Account</h3>
-      <p style="margin-bottom: 0.5rem">
+      <p class="home__card-text" style="margin-bottom: 0.5rem">
         Use this account if you want to test features without registration:
       </p>
-      <p style="margin: 0"><strong>Email:</strong> test@te.st</p>
-      <p style="margin: 0"><strong>Password:</strong> test</p>
+      <p class="home__card-text" style="margin: 0"><strong>Email:</strong> test@te.st</p>
+      <p class="home__card-text" style="margin: 0"><strong>Password:</strong> test</p>
     </div>
 
-    <div class="action-buttons">
+    <div class="home__actions">
       <app-link-button [routerLink]="'/login'">Log In</app-link-button>
       <app-link-button [routerLink]="'/register'" variant="secondary">Register</app-link-button>
     </div>
 
-    <p class="small-text">
+    <p class="home__hint">
       New here? Create an account in under a minute to test protected flows end-to-end. Current
       baseline: strict lint + green Playwright + 100% unit test coverage.
     </p>

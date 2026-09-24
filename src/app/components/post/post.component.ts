@@ -9,58 +9,11 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { injectMutation, QueryClient } from '@tanstack/angular-query-experimental';
-import type { AuthUser } from '../../services/auth-query.service';
-import { PostQueryService } from '../../services/post-query.service';
+import type { AuthUser } from '../../core/auth/session.service';
+import { PostsStore } from '../../features/posts/posts.store';
 import type { Post } from '../../services/post.service';
-import { UiStore } from '../../store/ui/ui.store';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconButtonComponent } from '../ui/icon-button/icon-button.component';
-
-type PostsPaginationStore = {
-  postsPage: () => number;
-  postsLimit: () => number;
-};
-
-export const createPostReactionMutationOptions = (
-  postQueryService: PostQueryService,
-  queryClient: QueryClient,
-  uiStore: PostsPaginationStore,
-  getPost: () => Post | undefined,
-  detailsMode: () => boolean,
-) => ({
-  mutationFn: (reaction: 1 | -1 | 0) =>
-    postQueryService.toggleReaction('post', getPost()!.id, reaction),
-  onSuccess: () => {
-    const post = getPost();
-    if (!post) return;
-
-    if (detailsMode()) {
-      queryClient.invalidateQueries({ queryKey: ['posts', 'detail', post.id] });
-    } else {
-      const queryKey = [
-        'posts',
-        'list',
-        { page: uiStore.postsPage(), limit: uiStore.postsLimit() },
-      ];
-      queryClient.invalidateQueries({ queryKey });
-    }
-  },
-});
-
-export const createPostReactionMutationInjectionFactory =
-  (
-    postQueryService: PostQueryService,
-    queryClient: QueryClient,
-    uiStore: PostsPaginationStore,
-    getPost: () => Post | undefined,
-    detailsMode: () => boolean,
-  ) =>
-  () =>
-    createPostReactionMutationOptions(postQueryService, queryClient, uiStore, getPost, detailsMode);
-
-export const createPostGetter = (component: PostComponent) => () => component.post();
-export const createDetailsModeGetter = (component: PostComponent) => () => component.detailsMode();
 
 @Component({
   selector: 'app-post',
@@ -78,12 +31,7 @@ export class PostComponent implements OnDestroy {
   delete = output<string>();
 
   private router = inject(Router);
-  private postQueryService = inject(PostQueryService);
-  private queryClient = inject(QueryClient);
-  private uiStore = inject(UiStore);
-
-  private getPost = createPostGetter(this);
-  private getDetailsMode = createDetailsModeGetter(this);
+  private store = inject(PostsStore);
 
   // Локальное состояние реакций с дебаунсом
   private localReaction = signal<{
@@ -100,21 +48,10 @@ export class PostComponent implements OnDestroy {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
       if (this.pendingReaction !== null && this.post()) {
-        this.reactionMutation.mutate(this.pendingReaction);
+        void this.sendReaction(this.pendingReaction);
       }
     }
   }
-
-  // Простая мутация для реакций без оптимистических обновлений
-  reactionMutation = injectMutation(
-    createPostReactionMutationInjectionFactory(
-      this.postQueryService,
-      this.queryClient,
-      this.uiStore,
-      this.getPost,
-      this.getDetailsMode,
-    ),
-  );
 
   // Проверка прав
   canEdit() {
@@ -149,20 +86,32 @@ export class PostComponent implements OnDestroy {
     this.router.navigate([`/posts/${id}`]);
   }
 
+  // Реакция: патчим счётчики в сторе без полного reload (фон, без мигания)
+  private sendReaction(reaction: 1 | -1 | 0): Promise<void> {
+    const post = this.post();
+    if (!post) return Promise.resolve();
+
+    return this.store
+      .toggleReaction('post', post.id, reaction)
+      .then(() => undefined)
+      .catch(() => {
+        // Откат: стор уже вернул прежнее состояние — показываем серверное значение.
+        this.localReaction.set(null);
+        return undefined;
+      });
+  }
+
   // Debounced синхронизация с сервером
   private syncReactionToServer(reaction: 1 | -1 | 0) {
-    // Сбрасываем предыдущий таймер
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
 
-    // Запоминаем реакцию для отправки
     this.pendingReaction = reaction;
 
-    // Ставим новый таймер на 800мс
     this.debounceTimer = setTimeout(() => {
       if (this.pendingReaction !== null) {
-        this.reactionMutation.mutate(this.pendingReaction);
+        void this.sendReaction(this.pendingReaction);
         this.pendingReaction = null;
       }
       this.debounceTimer = null;
@@ -173,29 +122,22 @@ export class PostComponent implements OnDestroy {
     event.stopPropagation();
     if (!this.post()) return;
 
-    // Получаем текущую реакцию (локальную или из поста)
     const currentReaction = this.getUserReaction();
     const newReaction: 1 | 0 = currentReaction === 1 ? 0 : 1;
 
-    // Мгновенно обновляем локальное состояние
     let likes = this.getLikes();
     let dislikes = this.getDislikes();
 
-    // Убираем старую реакцию
     if (currentReaction === 1) likes--;
     if (currentReaction === -1) dislikes--;
-
-    // Добавляем новую реакцию
     if (newReaction === 1) likes++;
 
-    // Обновляем локальное состояние
     this.localReaction.set({
       likes,
       dislikes,
       userReaction: newReaction === 0 ? null : newReaction,
     });
 
-    // Debounced отправка на сервер
     this.syncReactionToServer(newReaction);
   }
 
@@ -203,29 +145,22 @@ export class PostComponent implements OnDestroy {
     event.stopPropagation();
     if (!this.post()) return;
 
-    // Получаем текущую реакцию (локальную или из поста)
     const currentReaction = this.getUserReaction();
     const newReaction: -1 | 0 = currentReaction === -1 ? 0 : -1;
 
-    // Мгновенно обновляем локальное состояние
     let likes = this.getLikes();
     let dislikes = this.getDislikes();
 
-    // Убираем старую реакцию
     if (currentReaction === 1) likes--;
     if (currentReaction === -1) dislikes--;
-
-    // Добавляем новую реакцию
     if (newReaction === -1) dislikes++;
 
-    // Обновляем локальное состояние
     this.localReaction.set({
       likes,
       dislikes,
       userReaction: newReaction === 0 ? null : newReaction,
     });
 
-    // Debounced отправка на сервер
     this.syncReactionToServer(newReaction);
   }
 

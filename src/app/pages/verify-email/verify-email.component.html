@@ -1,0 +1,23 @@
+<div class="verify-email">
+  <div class="verify-email__card">
+    @if (status() === 'loading') {
+    <div class="verify-email__spinner"></div>
+    <h1 class="verify-email__title">Verifying Email...</h1>
+    <p class="verify-email__text">Please wait while we verify your email address.</p>
+    } @if (status() === 'success') {
+    <div class="verify-email__icon--success">✓</div>
+    <h1 class="verify-email__title">Email Verified!</h1>
+    <p class="verify-email__text">{{ message() }}</p>
+    <p class="verify-email__text verify-email__redirect">Redirecting to homepage...</p>
+    } @if (status() === 'error') {
+    <div class="verify-email__icon--error">✗</div>
+    <h1 class="verify-email__title">Verification Failed</h1>
+    <p class="verify-email__message--error verify-email__text">{{ message() }}</p>
+    <div class="verify-email__actions">
+      <app-button (click)="resendVerification()">Request New Link</app-button>
+      <app-button variant="danger" (click)="cancelRegistration()"> Cancel Registration </app-button>
+      <app-link-button [routerLink]="'/login'" variant="secondary">Go to Login</app-link-button>
+    </div>
+    }
+  </div>
+</div>

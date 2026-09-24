@@ -1,10 +1,10 @@
-<div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>{{ post() ? 'Edit Post' : 'Create Post' }}</h2>
+<div class="post-form__overlay" (click)="onCancel()">
+  <div class="post-form__content" (click)="$event.stopPropagation()">
+    <div class="post-form__header">
+      <h2 class="post-form__title">{{ post() ? 'Edit Post' : 'Create Post' }}</h2>
       <button
         type="button"
-        class="close-btn"
+        class="post-form__close"
         (click)="onCancel()"
         aria-label="Close"
         [disabled]="isSubmitting()"
@@ -14,56 +14,52 @@
     </div>
 
     <form
-      [formGroup]="form"
-      (ngSubmit)="onSubmit()"
+      (submit)="onSubmit($event)"
       class="post-form"
+      novalidate
       [attr.aria-busy]="isSubmitting()"
     >
-      <div class="form-group">
-        <label for="title">Title</label>
+      <div class="post-form__field">
+        <label class="post-form__label" for="title">Title</label>
         <input
           type="text"
           id="title"
-          formControlName="title"
+          class="post-form__input"
+          [formField]="form.title"
           placeholder="Enter post title..."
-          [class.error]="form.controls.title.invalid && form.controls.title.touched"
+          [class.post-form__input--invalid]="form.title().invalid() && form.title().touched()"
         />
-        @if (form.controls.title.errors && form.controls.title.touched) {
-          <div class="error-message">
-            @if (form.controls.title.errors['required']) {
-              Title is required
-            }
-            @if (form.controls.title.errors['maxlength']) {
-              Maximum 200 characters
+        @if (form.title().touched() && form.title().invalid()) {
+          <div class="post-form__error">
+            @for (error of form.title().errors(); track error.kind) {
+              <div>{{ error.message }}</div>
             }
           </div>
         }
-        <div class="char-counter">{{ form.controls.title.value.length }} / 200</div>
+        <div class="post-form__counter">{{ model().title.length }} / 200</div>
       </div>
 
-      <div class="form-group">
-        <label for="content">Content</label>
+      <div class="post-form__field">
+        <label class="post-form__label" for="content">Content</label>
         <textarea
           id="content"
-          formControlName="content"
+          class="post-form__textarea"
+          [formField]="form.content"
           placeholder="Enter post content..."
           rows="12"
-          [class.error]="form.controls.content.invalid && form.controls.content.touched"
+          [class.post-form__textarea--invalid]="form.content().invalid() && form.content().touched()"
         ></textarea>
-        @if (form.controls.content.errors && form.controls.content.touched) {
-          <div class="error-message">
-            @if (form.controls.content.errors['required']) {
-              Content is required
-            }
-            @if (form.controls.content.errors['maxlength']) {
-              Maximum 50000 characters
+        @if (form.content().touched() && form.content().invalid()) {
+          <div class="post-form__error">
+            @for (error of form.content().errors(); track error.kind) {
+              <div>{{ error.message }}</div>
             }
           </div>
         }
-        <div class="char-counter">{{ form.controls.content.value.length }} / 50000</div>
+        <div class="post-form__counter">{{ model().content.length }} / 50000</div>
       </div>
 
-      <div class="form-actions">
+      <div class="post-form__actions">
         <app-button
           type="button"
           variant="secondary"
@@ -72,7 +68,7 @@
         >
           Cancel
         </app-button>
-        <app-button type="submit" [disabled]="form.invalid || isSubmitting()">
+        <app-button type="submit" [disabled]="form().invalid() || isSubmitting()">
           @if (isSubmitting()) {
             Saving...
           } @else {

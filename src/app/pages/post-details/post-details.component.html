@@ -1,5 +1,5 @@
 <section class="post-details">
-  <div class="back-nav">
+  <div class="post-details__back">
     <app-link-button [routerLink]="'/posts'" variant="secondary">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -18,31 +18,32 @@
     </app-link-button>
   </div>
 
-  @if (postQuery.isPending() && !postQuery.data()) {
+  @if (!post() && postQuery.status() === 'loading') {
     <p class="post-details__body">Loading post...</p>
-  } @else if (postQuery.isError()) {
-    <p class="post-details__body">Error loading post: {{ postQuery.error().message }}</p>
-  } @else if (postQuery.data(); as data) {
-    <!-- Используем компонент app-post в режиме детального просмотра -->
+  } @else if (!post() && postQuery.status() === 'error') {
+    <p class="post-details__body">Error loading post: {{ postQuery.error()?.message }}</p>
+  } @else if (post(); as postData) {
+    <!-- Пост рендерится мгновенно (из кэша списка), комментарии подгружаются отдельно -->
     <app-post
-      [post]="data.post"
+      [post]="postData"
       [currentUser]="currentUser()"
       [detailsMode]="true"
       (edit)="startEditingPost()"
-      (delete)="requestDeletePost(data.post.id)"
+      (delete)="requestDeletePost(postData.id)"
     ></app-post>
 
-    <section class="comments-section">
-      @if (postQuery.isFetching() && data.comments.length === 0) {
-        <h2>Comments</h2>
+    <section class="post-details__comments">
+      @if (postQuery.status() === 'loading' && comments().length === 0) {
+        <h2 class="post-details__comments-title">Comments</h2>
         <p class="post-details__body">Loading comments...</p>
       } @else {
-        <h2>Comments ({{ data.comments.length }})</h2>
+        <h2 class="post-details__comments-title">Comments ({{ comments().length }})</h2>
       }
 
-      <form class="comment-form" #commentForm="ngForm" (ngSubmit)="submitComment(newCommentText())">
+      <form class="post-details__comment-form" #commentForm="ngForm" (ngSubmit)="submitComment(newCommentText())">
         <textarea
           #commentContent
+          class="post-details__comment-input"
           name="content"
           [ngModel]="newCommentText()"
           (ngModelChange)="newCommentText.set($event)"
@@ -54,9 +55,9 @@
         ></textarea>
         <app-button
           type="submit"
-          [disabled]="createCommentMutation.isPending() || !newCommentText().trim()"
+          [disabled]="isCreatingComment() || !newCommentText().trim()"
         >
-          @if (createCommentMutation.isPending()) {
+          @if (isCreatingComment()) {
             Posting...
           } @else {
             Post Comment
@@ -64,27 +65,27 @@
         </app-button>
       </form>
 
-      @if (!postQuery.isFetching() || data.comments.length > 0) {
-        @if (data.comments.length > 0) {
-          <div class="comments-list">
-            @for (comment of data.comments; track comment.id) {
-              <article class="comment">
-                <div class="comment-header">
-                  <div class="author-info">
+      @if (postQuery.status() !== 'loading' || comments().length > 0) {
+        @if (comments().length > 0) {
+          <div class="post-details__comment-list">
+            @for (comment of comments(); track comment.id) {
+              <article class="post-details__comment">
+                <div class="post-details__comment-header">
+                  <div class="post-details__author">
                     <app-avatar
                       [src]="comment.author.avatarUrl"
                       [alt]="comment.author.name"
                       [role]="comment.author.role ?? 'user'"
                     />
-                    <div>
-                      <span class="author-name">{{ comment.author.name }}</span>
-                      <time class="comment-date" [attr.datetime]="comment.createdAt">
+                    <div class="post-details__author-details">
+                      <span class="post-details__author-name">{{ comment.author.name }}</span>
+                      <time class="post-details__comment-date" [attr.datetime]="comment.createdAt">
                         {{ comment.createdAt | date: 'medium' }}
                       </time>
                     </div>
                   </div>
 
-                  <div class="comment-actions">
+                  <div class="post-details__comment-actions">
                     @if (canEditComment(comment.author.id)) {
                       <app-icon-button
                         (click)="startEditingComment(comment.id, comment.content)"
@@ -114,7 +115,7 @@
                       <app-icon-button
                         variant="danger"
                         (click)="requestDeleteComment(comment.id)"
-                        [disabled]="deleteCommentMutation.isPending()"
+                        [disabled]="isDeletingComment()"
                         aria-label="Delete comment"
                         title="Delete comment"
                       >
@@ -149,10 +150,10 @@
                       (ngModelChange)="editCommentContent.set($event)"
                       placeholder="Edit comment..."
                       rows="3"
-                      class="edit-comment-textarea"
+                      class="post-details__edit-textarea"
                       maxlength="10000"
                     ></textarea>
-                    <div class="edit-actions">
+                    <div class="post-details__edit-actions">
                       <app-button
                         type="button"
                         variant="secondary"
@@ -166,10 +167,10 @@
                         size="sm"
                         (click)="saveComment(comment.id)"
                         [disabled]="
-                          updateCommentMutation.isPending() || !editCommentContent().trim()
+                          isUpdatingComment() || !editCommentContent().trim()
                         "
                       >
-                        @if (updateCommentMutation.isPending()) {
+                        @if (isUpdatingComment()) {
                           Saving...
                         } @else {
                           Save
@@ -178,12 +179,12 @@
                     </div>
                   </div>
                 } @else {
-                  <p class="comment-content">{{ comment.content }}</p>
+                  <p class="post-details__comment-content">{{ comment.content }}</p>
                   @if (comment.updatedAt !== comment.createdAt) {
-                    <p class="edited-small">Edited: {{ comment.updatedAt | date: 'medium' }}</p>
+                    <p class="post-details__edited">Edited: {{ comment.updatedAt | date: 'medium' }}</p>
                   }
 
-                  <div class="comment-reactions">
+                  <div class="post-details__comment-reactions">
                     <app-icon-button
                       size="md"
                       (click)="reactToComment(comment.id, 'like')"
@@ -239,7 +240,7 @@
             }
           </div>
         } @else {
-          <p class="no-comments">No comments yet. Be the first to comment!</p>
+          <p class="post-details__empty">No comments yet. Be the first to comment!</p>
         }
       }
     </section>
@@ -247,15 +248,15 @@
     <!-- Post Form Modal -->
     @if (showPostForm()) {
       <app-post-form
-        [post]="data.post"
-        [isSubmitting]="updatePostMutation.isPending()"
+        [post]="postData"
+        [isSubmitting]="isUpdatingPost()"
         (save)="handleSavePost($event)"
         (cancel)="closePostForm()"
       ></app-post-form>
     }
 
     @if (deleteDialog(); as dialog) {
-      <div class="confirm-modal-overlay" (click)="closeDeleteDialog()">
+      <div class="confirm-modal__overlay" (click)="closeDeleteDialog()">
         <section
           class="confirm-modal"
           role="dialog"
@@ -285,7 +286,7 @@
               variant="danger"
               size="sm"
               (click)="confirmDelete()"
-              [disabled]="deletePostMutation.isPending() || deleteCommentMutation.isPending()"
+              [disabled]="isDeletingPost() || isDeletingComment()"
             >
               Delete
             </app-button>

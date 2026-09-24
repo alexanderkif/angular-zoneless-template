@@ -1,27 +1,33 @@
-.back-nav {
+:host {
+  display: block;
+  /* Чтобы scrollIntoView при входе не заезжал под fixed-хедер */
+  scroll-margin-top: calc(var(--header-height) + var(--spacing-md));
+}
+
+.post-details__back {
   height: 100px;
   display: flex;
   align-items: center;
 }
 
-.comments-section {
+.post-details__comments {
   margin-top: var(--spacing-md);
 }
 
-.comments-section h2 {
+.post-details__comments-title {
   color: var(--color-text);
   font-size: 1.5rem;
   margin-bottom: var(--spacing-md);
 }
 
-.comment-form {
+.post-details__comment-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
 }
 
-.comment-form textarea {
+.post-details__comment-input {
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -32,17 +38,17 @@
   color: var(--color-text);
 }
 
-.comment-form textarea:focus {
+.post-details__comment-input:focus {
   outline: none;
   border-color: var(--color-accent);
 }
 
-.comments-list {
+.post-details__comment-list {
   display: grid;
   gap: var(--spacing-md);
 }
 
-.comment {
+.post-details__comment {
   padding: var(--spacing-md);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -50,7 +56,7 @@
   transition: all 0.2s;
 }
 
-.comment-header {
+.post-details__comment-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -59,47 +65,47 @@
   gap: var(--spacing-sm);
 }
 
-.comment-header .author-info {
+.post-details__author {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   flex: 1;
 }
 
-.comment-header .author-info > div {
+.post-details__author-details {
   display: grid;
 }
 
-.comment-header .author-name {
+.post-details__author-name {
   font-weight: 500;
   color: var(--color-text);
 }
 
-.comment-date {
+.post-details__comment-date {
   color: var(--color-text-secondary);
   font-size: 0.75rem;
 }
 
-.comment-actions {
+.post-details__comment-actions {
   display: flex;
   gap: var(--spacing-xs);
 }
 
-.comment-content {
+.post-details__comment-content {
   color: var(--color-text-secondary);
   line-height: 1.6;
   margin-bottom: var(--spacing-sm);
   white-space: pre-wrap;
 }
 
-.edited-small {
+.post-details__edited {
   margin-top: var(--spacing-xs);
   font-size: 0.65rem;
   color: var(--color-text-secondary);
   font-style: italic;
 }
 
-.comment-reactions {
+.post-details__comment-reactions {
   display: flex;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
@@ -107,7 +113,7 @@
   border-top: 1px solid var(--color-border);
 }
 
-.no-comments {
+.post-details__empty {
   text-align: center;
   color: var(--color-text-secondary);
   padding: var(--spacing-xl);
@@ -116,13 +122,13 @@
   border-radius: var(--radius-md);
 }
 
-.edit-actions {
+.post-details__edit-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-sm);
 }
 
-.edit-comment-textarea {
+.post-details__edit-textarea {
   width: 100%;
   padding: var(--spacing-sm);
   border: 1px solid var(--color-border);
@@ -135,12 +141,12 @@
   box-sizing: border-box;
 }
 
-.edit-comment-textarea:focus {
+.post-details__edit-textarea:focus {
   outline: none;
   border-color: var(--color-accent);
 }
 
-.confirm-modal-overlay {
+.confirm-modal__overlay {
   position: fixed;
   inset: 0;
   z-index: 1100;
@@ -179,13 +185,13 @@
 }
 
 @media (max-width: 480px) {
-  .comment-header {
+  .post-details__comment-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
 
-  .comment-header .author-info {
+  .post-details__author {
     width: 100%;
     flex-wrap: wrap;
 
@@ -195,13 +201,13 @@
     }
   }
 
-  .comment-date {
+  .post-details__comment-date {
     width: 100%;
     margin-left: 0;
     font-size: 0.65rem;
   }
 
-  .comment-actions {
+  .post-details__comment-actions {
     width: 100%;
     justify-content: flex-start;
   }

@@ -116,4 +116,16 @@ export class PostService {
       withCredentials: true,
     });
   }
+
+  toggleReaction(
+    targetType: 'post' | 'comment',
+    targetId: string,
+    reaction: 1 | -1 | 0,
+  ): Observable<{ success: boolean; likes: number; dislikes: number }> {
+    return this.http.post<{ success: boolean; likes: number; dislikes: number }>(
+      `${this.baseUrl}/reactions`,
+      { targetType, targetId, reaction },
+      { withCredentials: true },
+    );
+  }
 }

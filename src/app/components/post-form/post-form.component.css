@@ -1,4 +1,4 @@
-.modal-overlay {
+.post-form__overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -12,8 +12,8 @@
   padding: 1rem;
 }
 
-.modal-content {
-  background: white;
+.post-form__content {
+  background: var(--color-surface);
   border-radius: 8px;
   max-width: 800px;
   width: 100%;
@@ -22,25 +22,25 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-.modal-header {
+.post-form__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.modal-header h2 {
+.post-form__title {
   margin: 0;
   font-size: 1.5rem;
-  color: #111827;
+  color: var(--color-text);
 }
 
-.close-btn {
+.post-form__close {
   background: none;
   border: none;
   font-size: 2rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   cursor: pointer;
   line-height: 1;
   padding: 0;
@@ -53,31 +53,31 @@
   transition: all 0.2s;
 }
 
-.close-btn:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+.post-form__close:hover {
+  background-color: var(--senary-contrast);
+  color: var(--color-text);
 }
 
 .post-form {
   padding: 1.5rem;
 }
 
-.form-group {
+.post-form__field {
   margin-bottom: 1.5rem;
 }
 
-.form-group label {
+.post-form__label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 
-.form-group input,
-.form-group textarea {
+.post-form__input,
+.post-form__textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;
@@ -86,40 +86,40 @@
     box-shadow 0.2s;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
+.post-form__input:focus,
+.post-form__textarea:focus {
   outline: none;
-  border-color: #dd0031;
+  border-color: var(--color-error);
   box-shadow: 0 0 0 3px rgba(221, 0, 49, 0.1);
 }
 
-.form-group input.error,
-.form-group textarea.error {
-  border-color: #ef4444;
+.post-form__input--invalid,
+.post-form__textarea--invalid {
+  border-color: var(--color-error);
 }
 
-.form-group textarea {
+.post-form__textarea {
   resize: vertical;
   min-height: 200px;
 }
 
-.error-message {
-  color: #ef4444;
+.post-form__error {
+  color: var(--color-error);
   font-size: 0.875rem;
   margin-top: 0.5rem;
 }
 
-.char-counter {
+.post-form__counter {
   text-align: right;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-top: 0.5rem;
 }
 
-.form-actions {
+.post-form__actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
 }

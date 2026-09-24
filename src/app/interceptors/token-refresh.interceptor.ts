@@ -2,10 +2,10 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { catchError, from, switchMap, throwError } from 'rxjs';
-import { AuthRefreshCoordinatorService } from '../services/auth-refresh-coordinator.service';
+import { SessionService } from '../core/auth/session.service';
 
 export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
-  const refreshCoordinator = inject(AuthRefreshCoordinatorService);
+  const session = inject(SessionService);
   const platformId = inject(PLATFORM_ID);
 
   return next(req).pipe(
@@ -21,7 +21,7 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
         !req.url.includes('/auth/logout')
       ) {
         const retryReq = req.clone({ setHeaders: { 'X-Skip-Refresh': '1' } });
-        return from(refreshCoordinator.refreshSession()).pipe(switchMap(() => next(retryReq)));
+        return from(session.refreshSession()).pipe(switchMap(() => next(retryReq)));
       }
 
       return throwError(() => error);

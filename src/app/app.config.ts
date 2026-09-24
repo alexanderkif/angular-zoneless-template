@@ -6,61 +6,36 @@ import {
 } from '@angular/common/http';
 import {
   ApplicationConfig,
-  inject,
-  isDevMode,
-  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideClientHydration, withHttpTransferCacheOptions } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { ssrCookieInterceptor } from './interceptors/ssr-cookie.interceptor';
 import { tokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
 
 /**
- * Application Config (Best Practice 2026 - SSR Ready)
+ * Application Config (Angular 22 - SSR Ready)
  *
  * Ключевые особенности для SSR авторизации:
  *
- * 1. provideClientHydration() - включает гидратацию SSR
- * 2. withFetch() - использует Fetch API с автоматическим transfer cache
+ * 1. provideClientHydration() - гидратация SSR + HTTP transfer cache
+ * 2. withFetch() - Fetch API
  * 3. ssrCookieInterceptor - на сервере перекладывает cookies в API запросы
- * 4. withFetchWithXsrfConfiguration - защита от CSRF атак
- * 5. provideTanStackQuery - TanStack Query для серверных данных (user, posts)
- * 6. Signal Store - для UI состояния (открытие меню, модалки и т.д.)
+ * 4. withXsrfConfiguration - защита от CSRF
+ * 5. Серверное состояние - `resource()` / `httpResource()` в NgRx Signal Store
+ *    (TanStack Query удалён); TransferState у ресурсов через опцию `id`
  *
  * Логика работы:
  * - SSR: cookies из браузера → API → получение user → рендер с данными
  * - Client: гидратация с SSR данными → избегаем повторных запросов
- * - TanStack Query: кеширование, автоматический refetch, оптимистичные обновления
  */
-
-// TypeScript declaration for TanStack Query DevTools browser extension
-declare global {
-  interface Window {
-    __TANSTACK_QUERY_CLIENT__: QueryClient;
-  }
-}
-
-const createQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 1000 * 60 * 5,
-        gcTime: 1000 * 60 * 30,
-        refetchOnWindowFocus: false,
-        retry: 1,
-      },
-    },
-  });
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(routes, withComponentInputBinding()),
     provideClientHydration(
       withHttpTransferCacheOptions({
         includePostRequests: false,
@@ -74,14 +49,5 @@ export const appConfig: ApplicationConfig = {
         headerName: 'X-XSRF-TOKEN',
       }),
     ),
-    provideTanStackQuery(createQueryClient()),
-    provideAppInitializer(() => {
-      // Connect to TanStack Query DevTools browser extension (in development only)
-      if (isDevMode() && typeof window !== 'undefined') {
-        const queryClient = inject(QueryClient);
-        window.__TANSTACK_QUERY_CLIENT__ = queryClient;
-      }
-    }),
-    // TODO: Add devtools when @tanstack/angular-query-devtools package becomes available
   ],
 };

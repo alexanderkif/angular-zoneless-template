@@ -5,16 +5,17 @@
   padding: var(--spacing-md);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-theme), transform 0.2s ease;
 
   &:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--color-accent);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+    transform: translateY(-2px);
   }
 
-  &.details-mode {
+  &.post--details {
     cursor: default;
 
     &:hover {
@@ -23,7 +24,7 @@
     }
   }
 
-  .post-header {
+  .post__header {
     display: flex;
     justify-content: space-between;
     margin-bottom: var(--spacing-sm);
@@ -31,28 +32,28 @@
     gap: var(--spacing-xs);
   }
 
-  .post-actions-header {
+  .post__header-actions {
     display: flex;
     gap: var(--spacing-xs);
     margin-left: auto;
   }
 
-  .author-info {
+  .post__author {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     flex-wrap: wrap;
   }
 
-  .avatar,
-  .avatar-placeholder {
+  .post__avatar,
+  .post__avatar--placeholder {
     width: 44px;
     height: 44px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  .avatar-placeholder {
+  .post__avatar--placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,23 +63,23 @@
     font-size: 0.875rem;
   }
 
-  .author-name {
+  .post__author-name {
     font-weight: 500;
     color: var(--color-text);
   }
 
-  .post-date {
+  .post__date {
     color: var(--color-text-secondary);
     font-size: 0.875rem;
   }
 
-  .title {
+  .post__title {
     color: var(--color-text);
     font-weight: 600;
     margin-bottom: var(--spacing-sm);
   }
 
-  .text {
+  .post__text {
     color: var(--color-text-secondary);
     line-height: 1.6;
     overflow: hidden;
@@ -89,14 +90,14 @@
     -webkit-box-orient: vertical;
   }
 
-  .edited {
+  .post__edited {
     margin-top: var(--spacing-xs);
     font-size: 0.75rem;
     color: var(--color-text-secondary);
     font-style: italic;
   }
 
-  .post-actions {
+  .post__actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -105,7 +106,7 @@
     border-top: 1px solid var(--color-border);
   }
 
-  .reactions {
+  .post__reactions {
     display: flex;
     gap: var(--spacing-sm);
   }
@@ -114,13 +115,13 @@
     margin-left: auto;
   }
 
-  &.skeleton {
+  &.post--skeleton {
     cursor: default;
     pointer-events: none;
     opacity: 0.7;
     width: 100%;
 
-    .title {
+    .post__title {
       color: var(--color-text-secondary);
     }
   }
