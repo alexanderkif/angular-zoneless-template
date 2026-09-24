@@ -1,25 +1,31 @@
-<nav>
-  <ul>
-    <li>
+<nav class="panel">
+  <ul class="panel__list">
+    <li class="panel__item">
       <a
         id="nav-home"
+        class="panel__link"
         routerLink="/"
-        routerLinkActive="active"
+        routerLinkActive="panel__link--active"
         [routerLinkActiveOptions]="{ exact: true }"
         >Home</a
       >
     </li>
-    <li>
+    <li class="panel__item">
       <a
         id="nav-posts"
+        class="panel__link"
         routerLink="/posts"
-        routerLinkActive="active"
-        [class.disabled-link]="!isAuthenticated()"
+        routerLinkActive="panel__link--active"
+        [class.panel__link--disabled]="!isAuthenticated()"
         [attr.tabindex]="isAuthenticated() ? 0 : -1"
         [attr.aria-disabled]="!isAuthenticated()"
         >Posts</a
       >
     </li>
-    <li><a id="nav-about" routerLink="/about" routerLinkActive="active">About</a></li>
+    <li class="panel__item">
+      <a id="nav-about" class="panel__link" routerLink="/about" routerLinkActive="panel__link--active"
+        >About</a
+      >
+    </li>
   </ul>
 </nav>

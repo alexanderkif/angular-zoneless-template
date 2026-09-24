@@ -1,4 +1,4 @@
-.register-container {
+.register {
   min-height: calc(100vh - var(--header-height) - var(--footer-height));
   display: flex;
   align-items: center;
@@ -7,7 +7,7 @@
   background: var(--color-accent-gradient);
 }
 
-.register-card {
+.register__card {
   background: var(--color-surface);
   padding: 3rem;
   border-radius: 1rem;
@@ -16,14 +16,14 @@
   width: 100%;
 }
 
-h1 {
+.register__title {
   margin: 0 0 2rem;
   font-size: 2rem;
   text-align: center;
   color: var(--color-text);
 }
 
-.error-message {
+.register__error {
   padding: 1rem;
   background-color: var(--color-error-bg);
   border: 1px solid var(--color-error-border);
@@ -33,11 +33,11 @@ h1 {
   text-align: center;
 }
 
-.success-container {
+.register__success {
   text-align: center;
 }
 
-.success-icon {
+.register__success-icon {
   width: 80px;
   height: 80px;
   margin: 0 auto 24px;
@@ -63,70 +63,70 @@ h1 {
   }
 }
 
-.success-message {
+.register__success-message {
   font-size: 16px;
-  color: #666;
+  color: var(--color-text-secondary);
   margin-bottom: 16px;
   line-height: 1.5;
 }
 
-.success-message strong {
-  color: #1d4ed8;
+.register__success-email {
+  color: var(--bright-blue);
   font-weight: 600;
 }
 
-.instructions {
+.register__instructions {
   font-size: 15px;
   color: var(--color-text-secondary);
   margin-bottom: 24px;
   line-height: 1.6;
 }
 
-.email-note {
-  background: #f8f9fa;
+.register__email-note {
+  background: var(--surface-1);
   padding: 20px;
   border-radius: 8px;
   margin: 24px 0;
   text-align: left;
 }
 
-.email-note p {
+.register__email-note-text {
   font-weight: 600;
   color: var(--color-text-secondary);
   margin-bottom: 12px;
 }
 
-.email-note ul {
+.register__email-note-list {
   margin: 0;
   padding-left: 20px;
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
-.email-note li {
+.register__email-note-item {
   margin-bottom: 8px;
   line-height: 1.5;
 }
 
-.register-form {
+.register__form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.form-group {
+.register__field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-label {
+.register__label {
   font-weight: 600;
   color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
-input {
+.register__input {
   padding: 0.875rem;
   border: 2px solid var(--color-border);
   border-radius: 0.5rem;
@@ -134,20 +134,20 @@ input {
   transition: border-color 0.2s;
 }
 
-input:focus-visible {
+.register__input:focus-visible {
   border-color: var(--color-accent);
 }
 
-input.invalid {
+.register__input--invalid {
   border-color: var(--color-error);
 }
 
-.error-text {
+.register__field-error {
   color: var(--color-error);
   font-size: 0.875rem;
 }
 
-.divider {
+.register__divider {
   display: flex;
   align-items: center;
   text-align: center;
@@ -155,27 +155,27 @@ input.invalid {
   color: var(--color-text-secondary);
 }
 
-.divider::before,
-.divider::after {
+.register__divider::before,
+.register__divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.divider span {
+.register__divider-text {
   padding: 0 1rem;
   font-weight: 600;
   font-size: 0.875rem;
 }
 
-.oauth-buttons {
+.register__oauth {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.btn-github,
-.btn-google {
+.register__oauth-button--github,
+.register__oauth-button--google {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,50 +190,50 @@ input.invalid {
   transition: all 0.2s;
 }
 
-.btn-github {
+.register__oauth-button--github {
   color: var(--color-text);
 }
 
-.btn-github:hover:not(:disabled),
-.btn-google:hover:not(:disabled) {
+.register__oauth-button--github:hover:not(:disabled),
+.register__oauth-button--google:hover:not(:disabled) {
   border-color: var(--color-accent);
-  background: #f5f5f5;
+  background: var(--senary-contrast);
 }
 
-.btn-github:disabled,
-.btn-google:disabled {
+.register__oauth-button--github:disabled,
+.register__oauth-button--google:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.login-link {
+.register__login-link {
   text-align: center;
   margin-top: 2rem;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
-.login-link a {
-  color: #1d4ed8;
+.register__login-link-text {
+  color: var(--bright-blue);
   text-decoration: none;
   font-weight: 600;
 }
 
-.login-link a:hover {
+.register__login-link-text:hover {
   text-decoration: underline;
 }
 
-.password-wrapper {
+.register__password {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.password-wrapper input {
+.register__password-input {
   width: 100%;
   padding-right: 40px;
 }
 
-.password-toggle {
+.register__password-toggle {
   position: absolute;
   right: 10px;
   background: none;
@@ -245,6 +245,6 @@ input.invalid {
   color: var(--color-text-secondary);
 }
 
-.password-toggle:hover {
+.register__password-toggle:hover {
   color: var(--color-text);
 }

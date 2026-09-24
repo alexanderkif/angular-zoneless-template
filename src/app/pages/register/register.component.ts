@@ -7,7 +7,6 @@ import {
   ChangeDetectionStrategy,
   PLATFORM_ID,
 } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
 import {
   form,
   FormField,
@@ -18,19 +17,19 @@ import {
 import { RouterLink } from '@angular/router';
 import { ButtonComponent } from '../../components/ui/button/button.component';
 import { LinkButtonComponent } from '../../components/ui/link-button/link-button.component';
-import { AuthQueryService } from '../../services/auth-query.service';
+import { SessionService } from '../../core/auth/session.service';
 import { API_BASE_URL } from '../../tokens/api-url.token';
 import { WINDOW } from '../../tokens/window.token';
 
 @Component({
   selector: 'app-register',
-  imports: [ButtonComponent, LinkButtonComponent, ReactiveFormsModule, RouterLink, FormField],
+  imports: [ButtonComponent, LinkButtonComponent, RouterLink, FormField],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent {
-  private authQueryService = inject(AuthQueryService);
+  readonly session = inject(SessionService);
   private platformId = inject(PLATFORM_ID);
   private window = inject(WINDOW);
   private apiUrl = inject(API_BASE_URL);
@@ -39,7 +38,7 @@ export class RegisterComponent {
   registrationSuccess = signal(false);
   registeredEmail = signal('');
 
-  // Signal Forms (experimental API)
+  // Signal Forms
   registerModel = signal({
     name: '',
     email: '',
@@ -73,10 +72,7 @@ export class RegisterComponent {
     this.showConfirmPassword.update((v) => !v);
   };
 
-  // Mutations
-  registerMutation = this.authQueryService.registerMutation();
-
-  onSubmit = (event: Event): void => {
+  onSubmit = async (event: Event): Promise<void> => {
     event.preventDefault();
     if (
       this.registerForm.name().valid() &&
@@ -90,14 +86,13 @@ export class RegisterComponent {
       const password = this.registerForm.password().value();
 
       this.registeredEmail.set(email);
-      this.registerMutation.mutate(
-        { name, email, password },
-        {
-          onSuccess: () => {
-            this.registrationSuccess.set(true);
-          },
-        },
-      );
+
+      try {
+        await this.session.register({ name, email, password });
+        this.registrationSuccess.set(true);
+      } catch {
+        // Ошибка доступна через session.registerState.error()
+      }
     }
   };
 

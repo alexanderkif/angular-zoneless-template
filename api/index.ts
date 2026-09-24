@@ -12,26 +12,28 @@ const extractHost = (value: unknown): string | null => {
   return first.split(':')[0]?.trim() || null;
 };
 
-const buildAllowedHosts = (req: VercelRequest): string => {
+/**
+ * Allow-list is built ONLY from trusted configuration — never from the incoming
+ * `Host` / `X-Forwarded-Host` headers (otherwise the first request to a cold
+ * instance could poison it). For custom domains set `NG_ALLOWED_HOSTS`.
+ */
+const buildAllowedHosts = (): string => {
   const hosts = new Set<string>();
 
-  const existing = process.env.NG_ALLOWED_HOSTS || '';
-  for (const item of existing.split(',')) {
+  for (const item of (process.env.NG_ALLOWED_HOSTS || '').split(',')) {
     const host = item.trim();
     if (host) hosts.add(host);
   }
 
-  const hostHeader = extractHost(req?.headers?.host);
-  const forwardedHostHeader = extractHost(req?.headers?.['x-forwarded-host']);
-  const vercelUrl = extractHost(process.env.VERCEL_URL);
-  const vercelProdUrl = extractHost(process.env.VERCEL_PROJECT_PRODUCTION_URL);
-  if (hostHeader) hosts.add(hostHeader);
-  if (forwardedHostHeader) hosts.add(forwardedHostHeader);
-  if (vercelUrl) hosts.add(vercelUrl);
-  if (vercelProdUrl) hosts.add(vercelProdUrl);
-
-  // Allow Vercel preview and production aliases.
-  hosts.add('*.vercel.app');
+  const trustedSources = [
+    process.env.VERCEL_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    process.env.FRONTEND_URL,
+  ];
+  for (const source of trustedSources) {
+    const host = extractHost(source);
+    if (host) hosts.add(host);
+  }
 
   return Array.from(hosts).join(',');
 };
@@ -44,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
 
   if (!cachedRenderApp) {
-    const allowedHosts = buildAllowedHosts(req);
+    const allowedHosts = buildAllowedHosts();
     process.env.NG_ALLOWED_HOSTS = allowedHosts;
     console.log('[SSR] init hosts', {
       host: req?.headers?.host,

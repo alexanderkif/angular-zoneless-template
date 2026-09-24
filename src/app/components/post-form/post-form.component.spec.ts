@@ -3,6 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Post } from '../../services/post.service';
 import { PostFormComponent } from './post-form.component';
 
+const submitEvent = (): Event => ({ preventDefault: vi.fn() }) as unknown as Event;
+
 describe('PostFormComponent', () => {
   let component: PostFormComponent;
   let fixture: ComponentFixture<PostFormComponent>;
@@ -26,8 +28,8 @@ describe('PostFormComponent', () => {
     const saveSpy = vi.fn();
     component.save.subscribe(saveSpy);
 
-    component.form.patchValue({ title: '', content: '' });
-    component.onSubmit();
+    component.model.set({ title: '', content: '' });
+    component.onSubmit(submitEvent());
 
     expect(saveSpy).not.toHaveBeenCalled();
   });
@@ -36,8 +38,8 @@ describe('PostFormComponent', () => {
     const saveSpy = vi.fn();
     component.save.subscribe(saveSpy);
 
-    component.form.patchValue({ title: 'New title', content: 'New content' });
-    component.onSubmit();
+    component.model.set({ title: 'New title', content: 'New content' });
+    component.onSubmit(submitEvent());
 
     expect(saveSpy).toHaveBeenCalledWith({ title: 'New title', content: 'New content' });
   });
@@ -71,8 +73,9 @@ describe('PostFormComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.form.controls.title.value).toBe('Existing title');
-    expect(component.form.controls.content.value).toBe('Existing content');
+    expect(component.model().title).toBe('Existing title');
+    expect(component.model().content).toBe('Existing content');
+    expect(component.form().valid()).toBe(true);
   });
 
   it('should not emit save when submitting is active', async () => {
@@ -83,8 +86,8 @@ describe('PostFormComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component.form.patchValue({ title: 'New title', content: 'New content' });
-    component.onSubmit();
+    component.model.set({ title: 'New title', content: 'New content' });
+    component.onSubmit(submitEvent());
 
     expect(saveSpy).not.toHaveBeenCalled();
   });

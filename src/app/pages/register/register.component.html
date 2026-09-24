@@ -1,47 +1,51 @@
-<div class="register-container">
-  <div class="register-card">
+<div class="register">
+  <div class="register__card">
     @if (registrationSuccess()) {
-      <div class="success-container">
-        <div class="success-icon">✓</div>
-        <h1>Check Your Email!</h1>
-        <p class="success-message">
-          We've sent a verification link to <strong>{{ registeredEmail() }}</strong>
+      <div class="register__success">
+        <div class="register__success-icon">✓</div>
+        <h1 class="register__title">Check Your Email!</h1>
+        <p class="register__success-message">
+          We've sent a verification link to
+          <strong class="register__success-email">{{ registeredEmail() }}</strong>
         </p>
-        <p class="instructions">
+        <p class="register__instructions">
           Please click the link in the email to verify your account and complete registration.
         </p>
-        <div class="email-note">
-          <p>📬 Didn't receive the email?</p>
-          <ul>
-            <li>Check your spam folder</li>
-            <li>Make sure the email address is correct</li>
-            <li>Wait a few minutes and check again</li>
+        <div class="register__email-note">
+          <p class="register__email-note-text">📬 Didn't receive the email?</p>
+          <ul class="register__email-note-list">
+            <li class="register__email-note-item">Check your spam folder</li>
+            <li class="register__email-note-item">Make sure the email address is correct</li>
+            <li class="register__email-note-item">Wait a few minutes and check again</li>
           </ul>
         </div>
         <app-link-button [routerLink]="'/login'">Go to Login</app-link-button>
       </div>
     } @else {
-      <h1>Create Account</h1>
+      <h1 class="register__title">Create Account</h1>
 
-      @if (registerMutation.error()) {
-        <div class="error-message">
-          {{ registerMutation.error()!.message }}
+      @if (session.registerState.error()) {
+        <div class="register__error">
+          {{ session.registerState.error()!.message }}
         </div>
       }
 
-      <form (submit)="onSubmit($event)" class="register-form">
-        <div class="form-group">
-          <label for="name">Full Name</label>
+      <form (submit)="onSubmit($event)" class="register__form">
+        <div class="register__field">
+          <label class="register__label" for="name">Full Name</label>
           <input
             id="name"
+            class="register__input"
             data-testid="register-name"
             type="text"
             [formField]="registerForm.name"
             placeholder="Enter your full name"
-            [class.invalid]="!registerForm.name().valid() && registerForm.name().touched()"
+            [class.register__input--invalid]="
+              !registerForm.name().valid() && registerForm.name().touched()
+            "
           />
           @if (!registerForm.name().valid() && registerForm.name().touched()) {
-            <span class="error-text">
+            <span class="register__field-error">
               @for (error of registerForm.name().errors(); track error) {
                 <span>{{ error.message }}</span>
               }
@@ -49,18 +53,21 @@
           }
         </div>
 
-        <div class="form-group">
-          <label for="email">Email</label>
+        <div class="register__field">
+          <label class="register__label" for="email">Email</label>
           <input
             id="email"
+            class="register__input"
             data-testid="register-email"
             type="email"
             [formField]="registerForm.email"
             placeholder="Enter your email"
-            [class.invalid]="!registerForm.email().valid() && registerForm.email().touched()"
+            [class.register__input--invalid]="
+              !registerForm.email().valid() && registerForm.email().touched()
+            "
           />
           @if (!registerForm.email().valid() && registerForm.email().touched()) {
-            <span class="error-text">
+            <span class="register__field-error">
               @for (error of registerForm.email().errors(); track error) {
                 <span>{{ error.message }}</span>
               }
@@ -68,22 +75,23 @@
           }
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="password-wrapper">
+        <div class="register__field">
+          <label class="register__label" for="password">Password</label>
+          <div class="register__password">
             <input
               id="password"
+              class="register__input register__password-input"
               data-testid="register-password"
               [type]="showPassword() ? 'text' : 'password'"
               [formField]="registerForm.password"
               placeholder="Create a password"
-              [class.invalid]="
+              [class.register__input--invalid]="
                 !registerForm.password().valid() && registerForm.password().touched()
               "
             />
             <button
               type="button"
-              class="password-toggle"
+              class="register__password-toggle"
               (click)="togglePasswordVisibility()"
               [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
             >
@@ -121,7 +129,7 @@
             </button>
           </div>
           @if (!registerForm.password().valid() && registerForm.password().touched()) {
-            <span class="error-text">
+            <span class="register__field-error">
               @for (error of registerForm.password().errors(); track error) {
                 <span>{{ error.message }}</span>
               }
@@ -129,22 +137,23 @@
           }
         </div>
 
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <div class="password-wrapper">
+        <div class="register__field">
+          <label class="register__label" for="confirmPassword">Confirm Password</label>
+          <div class="register__password">
             <input
               id="confirmPassword"
+              class="register__input register__password-input"
               data-testid="register-confirm-password"
               [type]="showConfirmPassword() ? 'text' : 'password'"
               [formField]="registerForm.confirmPassword"
               placeholder="Confirm your password"
-              [class.invalid]="
+              [class.register__input--invalid]="
                 !registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()
               "
             />
             <button
               type="button"
-              class="password-toggle"
+              class="register__password-toggle"
               (click)="toggleConfirmPasswordVisibility()"
               [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
             >
@@ -184,14 +193,14 @@
           @if (
             !registerForm.confirmPassword().valid() && registerForm.confirmPassword().touched()
           ) {
-            <span class="error-text">
+            <span class="register__field-error">
               @for (error of registerForm.confirmPassword().errors(); track error) {
                 <span>{{ error.message }}</span>
               }
             </span>
           }
           @if (passwordMismatch() && registerForm.confirmPassword().touched()) {
-            <span class="error-text">Passwords do not match</span>
+            <span class="register__field-error">Passwords do not match</span>
           }
         </div>
 
@@ -204,10 +213,10 @@
             !registerForm.password().valid() ||
             !registerForm.confirmPassword().valid() ||
             passwordMismatch() ||
-            registerMutation.isPending()
+            session.registerState.isPending()
           "
         >
-          @if (registerMutation.isPending()) {
+          @if (session.registerState.isPending()) {
             <span>Creating account...</span>
           } @else {
             <span>Sign Up</span>
@@ -215,16 +224,16 @@
         </app-button>
       </form>
 
-      <div class="divider">
-        <span>OR</span>
+      <div class="register__divider">
+        <span class="register__divider-text">OR</span>
       </div>
 
-      <div class="oauth-buttons">
+      <div class="register__oauth">
         <button
           type="button"
-          class="btn-github"
+          class="register__oauth-button register__oauth-button--github"
           (click)="registerWithGithub()"
-          [disabled]="registerMutation.isPending()"
+          [disabled]="session.registerState.isPending()"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -236,9 +245,9 @@
 
         <button
           type="button"
-          class="btn-google"
+          class="register__oauth-button register__oauth-button--google"
           (click)="registerWithGoogle()"
-          [disabled]="registerMutation.isPending()"
+          [disabled]="session.registerState.isPending()"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path
@@ -262,7 +271,10 @@
         </button>
       </div>
 
-      <p class="login-link">Already have an account? <a routerLink="/login">Sign in</a></p>
+      <p class="register__login-link">
+        Already have an account?
+        <a class="register__login-link-text" routerLink="/login">Sign in</a>
+      </p>
     }
   </div>
 </div>

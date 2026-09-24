@@ -1,17 +1,17 @@
-<div class="login-container">
-  <div class="login-card">
+<div class="login">
+  <div class="login__card">
     @if (isAuthChecking()) {
-      <div class="auth-check-loader" aria-live="polite">
-        <span class="auth-check-loader__spinner" aria-hidden="true"></span>
-        <span class="auth-check-loader__text">Checking your session...</span>
+      <div class="login__loader" aria-live="polite">
+        <span class="login__loader-spinner" aria-hidden="true"></span>
+        <span class="login__loader-text">Checking your session...</span>
       </div>
     } @else {
-      <h1>Sign In</h1>
+      <h1 class="login__title">Sign In</h1>
 
-      @if (loginMutation.error()) {
-        <div class="error-message">
-          {{ loginMutation.error()?.message }}
-          @if (loginMutation.error()?.message?.includes('Email not verified')) {
+      @if (session.loginState.error()) {
+        <div class="login__error">
+          {{ session.loginState.error()?.message }}
+          @if (session.loginState.error()?.message?.includes('Email not verified')) {
             <div style="margin-top: 10px">
               <app-button
                 type="button"
@@ -42,19 +42,22 @@
         </div>
       }
 
-      <form (submit)="onSubmit($event)" class="login-form">
-        <div class="form-group">
-          <label for="email">Email</label>
+      <form (submit)="onSubmit($event)" class="login__form">
+        <div class="login__field">
+          <label class="login__label" for="email">Email</label>
           <input
             id="email"
+            class="login__input"
             data-testid="login-email"
             type="email"
             [formField]="loginForm.email"
             placeholder="Enter your email"
-            [class.invalid]="!loginForm.email().valid() && loginForm.email().touched()"
+            [class.login__input--invalid]="
+              !loginForm.email().valid() && loginForm.email().touched()
+            "
           />
           @if (!loginForm.email().valid() && loginForm.email().touched()) {
-            <span class="error-text">
+            <span class="login__field-error">
               @for (error of loginForm.email().errors(); track error) {
                 <span>{{ error.message }}</span>
               }
@@ -62,20 +65,23 @@
           }
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="password-wrapper">
+        <div class="login__field">
+          <label class="login__label" for="password">Password</label>
+          <div class="login__password">
             <input
               id="password"
+              class="login__input login__password-input"
               data-testid="login-password"
               [type]="showPassword() ? 'text' : 'password'"
               [formField]="loginForm.password"
               placeholder="Enter your password"
-              [class.invalid]="!loginForm.password().valid() && loginForm.password().touched()"
+              [class.login__input--invalid]="
+                !loginForm.password().valid() && loginForm.password().touched()
+              "
             />
             <button
               type="button"
-              class="password-toggle"
+              class="login__password-toggle"
               (click)="togglePasswordVisibility()"
               [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
             >
@@ -113,7 +119,7 @@
             </button>
           </div>
           @if (!loginForm.password().valid() && loginForm.password().touched()) {
-            <span class="error-text">
+            <span class="login__field-error">
               @for (error of loginForm.password().errors(); track error) {
                 <span>{{ error.message }}</span>
               }
@@ -121,17 +127,18 @@
           }
         </div>
 
-        <div class="form-group checkbox-group">
-          <label class="checkbox-label">
+        <div class="login__field login__checkbox-group">
+          <label class="login__checkbox login__label">
             <input
               type="checkbox"
+              class="login__checkbox-input login__input"
               data-testid="login-remember-me"
               [checked]="loginModel().rememberMe"
               (change)="toggleRememberMe()"
             />
-            <div class="checkbox-text">
+            <div class="login__checkbox-text">
               <span>Remember me for 7 days</span>
-              <small
+              <small class="login__checkbox-hint"
                 >Keeps you signed in on this device. Uncheck for public/shared computers.</small
               >
             </div>
@@ -142,10 +149,10 @@
           type="submit"
           data-testid="login-submit"
           [disabled]="
-            !loginForm.email().valid() || !loginForm.password().valid() || loginMutation.isPending()
+            !loginForm.email().valid() || !loginForm.password().valid() || session.loginState.isPending()
           "
         >
-          @if (loginMutation.isPending()) {
+          @if (session.loginState.isPending()) {
             <span>Signing in...</span>
           } @else {
             <span>Sign In</span>
@@ -153,16 +160,16 @@
         </app-button>
       </form>
 
-      <div class="divider">
-        <span>OR</span>
+      <div class="login__divider">
+        <span class="login__divider-text">OR</span>
       </div>
 
-      <div class="oauth-buttons">
+      <div class="login__oauth">
         <button
           type="button"
-          class="btn-github"
+          class="login__oauth-button login__oauth-button--github"
           (click)="loginWithGithub()"
-          [disabled]="loginMutation.isPending()"
+          [disabled]="session.loginState.isPending()"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -174,9 +181,9 @@
 
         <button
           type="button"
-          class="btn-google"
+          class="login__oauth-button login__oauth-button--google"
           (click)="loginWithGoogle()"
-          [disabled]="loginMutation.isPending()"
+          [disabled]="session.loginState.isPending()"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path
@@ -200,7 +207,10 @@
         </button>
       </div>
 
-      <p class="signup-link">Don't have an account? <a routerLink="/register">Sign up</a></p>
+      <p class="login__signup">
+        Don't have an account?
+        <a class="login__signup-link" routerLink="/register">Sign up</a>
+      </p>
     }
   </div>
 </div>

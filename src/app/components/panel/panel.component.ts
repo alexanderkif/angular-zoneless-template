@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { AuthQueryService } from '../../services/auth-query.service';
+import { SessionService } from '../../core/auth/session.service';
 
 @Component({
   selector: 'app-panel',
@@ -11,7 +10,7 @@ import { AuthQueryService } from '../../services/auth-query.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PanelComponent {
-  private authQueryService = inject(AuthQueryService);
-  public readonly userQuery = injectQuery(this.authQueryService.currentUserQueryOptions);
-  public readonly isAuthenticated = computed(() => !!this.userQuery.data());
+  private session = inject(SessionService);
+
+  public readonly isAuthenticated = computed(() => !!this.session.currentUser.value());
 }

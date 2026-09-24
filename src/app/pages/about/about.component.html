@@ -1,58 +1,58 @@
-<section class="about-container">
-  <h1>About This Project</h1>
+<section class="about">
+  <h1 class="about__title">About This Project</h1>
 
-  <p>
-    This template is built around <strong>Angular 21.2</strong> with
+  <p class="about__text">
+    This template is built around <strong>Angular 22</strong> with
     <strong>zoneless change detection</strong>, SSR hydration, and a secure API-first authentication
     flow.
   </p>
 
-  <p>
+  <p class="about__text">
     For quick evaluation, a pre-seeded demo account is available:
     <strong>test@te.st / test</strong>.
   </p>
 
-  <h2>Key Features</h2>
-  <ul>
-    <li>
-      <strong>Angular 21.2 + Signals</strong>: Standalone components, signal-driven UI state, and
+  <h2 class="about__heading">Key Features</h2>
+  <ul class="about__list">
+    <li class="about__item">
+      <strong>Angular 22 + Signals</strong>: Standalone components, signal-driven UI state, and
       modern routing patterns.
     </li>
-    <li>
-      <strong>SSR + Hydration</strong>: Server rendering with TransferState/TanStack hydration to
-      avoid duplicate client fetches.
+    <li class="about__item">
+      <strong>SSR + Hydration</strong>: Server rendering with resource TransferState to avoid
+      duplicate client fetches.
     </li>
-    <li>
+    <li class="about__item">
       <strong>Secure Authentication</strong>: Email/password and OAuth (GitHub, Google) with
       HttpOnly cookies, refresh token rotation, server-side session checks, and rate limiting.
     </li>
-    <li>
-      <strong>State Management</strong>: TanStack Query for server state + NgRx Signal Store for
-      local UI state.
+    <li class="about__item">
+      <strong>State Management</strong>: built-in <code>resource()</code> /
+      <code>httpResource()</code> for server state + NgRx Signal Store (+ DevTools) for app state.
     </li>
-    <li>
+    <li class="about__item">
       <strong>Quality Gate</strong>: Vitest unit tests (100% coverage), Playwright E2E checks,
       strict linting, and production build checks.
     </li>
   </ul>
 
-  <h2>Tech Stack</h2>
-  <div class="tech-grid">
-    <div class="tech-item">
-      <h3>Core</h3>
-      <p>Angular 21.2, TypeScript 5.9, RxJS 7.8, Vite 7, SSR</p>
+  <h2 class="about__heading">Tech Stack</h2>
+  <div class="about__grid">
+    <div class="about__tech">
+      <h3 class="about__tech-title">Core</h3>
+      <p class="about__tech-text">Angular 22, TypeScript 6.0, RxJS 7.8, Vite 7, SSR</p>
     </div>
-    <div class="tech-item">
-      <h3>State & Data</h3>
-      <p>TanStack Query, NgRx Signal Store, Signals, Drizzle ORM</p>
+    <div class="about__tech">
+      <h3 class="about__tech-title">State & Data</h3>
+      <p class="about__tech-text">Angular resources, NgRx Signal Store, Signals, Drizzle ORM</p>
     </div>
-    <div class="tech-item">
-      <h3>Backend & Auth</h3>
-      <p>Node.js, Supabase, Vercel Functions, JWT, Argon2id, Zod</p>
+    <div class="about__tech">
+      <h3 class="about__tech-title">Backend & Auth</h3>
+      <p class="about__tech-text">Node.js, Supabase, Vercel Functions, JWT, Argon2id, Zod</p>
     </div>
-    <div class="tech-item">
-      <h3>Testing</h3>
-      <p>Vitest, Playwright, ESLint, CI-ready checks</p>
+    <div class="about__tech">
+      <h3 class="about__tech-title">Testing</h3>
+      <p class="about__tech-text">Vitest, Playwright, ESLint, CI-ready checks</p>
     </div>
   </div>
 </section>

@@ -3,8 +3,10 @@
   flex-direction: column;
   gap: var(--spacing-md);
   position: relative;
+  /* Чтобы scrollIntoView при пагинации не заезжал под fixed-хедер */
+  scroll-margin-top: calc(var(--header-height) + var(--spacing-md));
 
-  h1 {
+  .posts__title {
     color: var(--color-text);
     font-size: 1.5rem;
     margin-top: var(--spacing-lg);
@@ -12,7 +14,7 @@
   }
 }
 
-.posts-status {
+.posts__status {
   margin: 0;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--color-border);
@@ -22,7 +24,7 @@
   font-size: 0.9rem;
 }
 
-.pagination {
+.posts__pagination {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -31,7 +33,7 @@
   margin-bottom: var(--spacing-xl);
 }
 
-.pagination__info {
+.posts__pagination-info {
   color: var(--color-text);
   font-size: 1rem;
   font-weight: 500;
@@ -40,7 +42,7 @@
 }
 
 /* FAB (Floating Action Button) */
-.fab {
+.posts__fab {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
@@ -61,13 +63,13 @@
     background: var(--color-accent-hover);
   }
 
-  svg {
+  .posts__fab-icon {
     width: 24px;
     height: 24px;
   }
 }
 
-.confirm-modal-overlay {
+.confirm-modal__overlay {
   position: fixed;
   inset: 0;
   z-index: 1100;
@@ -107,25 +109,25 @@
 
 /* Mobile optimizations */
 @media (max-width: 480px) {
-  .fab {
+  .posts__fab {
     bottom: 1rem;
     right: 1rem;
     width: 48px;
     height: 48px;
   }
 
-  .fab svg {
+  .posts__fab-icon {
     width: 20px;
     height: 20px;
   }
 
-  .pagination {
+  .posts__pagination {
     gap: var(--spacing-md);
     margin-top: var(--spacing-lg);
     margin-bottom: calc(var(--spacing-xl) + 4rem); /* Дополнительный отступ для FAB */
   }
 
-  .pagination__info {
+  .posts__pagination-info {
     font-size: 0.875rem;
     min-width: 100px;
   }

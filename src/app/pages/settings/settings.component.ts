@@ -1,6 +1,6 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { UiStore } from '../../store/ui/ui.store';
+import { PostsStore } from '../../features/posts/posts.store';
 
 @Component({
   selector: 'app-settings',
@@ -10,11 +10,11 @@ import { UiStore } from '../../store/ui/ui.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent {
-  readonly uiStore = inject(UiStore);
+  readonly postsStore = inject(PostsStore);
 
   onLimitChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
     const limit = parseInt(target.value, 10);
-    this.uiStore.setPostsLimit(limit);
+    this.postsStore.setLimit(limit);
   };
 }

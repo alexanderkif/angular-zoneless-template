@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   selector: 'app-link-button',
-  standalone: true,
   host: {
     '[attr.data-variant]': 'variant()',
     '[attr.data-size]': 'size()',

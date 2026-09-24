@@ -2,7 +2,6 @@ import { Component, ChangeDetectionStrategy, signal, input } from '@angular/core
 
 @Component({
   selector: 'app-avatar',
-  standalone: true,
   imports: [],
   template: `
     <div class="avatar-wrapper">
@@ -16,12 +15,12 @@ import { Component, ChangeDetectionStrategy, signal, input } from '@angular/core
           (error)="onError()"
         />
       } @else {
-        <div class="placeholder">
+        <div class="avatar__placeholder">
           {{ getInitial() }}
         </div>
       }
       @if (role() === 'admin') {
-        <span class="admin-badge">ADMIN</span>
+        <span class="avatar__badge--admin">ADMIN</span>
       }
     </div>
   `,
@@ -46,7 +45,7 @@ import { Component, ChangeDetectionStrategy, signal, input } from '@angular/core
         display: block;
         image-rendering: auto;
       }
-      .placeholder {
+      .avatar__placeholder {
         width: 100%;
         height: 100%;
         display: flex;
@@ -57,7 +56,7 @@ import { Component, ChangeDetectionStrategy, signal, input } from '@angular/core
         color: white;
         font-weight: 600;
       }
-      .admin-badge {
+      .avatar__badge--admin {
         position: absolute;
         top: -6px;
         right: -6px;

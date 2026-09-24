@@ -1,15 +1,15 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonComponent } from '../../components/ui/button/button.component';
 import { LinkButtonComponent } from '../../components/ui/link-button/link-button.component';
-import { AuthQueryService } from '../../services/auth-query.service';
+import { SessionService } from '../../core/auth/session.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-verify-email',
   imports: [ButtonComponent, LinkButtonComponent],
-  templateUrl: './verify-email.html',
-  styleUrl: './verify-email.css',
+  templateUrl: './verify-email.component.html',
+  styleUrl: './verify-email.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerifyEmailComponent implements OnInit {
@@ -17,14 +17,11 @@ export class VerifyEmailComponent implements OnInit {
   message = signal<string>('Verifying your email...');
 
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private session = inject(SessionService);
   private authService = inject(AuthService);
-  private authQueryService = inject(AuthQueryService);
+  private router = inject(Router);
 
-  verifyEmailMutation = this.authQueryService.verifyEmailMutation();
-  resendMutation = this.authQueryService.resendVerificationMutation();
-
-  ngOnInit() {
+  async ngOnInit(): Promise<void> {
     const token = this.route.snapshot.queryParamMap.get('token');
 
     if (!token) {
@@ -33,43 +30,36 @@ export class VerifyEmailComponent implements OnInit {
       return;
     }
 
-    // Call verification endpoint with TanStack Query mutation
-    this.verifyEmailMutation.mutate(token, {
-      onSuccess: (response) => {
-        this.status.set('success');
-        this.message.set(response.message || 'Email verified successfully!');
+    try {
+      const response = await this.session.verifyEmail(token);
+      this.status.set('success');
+      this.message.set(response.message || 'Email verified successfully!');
 
-        // Redirect to home after 2 seconds
-        setTimeout(() => {
-          this.router.navigate(['/']);
-        }, 2000);
-      },
-      onError: (error: Error) => {
-        this.status.set('error');
-        this.message.set(error.message || 'Failed to verify email');
-      },
-    });
+      setTimeout(() => {
+        this.router.navigate(['/']);
+      }, 2000);
+    } catch (error: unknown) {
+      this.status.set('error');
+      this.message.set(error instanceof Error ? error.message : 'Failed to verify email');
+    }
   }
 
-  resendVerification() {
+  async resendVerification(): Promise<void> {
     const token = this.route.snapshot.queryParamMap.get('token');
     if (!token) return;
 
     this.status.set('loading');
     this.message.set('Sending new verification link...');
 
-    this.resendMutation.mutate(
-      { token },
-      {
-        onSuccess: (response) => {
-          this.status.set('error'); // Keep error state to show message
-          this.message.set(response.message);
-        },
-        onError: (error: Error) => {
-          this.message.set(error.message || 'Failed to resend verification link');
-        },
-      },
-    );
+    try {
+      const response = await this.session.resendVerification({ token });
+      this.status.set('error'); // Keep error state to show message
+      this.message.set(response.message);
+    } catch (error: unknown) {
+      this.message.set(
+        error instanceof Error ? error.message : 'Failed to resend verification link',
+      );
+    }
   }
 
   cancelRegistration() {

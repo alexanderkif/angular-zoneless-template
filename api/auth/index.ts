@@ -222,14 +222,14 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
     if (isDbUnavailable(error)) {
       logDatabaseFailure('Login', error);
       return res.status(503).json({
-        error: 'Database unavailable. Check Supabase connectivity and DATABASE_URL.',
+        error: 'Service temporarily unavailable.',
       });
     }
 
     if (isDbAuthFailure(error)) {
       logDatabaseFailure('Login', error);
       return res.status(503).json({
-        error: 'Database authentication failed. Update DATABASE_URL and restart API server.',
+        error: 'Service temporarily unavailable.',
       });
     }
 
@@ -600,14 +600,14 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
     if (isDbUnavailable(error)) {
       logDatabaseFailure('Refresh', error);
       return res.status(503).json({
-        error: 'Database unavailable. Check Supabase connectivity and DATABASE_URL.',
+        error: 'Service temporarily unavailable.',
       });
     }
 
     if (isDbAuthFailure(error)) {
       logDatabaseFailure('Refresh', error);
       return res.status(503).json({
-        error: 'Database authentication failed. Update DATABASE_URL and restart API server.',
+        error: 'Service temporarily unavailable.',
       });
     }
 

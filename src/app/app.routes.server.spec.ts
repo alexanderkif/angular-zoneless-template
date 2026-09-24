@@ -7,17 +7,28 @@ describe('app.routes.server', () => {
     expect(Array.isArray(serverRoutes)).toBe(true);
   });
 
-  it('should have at least one route', () => {
-    expect(serverRoutes.length).toBeGreaterThan(0);
+  it('should define three server routes', () => {
+    expect(serverRoutes).toHaveLength(3);
   });
 
-  it('should have catch-all route', () => {
+  it('should have catch-all route rendered on the server', () => {
     const catchAllRoute = serverRoutes.find((route) => route.path === '**');
+
     expect(catchAllRoute).toBeDefined();
+    expect(catchAllRoute?.renderMode).toBe(RenderMode.Server);
   });
 
-  it('should use Server render mode', () => {
-    const catchAllRoute = serverRoutes.find((route) => route.path === '**');
-    expect(catchAllRoute?.renderMode).toBe(RenderMode.Server);
+  it('should render auth/callback on the client', () => {
+    const route = serverRoutes.find((item) => item.path === 'auth/callback');
+
+    expect(route).toBeDefined();
+    expect(route?.renderMode).toBe(RenderMode.Client);
+  });
+
+  it('should render verify-email on the client', () => {
+    const route = serverRoutes.find((item) => item.path === 'verify-email');
+
+    expect(route).toBeDefined();
+    expect(route?.renderMode).toBe(RenderMode.Client);
   });
 });

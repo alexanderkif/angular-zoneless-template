@@ -1,11 +1,9 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { Subject } from 'rxjs';
-import { AuthQueryService } from '../../services/auth-query.service';
+
+import { SessionService } from '../../core/auth/session.service';
 import { WINDOW } from '../../tokens/window.token';
 import { RegisterComponent } from './register.component';
 
@@ -14,24 +12,10 @@ describe('RegisterComponent', () => {
   let fixture: ComponentFixture<RegisterComponent>;
   let activatedRouteMock: any;
   let windowMock: any;
-  let queryClient: QueryClient;
   let routerMock: any;
-  let registerMutateFn: ReturnType<typeof vi.fn>;
+  let sessionMock: any;
 
   beforeEach(async () => {
-    registerMutateFn = vi.fn();
-
-    const authQueryServiceMock = {
-      registerMutation: () => ({
-        mutate: registerMutateFn,
-        isPending: vi.fn(() => false),
-        error: vi.fn(() => null),
-        data: vi.fn(() => null),
-        isError: vi.fn(() => false),
-        isSuccess: vi.fn(() => false),
-      }),
-    };
-
     routerMock = {
       navigate: vi.fn(),
       events: new Subject(),
@@ -59,24 +43,27 @@ describe('RegisterComponent', () => {
       },
     };
 
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    sessionMock = {
+      register: vi.fn(async () => ({
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User',
+        avatarUrl: null,
+        provider: 'local',
+        emailVerified: false,
+        role: 'user',
+      })),
+      registerState: { isPending: signal(false), error: signal<Error | null>(null) },
+    };
 
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: WINDOW, useValue: windowMock },
-        { provide: AuthQueryService, useValue: authQueryServiceMock },
+        { provide: SessionService, useValue: sessionMock },
       ],
     }).compileComponents();
 
@@ -109,7 +96,7 @@ describe('RegisterComponent', () => {
     expect(component.passwordMismatch()).toBe(false);
   });
 
-  it('should call registerMutation on valid submit', () => {
+  it('should call session.register on valid submit', async () => {
     component.registerModel.set({
       name: 'Test User',
       email: 'test@example.com',
@@ -117,23 +104,17 @@ describe('RegisterComponent', () => {
       confirmPassword: 'password123',
     });
 
-    component.onSubmit({ preventDefault: () => {} } as any);
+    await component.onSubmit({ preventDefault: () => {} } as Event);
 
-    expect(registerMutateFn).toHaveBeenCalledWith(
-      {
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'password123',
-      },
-      expect.any(Object),
-    );
-
-    const options = registerMutateFn.mock.calls[0][1] as { onSuccess?: () => void };
-    options.onSuccess?.();
+    expect(sessionMock.register).toHaveBeenCalledWith({
+      name: 'Test User',
+      email: 'test@example.com',
+      password: 'password123',
+    });
     expect(component.registrationSuccess()).toBe(true);
   });
 
-  it('should not call registerMutation on invalid submit', () => {
+  it('should not call session.register on invalid submit', async () => {
     component.registerModel.set({
       name: '',
       email: 'invalid',
@@ -141,9 +122,9 @@ describe('RegisterComponent', () => {
       confirmPassword: '456',
     });
 
-    component.onSubmit({ preventDefault: () => {} } as any);
+    await component.onSubmit({ preventDefault: () => {} } as Event);
 
-    expect(registerMutateFn).not.toHaveBeenCalled();
+    expect(sessionMock.register).not.toHaveBeenCalled();
   });
 
   it('should redirect to OAuth endpoints for social registration', () => {

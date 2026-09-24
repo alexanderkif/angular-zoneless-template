@@ -68,3 +68,4 @@ CHANGES_SUMMARY.md
 /supabase/.branches
 /supabase/.temp
 /supabase/functions/.env
+.env*

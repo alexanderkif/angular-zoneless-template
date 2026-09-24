@@ -1,12 +1,12 @@
 @if (isLoading()) {
-  <article class="post skeleton">
-    <h1 class="title">Loading...</h1>
-    <p class="text">Please wait while we fetch the content.</p>
+  <article class="post post--skeleton">
+    <h1 class="post__title">Loading...</h1>
+    <p class="post__text">Please wait while we fetch the content.</p>
   </article>
 } @else if (post(); as postData) {
   <article
     class="post"
-    [class.details-mode]="detailsMode()"
+    [class.post--details]="detailsMode()"
     (click)="openDetails(postData.id)"
     (keydown.enter)="openDetails(postData.id)"
     (keydown.space)="$event.preventDefault(); openDetails(postData.id)"
@@ -14,24 +14,24 @@
     [attr.role]="detailsMode() ? 'article' : 'button'"
     [attr.aria-label]="detailsMode() ? null : 'View details for ' + postData.title"
   >
-    <div class="post-header">
-      <div class="author-info">
+    <div class="post__header">
+      <div class="post__author">
         <app-avatar
           [src]="postData.author.avatarUrl"
           [alt]="postData.author.name"
           [role]="postData.author.role ?? 'user'"
         />
         <div>
-          <span class="author-name">{{ postData.author.name }}</span>
+          <span class="post__author-name">{{ postData.author.name }}</span>
         </div>
-        <time class="post-date" [attr.datetime]="postData.createdAt">
+        <time class="post__date" [attr.datetime]="postData.createdAt">
           {{ postData.createdAt | date: 'medium' }}
         </time>
       </div>
 
       @if (currentUser()) {
         @if (canEdit() || canDelete()) {
-          <div class="post-actions-header">
+          <div class="post__header-actions">
             @if (canEdit()) {
               <app-icon-button
                 (click)="handleEdit($event)"
@@ -85,15 +85,15 @@
         }
       }
     </div>
-    <h1 class="title">{{ postData.title }}</h1>
-    <p class="text">{{ postData.content }}</p>
+    <h1 class="post__title">{{ postData.title }}</h1>
+    <p class="post__text">{{ postData.content }}</p>
     @if (postData.updatedAt !== postData.createdAt) {
-      <p class="edited">Edited: {{ postData.updatedAt | date: 'medium' }}</p>
+      <p class="post__edited">Edited: {{ postData.updatedAt | date: 'medium' }}</p>
     }
 
     <!-- Reactions -->
-    <div class="post-actions">
-      <div class="reactions">
+    <div class="post__actions">
+      <div class="post__reactions">
         <app-icon-button
           size="md"
           [active]="getUserReaction() === 1"

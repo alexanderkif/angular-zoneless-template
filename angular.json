@@ -55,8 +55,7 @@
                   "maximumError": "10kB"
                 }
               ],
-              "outputHashing": "all",
-              "prerender": false
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
@@ -65,7 +64,6 @@
             },
             "csr": {
               "ssr": false,
-              "prerender": false,
               "outputMode": "static"
             }
           },
@@ -114,5 +112,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

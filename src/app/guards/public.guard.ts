@@ -1,24 +1,19 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { QueryClient } from '@tanstack/angular-query-experimental';
-import { AuthQueryService, AuthUser } from '../services/auth-query.service';
+import { SessionService } from '../core/auth/session.service';
 
 /**
- * Guard for public routes (login, register)
- * Redirects to home if user is already authenticated
+ * Guard for public routes (login, register).
+ * Redirects to home if user is already authenticated.
+ *
+ * Замена TanStack `ensureQueryData` на `SessionService.ensureUser()`.
  */
 export const publicGuard: CanActivateFn = async (route) => {
   const router = inject(Router);
-  const queryClient = inject(QueryClient);
-  const authQueryService = inject(AuthQueryService);
+  const session = inject(SessionService);
 
   try {
-    const user = await queryClient.ensureQueryData<AuthUser | null>({
-      queryKey: ['auth', 'currentUser'],
-      queryFn: () => authQueryService.fetchCurrentUser(),
-      retry: 1,
-      staleTime: 1000 * 60 * 5,
-    });
+    const user = await session.ensureUser();
 
     if (user) {
       const returnUrl = route.queryParams?.['returnUrl'];

@@ -1,38 +1,50 @@
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { provideRouter } from '@angular/router';
+import { SessionService } from '../../core/auth/session.service';
 import { PanelComponent } from './panel.component';
+
+const createSessionMock = () => {
+  const currentUserValue = signal<{ id: string } | null>(null);
+
+  return {
+    currentUser: {
+      value: currentUserValue,
+      isLoading: signal(false),
+      status: signal('resolved'),
+      error: signal<Error | null>(null),
+      reload: vi.fn(),
+    },
+    ensureUser: vi.fn(async () => currentUserValue()),
+    reloadCurrentUser: vi.fn(),
+    refreshSession: vi.fn(async () => currentUserValue()),
+    logoutState: { isPending: signal(false), error: signal<Error | null>(null) },
+    logout: vi.fn(async () => {
+      currentUserValue.set(null);
+    }),
+  };
+};
 
 describe('PanelComponent', () => {
   let component: PanelComponent;
   let fixture: ComponentFixture<PanelComponent>;
-  let queryClient: QueryClient;
+  let sessionMock: ReturnType<typeof createSessionMock>;
 
   beforeEach(async () => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    sessionMock = createSessionMock();
 
     await TestBed.configureTestingModule({
       imports: [PanelComponent],
       providers: [
         provideZonelessChangeDetection(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
-        { provide: ActivatedRoute, useValue: { snapshot: {}, params: {} } },
+        provideRouter([]),
+        { provide: SessionService, useValue: sessionMock },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PanelComponent);
     component = fixture.componentInstance;
-    fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -40,12 +52,12 @@ describe('PanelComponent', () => {
   });
 
   it('should compute isAuthenticated=false when no user', () => {
-    (component as any).userQuery = { data: () => null };
     expect(component.isAuthenticated()).toBe(false);
   });
 
   it('should compute isAuthenticated=true when user exists', () => {
-    (component as any).userQuery = { data: () => ({ id: 'u1' }) };
+    sessionMock.currentUser.value.set({ id: 'u1' });
+
     expect(component.isAuthenticated()).toBe(true);
   });
 });

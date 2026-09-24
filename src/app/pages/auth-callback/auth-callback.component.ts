@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, inject, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
-import { AuthQueryService } from '../../services/auth-query.service';
+import { ChangeDetectionStrategy, Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SessionService } from '../../core/auth/session.service';
 import { WINDOW } from '../../tokens/window.token';
 
 @Component({
@@ -13,7 +13,7 @@ import { WINDOW } from '../../tokens/window.token';
 export class AuthCallbackComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private authQueryService = inject(AuthQueryService);
+  private session = inject(SessionService);
   private platformId = inject(PLATFORM_ID);
   private window = inject(WINDOW);
 
@@ -26,9 +26,9 @@ export class AuthCallbackComponent implements OnInit {
         return;
       }
 
-      // OAuth successful - cookies are set by backend
-      // Trigger query refetch to get user data
-      this.authQueryService.refetchUser();
+      // OAuth successful - cookies are set by backend.
+      // Re-fetch current user instead of TanStack refetchUser().
+      this.session.reloadCurrentUser();
 
       // Get returnUrl from sessionStorage (saved before OAuth redirect)
       let returnUrl = '/';

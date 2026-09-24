@@ -1,40 +1,40 @@
 <section class="posts" #postsSection>
-  @if (postsQuery.isPending()) {
-    <h1>Loading posts...</h1>
+  @if (isListLoading()) {
+    <h1 class="posts__title">Loading posts...</h1>
     <app-post [isLoading]="true"></app-post>
-  } @else if (postsQuery.isError()) {
-    <h1>Error loading posts</h1>
-    <p>{{ postsQuery.error().message }}</p>
-  } @else if (postsQuery.data(); as data) {
-    <h1>Posts ({{ data.pagination.total }} total)</h1>
+  } @else if (listError(); as error) {
+    <h1 class="posts__title">Error loading posts</h1>
+    <p>{{ error.message }}</p>
+  } @else {
+    <h1 class="posts__title">Posts ({{ totalPosts() }} total)</h1>
 
     @if (isCreateSyncPending()) {
-      <p class="posts-status" role="status" aria-live="polite">Saving post and syncing list...</p>
+      <p class="posts__status" role="status" aria-live="polite">Saving post and syncing list...</p>
     }
 
-    @for (post of data.posts; track post.id) {
+    @for (post of pageData(); track post.id) {
       <app-post
         [post]="post"
-        [currentUser]="currentUserQuery.data()"
+        [currentUser]="currentUser.value()"
         (edit)="handleEditPost($event)"
         (delete)="handleDeletePost($event)"
       ></app-post>
     }
 
     <!-- Pagination Controls -->
-    <div class="pagination">
+    <div class="posts__pagination">
       <app-button
         id="posts-prev-page"
         variant="secondary"
         size="sm"
         (click)="goToPreviousPage()"
-        [disabled]="!data.pagination.hasPrev"
+        [disabled]="!hasPrevPage()"
       >
         ← Previous
       </app-button>
 
-      <span class="pagination__info">
-        Page {{ data.pagination.page }} of {{ data.pagination.totalPages }}
+      <span class="posts__pagination-info">
+        Page {{ page() }} of {{ totalPages() }}
       </span>
 
       <app-button
@@ -42,7 +42,7 @@
         variant="secondary"
         size="sm"
         (click)="goToNextPage()"
-        [disabled]="!data.pagination.hasNext"
+        [disabled]="!hasNextPage()"
       >
         Next →
       </app-button>
@@ -50,8 +50,9 @@
   }
 
   <!-- FAB Button for Creating Posts -->
-  <button class="fab" (click)="openPostForm()" aria-label="Create new post" title="Create post">
+  <button class="posts__fab" (click)="openPostForm()" aria-label="Create new post" title="Create post">
     <svg
+      class="posts__fab-icon"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
@@ -78,7 +79,7 @@
   }
 
   @if (deleteDialogPostId()) {
-    <div class="confirm-modal-overlay" (click)="closeDeleteDialog()">
+    <div class="confirm-modal__overlay" (click)="closeDeleteDialog()">
       <section
         class="confirm-modal"
         role="dialog"
@@ -96,7 +97,7 @@
             variant="danger"
             size="sm"
             (click)="confirmDeletePost()"
-            [disabled]="deletePostMutation.isPending()"
+            [disabled]="isDeleting()"
           >
             Delete
           </app-button>

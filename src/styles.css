@@ -1,56 +1,117 @@
-/* CSS Variables - Design System */
+/* ==========================================================================
+   Design tokens — inspired by https://angular.dev (sampled from its CSS)
+   Light + dark: `light-dark()` keyed off `color-scheme`, so no duplication.
+   Manual override: set `data-theme="light|dark"` on <html>.
+   Fonts: no external fetch (CSP is `font-src 'self'`); Inter falls back to
+   the system stack unless installed locally.
+   ========================================================================== */
 :root {
-  /* Colors - Angular Theme */
-  --color-primary: #dd0031;
-  --color-primary-light: #e84361;
-  --color-primary-dark: #c3002f;
+  color-scheme: light dark;
 
-  --color-accent: #c3002f;
-  --color-accent-hover: #a50028;
-  --color-accent-gradient: linear-gradient(135deg, #dd0031 0%, #a50028 100%);
+  /* Brand palette (angular.dev, OKLCH) */
+  --bright-blue: oklch(51.01% 0.274 263.83);
+  --indigo-blue: oklch(51.64% 0.229 281.65);
+  --electric-violet: oklch(53.18% 0.28 296.97);
+  --french-violet: oklch(47.66% 0.246 305.88);
+  --vivid-pink: oklch(69.02% 0.277 332.77);
+  --hot-pink: oklch(59.91% 0.239 8.14);
+  --hot-red: oklch(61.42% 0.238 15.34);
+  --orange-red: oklch(63.32% 0.24 31.68);
+  --super-green: oklch(79.12% 0.257 155.13);
 
-  --color-background: #fafafa;
-  --color-surface: #ffffff;
-  --color-border: #e0e0e0;
+  /* Contrast scale (light / dark) */
+  --primary-contrast: light-dark(oklch(19.37% 0.006 300.98), oklch(98.81% 0 0));
+  --secondary-contrast: light-dark(oklch(25.16% 0.008 308.11), oklch(84.01% 0.009 308.34));
+  --tertiary-contrast: light-dark(oklch(36.98% 0.014 302.71), oklch(84.01% 0.009 308.34));
+  --quaternary-contrast: light-dark(oklch(54.84% 0.023 304.99), oklch(70.9% 0.015 304.04));
+  --quinary-contrast: light-dark(oklch(84.01% 0.009 308.34), oklch(54.84% 0.023 304.99));
+  --senary-contrast: light-dark(oklch(91.75% 0.004 301.42), oklch(36.98% 0.014 302.71));
+  --septenary-contrast: light-dark(oklch(97.12% 0.002 325.59), oklch(25.16% 0.008 308.11));
+  --octonary-contrast: light-dark(oklch(98.81% 0 0), oklch(19.37% 0.006 300.98));
 
-  --color-text: #1e1e1e;
-  --color-text-secondary: #595959;
+  --page-background: light-dark(#fff, oklch(16.93% 0.004 285.95));
+  --surface-1: light-dark(oklch(98.81% 0 0), oklch(19.37% 0.006 300.98));
+  --surface-2: light-dark(#fff, oklch(25.16% 0.008 308.11));
 
-  --color-success: #4caf50;
-  --color-success-bg: #4caf50;
-  --color-error: #f44336;
-  --color-error-bg: #fee;
-  --color-error-border: #fcc;
+  /* Brand gradients */
+  --brand-gradient: linear-gradient(
+    90deg,
+    var(--orange-red) 0%,
+    var(--vivid-pink) 50%,
+    var(--electric-violet) 100%
+  );
+  --brand-gradient-vertical: linear-gradient(
+    0deg,
+    var(--orange-red) 0%,
+    var(--vivid-pink) 50%,
+    var(--electric-violet) 100%
+  );
+  --soft-brand-radial: radial-gradient(
+    circle at center bottom,
+    color-mix(in srgb, var(--vivid-pink) 14%, var(--page-background)) 0%,
+    var(--page-background) 80%
+  );
 
-  /* Spacing */
+  /* Fonts */
+  --inter-font:
+    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --inter-tight-font: 'Inter Tight', var(--inter-font);
+  --code-font: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* angular.dev hatch tile: 72px SVG scaled to 22px by mask-size */
+  --pattern-url: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'><defs><pattern id='p' patternUnits='userSpaceOnUse' width='72' height='72'><g transform='translate(36 36) rotate(-60)'><line x1='-10' y1='0' x2='10' y2='0' stroke='white' stroke-width='3' stroke-linecap='round'/></g></pattern></defs><rect width='100%' height='100%' fill='url(%23p)'/></svg>");
+
+  /* Layout */
+  --header-height: 4rem;
+  --header-item-height: 2.5rem;
+  --footer-height: 3rem;
+  --container-width: 71rem;
+  --transition-theme:
+    color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+  /* --- Legacy app tokens mapped onto the angular.dev scale --- */
+  --color-primary: var(--electric-violet);
+  --color-primary-light: color-mix(in srgb, var(--electric-violet), white 30%);
+  --color-primary-dark: var(--french-violet);
+  --color-accent: var(--french-violet);
+  --color-accent-hover: var(--electric-violet);
+  --color-accent-gradient: var(--brand-gradient);
+
+  --color-background: var(--page-background);
+  --color-surface: var(--surface-2);
+  --color-border: var(--quinary-contrast);
+  --color-text: var(--primary-contrast);
+  --color-text-secondary: var(--quaternary-contrast);
+
+  --color-success: oklch(48% 0.16 145);
+  --color-success-bg: color-mix(in srgb, var(--super-green) 30%, var(--page-background));
+  --color-error: var(--hot-red);
+  --color-error-bg: color-mix(in srgb, var(--hot-red) 10%, var(--page-background));
+  --color-error-border: color-mix(in srgb, var(--hot-red) 35%, var(--page-background));
+
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 2rem;
   --spacing-xl: 3rem;
 
-  /* Border radius */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
-  --radius-lg: 1rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.3);
-
-  /* Header */
-  --header-height: 4rem;
-  --header-item-height: 2.75rem;
-  --footer-height: 3rem;
-
-  /* Layout */
-  --container-width: 71rem; /* 1136px */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 6%);
+  --shadow-md: 0 6px 24px rgb(0 0 0 / 10%);
+  --shadow-lg: 0 16px 40px rgb(0 0 0 / 14%);
 }
 
-html {
-  scrollbar-gutter: stable;
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 /* Global resets */
@@ -58,8 +119,42 @@ html {
   box-sizing: border-box;
 }
 
+html {
+  scrollbar-gutter: stable;
+  background-color: var(--page-background);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--inter-font);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  transition: var(--transition-theme);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--inter-tight-font);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--bright-blue);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--vivid-pink);
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--electric-violet);
   outline-offset: 2px;
 }
 
@@ -73,8 +168,8 @@ select:focus-visible {
   position: absolute;
   top: -100px;
   left: 0;
-  background: var(--color-primary);
-  color: white;
+  background: var(--brand-gradient);
+  color: #fff;
   padding: var(--spacing-md);
   z-index: 10000;
   transition: top 0.3s;
@@ -87,24 +182,12 @@ select:focus-visible {
   top: 0;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--color-text);
-  background-color: var(--color-background);
-}
-
-/* App shell layout is global to avoid late style injection CLS. */
+/* App shell layout */
 app-root {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
-  background-color: var(--color-background);
 }
 
 main.main {
@@ -112,7 +195,7 @@ main.main {
   max-width: 1200px;
   width: 100%;
   margin: var(--header-height) auto 0 auto;
-  padding: 0 var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 /* Reset list styles globally */
@@ -123,8 +206,70 @@ li {
   list-style: none;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--vivid-pink) 30%, var(--page-background));
+}
+
 @media (max-width: 480px) {
   main.main {
-    padding: 0 var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Page background — angular.dev "pattern" on every page.
+
+   A thin diagonal hatch (72px SVG tile scaled to 22px) masks a rotating
+   conic-gradient. The gradient's `transparent` stops fade the colour out around
+   the centre and the opposite sectors, so the hatch stays soft and text legible.
+
+   NOTE: `z-index: -1` paints behind `body`'s own background, so `body` must stay
+   transparent (the page colour lives on `html`) for this layer to be visible.
+   -------------------------------------------------------------------------- */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 122deg;
+  inherits: false;
+}
+
+@keyframes rotate-gradient-angle {
+  0% {
+    --gradient-angle: 0deg;
+  }
+  100% {
+    --gradient-angle: 360deg;
+  }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* exact angular.dev conic stops */
+  background: conic-gradient(
+    from var(--gradient-angle) at 50% 50%,
+    transparent 17%,
+    #f627e3 25%,
+    #6911d2 32%,
+    transparent 38%,
+    transparent 61%,
+    #6911d2 71%,
+    #f627e3 81%,
+    transparent 91%
+  );
+  -webkit-mask-image: var(--pattern-url);
+  mask-image: var(--pattern-url);
+  -webkit-mask-size: 22px 22px;
+  mask-size: 22px 22px;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  animation: rotate-gradient-angle 10s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
   }
 }

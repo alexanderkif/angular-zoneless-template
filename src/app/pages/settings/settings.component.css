@@ -4,7 +4,7 @@
   padding: 2rem;
 }
 
-.settings h1 {
+.settings__title {
   font-size: 2rem;
   margin-bottom: 2rem;
   color: var(--text-primary);
@@ -17,7 +17,7 @@
   margin-bottom: 1.5rem;
 }
 
-.settings__section h2 {
+.settings__section-title {
   font-size: 1.5rem;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -30,7 +30,7 @@
   margin-bottom: 1rem;
 }
 
-.settings__item label {
+.settings__label {
   font-weight: 500;
   color: var(--text-secondary);
 }
@@ -62,7 +62,7 @@
   margin-top: 1rem;
 }
 
-.settings__info strong {
+.settings__limit {
   color: var(--primary-color);
   font-weight: 600;
 }

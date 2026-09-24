@@ -23,7 +23,7 @@ describe('AvatarComponent', () => {
   it('should render placeholder by default', () => {
     fixture.detectChanges();
 
-    const placeholder = fixture.nativeElement.querySelector('.placeholder');
+    const placeholder = fixture.nativeElement.querySelector('.avatar__placeholder');
     const img = fixture.nativeElement.querySelector('img');
 
     expect(placeholder).toBeTruthy();
@@ -61,14 +61,14 @@ describe('AvatarComponent', () => {
 
     expect(component.hasError()).toBe(true);
     expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
-    expect(fixture.nativeElement.querySelector('.placeholder')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.avatar__placeholder')).toBeTruthy();
   });
 
   it('should render admin badge for admin role', () => {
     fixture.componentRef.setInput('role', 'admin');
     fixture.detectChanges();
 
-    const badge = fixture.nativeElement.querySelector('.admin-badge');
+    const badge = fixture.nativeElement.querySelector('.avatar__badge--admin');
     expect(badge).toBeTruthy();
     expect((badge.textContent as string).trim()).toBe('ADMIN');
   });
@@ -77,7 +77,7 @@ describe('AvatarComponent', () => {
     fixture.componentRef.setInput('role', 'user');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('.admin-badge')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('.avatar__badge--admin')).toBeFalsy();
   });
 
   it('should return ? initial when alt is empty', () => {
@@ -100,6 +100,6 @@ describe('AvatarComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('img')).toBeFalsy();
-    expect(fixture.nativeElement.querySelector('.placeholder')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.avatar__placeholder')).toBeTruthy();
   });
 });

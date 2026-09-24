@@ -6,10 +6,12 @@
   align-items: center;
   column-gap: var(--spacing-md);
   height: var(--header-height);
-  padding: 0 var(--spacing-md);
-  background-color: #fff;
-  border-bottom: 1px solid #bdbdbd;
-  color: #1a1a1a;
-  box-shadow: var(--shadow-sm);
+  padding: 0 var(--spacing-lg);
+  background-color: color-mix(in srgb, var(--page-background) 70%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--septenary-contrast);
+  color: var(--primary-contrast);
   z-index: 1000;
+  transition: var(--transition-theme);
 }

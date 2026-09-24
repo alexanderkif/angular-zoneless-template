@@ -59,8 +59,21 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return res.status(imageResponse.status).json({ error: 'Failed to fetch image' });
     }
 
+    const contentType = imageResponse.headers.get('content-type') ?? '';
+    if (!contentType.startsWith('image/')) {
+      return res.status(415).json({ error: 'Unsupported media type' });
+    }
+
+    const MAX_BYTES = 5 * 1024 * 1024;
+    const declaredLength = Number(imageResponse.headers.get('content-length') ?? '0');
+    if (declaredLength > MAX_BYTES) {
+      return res.status(413).json({ error: 'Image too large' });
+    }
+
     const imageBuffer = await imageResponse.arrayBuffer();
-    const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    if (imageBuffer.byteLength > MAX_BYTES) {
+      return res.status(413).json({ error: 'Image too large' });
+    }
 
     // Cache for 1 hour
     res.setHeader('Content-Type', contentType);

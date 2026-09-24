@@ -8,7 +8,7 @@ import { PostDetailsComponent } from './pages/post-details/post-details.componen
 import { PostsListComponent } from './pages/posts-list/posts-list.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { SettingsComponent } from './pages/settings/settings.component';
-import { VerifyEmailComponent } from './pages/verify-email/verify-email';
+import { VerifyEmailComponent } from './pages/verify-email/verify-email.component';
 
 describe('app.routes', () => {
   it('should define routes', () => {

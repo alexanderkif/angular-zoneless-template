@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-icon-button',
-  standalone: true,
   host: {
     '[attr.data-variant]': 'variant()',
     '[attr.data-size]': 'size()',

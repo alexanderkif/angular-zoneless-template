@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-button',
-  standalone: true,
   host: {
     '[attr.data-variant]': 'variant()',
     '[attr.data-size]': 'size()',
@@ -24,7 +23,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         align-items: center;
         justify-content: center;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         font-size: 1rem;
         font-weight: 500;
         font-family: inherit;
@@ -55,17 +54,17 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
       /* --- Variant: primary --- */
       :host([data-variant='primary']) button {
-        background: var(--color-accent);
+        background: var(--brand-gradient);
         color: white;
       }
       :host([data-variant='primary']) button:hover:not(:disabled) {
-        background: var(--color-accent-hover);
+        filter: brightness(1.08);
       }
       :host([data-variant='primary'][data-size='sm']) button {
         box-shadow: none;
       }
       :host([data-variant='primary'][data-size='sm']) button:hover:not(:disabled) {
-        background: var(--color-accent-hover);
+        filter: brightness(1.08);
       }
 
       /* --- Variant: secondary --- */
@@ -75,7 +74,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         border: 1px solid var(--color-accent);
       }
       :host([data-variant='secondary']) button:hover:not(:disabled) {
-        background: rgba(221, 0, 49, 0.08);
+        background: color-mix(in srgb, var(--electric-violet) 10%, transparent);
       }
       :host([data-variant='secondary']) button:disabled {
         border-color: var(--color-border);
@@ -87,15 +86,15 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         color: white;
       }
       :host([data-variant='danger']) button:hover:not(:disabled) {
-        background: #c62828;
+        filter: brightness(1.08);
       }
       :host([data-variant='danger'][data-size='sm']) button {
-        background-color: var(--color-accent);
-        border: 1px solid var(--color-accent);
+        background: var(--color-error);
+        border: 1px solid var(--color-error);
         box-shadow: none;
       }
       :host([data-variant='danger'][data-size='sm']) button:hover:not(:disabled) {
-        background: var(--color-accent-hover);
+        filter: brightness(1.08);
       }
 
       /* --- Disabled (all variants) --- */

@@ -1,42 +1,77 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { of } from 'rxjs';
-import {
-  createCreatePostMutationOptions,
-  createCreatePostMutationInjectionFactory,
-  createDeletePostMutationOptions,
-  createDeletePostMutationInjectionFactory,
-  createPostsListQueryKey,
-  createPostsListQueryOptions,
-  createPostsListQueryInjectionFactory,
-  createUpdatePostMutationOptions,
-  createUpdatePostMutationInjectionFactory,
-  PostsListComponent,
-} from './posts-list.component';
+import { provideRouter } from '@angular/router';
+import { SessionService, type AuthUser } from '../../core/auth/session.service';
+import { PostsStore } from '../../features/posts/posts.store';
+import type { Post } from '../../services/post.service';
+import { PostsListComponent } from './posts-list.component';
+
+const createPost = (overrides: Partial<Post> = {}): Post => ({
+  id: 'p1',
+  title: 'Title',
+  content: 'Content',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+  author: { id: 'u1', name: 'User One', avatarUrl: null, role: 'user' },
+  likes: 0,
+  dislikes: 0,
+  userReaction: null,
+  commentsCount: 0,
+  ...overrides,
+});
+
+const createUser = (overrides: Partial<AuthUser> = {}): AuthUser => ({
+  id: 'u1',
+  email: 'user@test.dev',
+  name: 'User One',
+  avatarUrl: null,
+  provider: 'email',
+  emailVerified: true,
+  role: 'user',
+  ...overrides,
+});
+
+const createStoreMock = () => ({
+  currentPageData: signal<Post[]>([]),
+  isListLoading: signal(false),
+  listError: signal<Error | undefined>(undefined),
+  page: signal(1),
+  totalPosts: signal(0),
+  totalPages: signal(1),
+  hasNextPage: signal(false),
+  hasPrevPage: signal(false),
+  nextPage: vi.fn(),
+  previousPage: vi.fn(),
+  createPost: vi.fn(async () => undefined),
+  updatePost: vi.fn(async () => undefined),
+  deletePost: vi.fn(async () => undefined),
+});
+
+const createSessionMock = () => ({
+  currentUser: { value: signal<AuthUser | null>(null) },
+});
 
 describe('PostsListComponent', () => {
   let component: PostsListComponent;
   let fixture: ComponentFixture<PostsListComponent>;
-  let queryClient: QueryClient;
+  let storeMock: ReturnType<typeof createStoreMock>;
+  let sessionMock: ReturnType<typeof createSessionMock>;
 
   beforeEach(async () => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    storeMock = createStoreMock();
+    sessionMock = createSessionMock();
 
     await TestBed.configureTestingModule({
       imports: [PostsListComponent],
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideTanStackQuery(queryClient),
+        { provide: PostsStore, useValue: storeMock },
+        { provide: SessionService, useValue: sessionMock },
       ],
     }).compileComponents();
 
@@ -44,116 +79,86 @@ describe('PostsListComponent', () => {
     component = fixture.componentInstance;
     // scrollIntoView is not implemented in JSDOM
     Element.prototype.scrollIntoView = vi.fn();
-    fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have postsQuery', () => {
-    expect(component.postsQuery).toBeDefined();
+  it('should expose page data and current user', () => {
+    sessionMock.currentUser.value.set(createUser({ id: 'u-cur' }));
+    storeMock.currentPageData.set([createPost()]);
+
+    expect(component.pageData()).toEqual([createPost()]);
+    expect(component.currentUser.value()?.id).toBe('u-cur');
   });
 
-  it('should have createPostMutation', () => {
-    expect(component.createPostMutation).toBeDefined();
+  it('should render loading state', () => {
+    storeMock.isListLoading.set(true);
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Loading posts...');
+  });
+
+  it('should render error state', () => {
+    storeMock.listError.set(new Error('boom'));
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Error loading posts');
+    expect(fixture.nativeElement.textContent).toContain('boom');
+  });
+
+  it('should render posts on success', async () => {
+    storeMock.currentPageData.set([createPost({ title: 'Rendered Post' })]);
+    storeMock.totalPosts.set(1);
+    storeMock.page.set(1);
+    storeMock.totalPages.set(1);
+    storeMock.hasPrevPage.set(false);
+    storeMock.hasNextPage.set(false);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Posts (1 total)');
+    expect(fixture.nativeElement.textContent).toContain('Rendered Post');
+    expect(fixture.nativeElement.textContent).toContain('Page 1 of 1');
+  });
+
+  it('should render empty list with zero total', async () => {
+    storeMock.currentPageData.set([]);
+    storeMock.totalPosts.set(0);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Posts (0 total)');
   });
 
   it('should toggle post form visibility', () => {
     expect(component.showPostForm()).toBe(false);
+
     component.openPostForm();
     expect(component.showPostForm()).toBe(true);
+
     component.closePostForm();
     expect(component.showPostForm()).toBe(false);
   });
 
-  it('should open form in create mode', () => {
-    component.editingPost.set({ id: 'x' } as any);
+  it('should open form in create mode and reset editing post', () => {
+    component.editingPost.set(createPost());
+
     component.openPostForm();
 
     expect(component.editingPost()).toBeNull();
     expect(component.showPostForm()).toBe(true);
   });
 
-  it('should go to next page when hasNext is true', () => {
-    const nextSpy = vi.spyOn(component.uiStore, 'nextPostsPage');
-    const prefetchSpy = vi.spyOn((component as any).postQueryService, 'prefetchNextPage');
-
-    (component as any).postsQuery = {
-      data: vi.fn(() => ({
-        posts: [],
-        pagination: {
-          page: 1,
-          limit: 3,
-          total: 10,
-          totalPages: 4,
-          hasNext: true,
-          hasPrev: false,
-        },
-      })),
-    };
-
-    component.goToNextPage();
-
-    expect(nextSpy).toHaveBeenCalled();
-    expect(prefetchSpy).toHaveBeenCalled();
-  });
-
-  it('should not go to next page when hasNext is false', () => {
-    const nextSpy = vi.spyOn(component.uiStore, 'nextPostsPage');
-
-    (component as any).postsQuery = {
-      data: vi.fn(() => ({
-        posts: [],
-        pagination: {
-          page: 1,
-          limit: 3,
-          total: 1,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false,
-        },
-      })),
-    };
-
-    component.goToNextPage();
-
-    expect(nextSpy).not.toHaveBeenCalled();
-  });
-
-  it('should go to previous page when current page > 1', () => {
-    const prevSpy = vi.spyOn(component.uiStore, 'prevPostsPage');
-    const prefetchSpy = vi.spyOn((component as any).postQueryService, 'prefetchPreviousPage');
-    vi.spyOn(component.uiStore, 'postsPage').mockReturnValue(2);
-
-    component.goToPreviousPage();
-
-    expect(prevSpy).toHaveBeenCalled();
-    expect(prefetchSpy).toHaveBeenCalled();
-  });
-
-  it('should create post in handleSavePost when not editing', () => {
-    const mutate = vi.fn();
-    (component as any).createPostMutation = { mutate };
-    component.editingPost.set(null);
-
-    component.handleSavePost({ title: 'T', content: 'C' });
-
-    expect(mutate).toHaveBeenCalledWith({ title: 'T', content: 'C' });
-  });
-
-  it('should update post in handleSavePost when editing', () => {
-    const mutate = vi.fn();
-    (component as any).updatePostMutation = { mutate };
-    component.editingPost.set({ id: 'p1' } as any);
-
-    component.handleSavePost({ title: 'T2', content: 'C2' });
-
-    expect(mutate).toHaveBeenCalledWith({ id: 'p1', data: { title: 'T2', content: 'C2' } });
-  });
-
   it('should set editing post in handleEditPost', () => {
-    const post = { id: 'p100' } as any;
+    const post = createPost({ id: 'p100' });
 
     component.handleEditPost(post);
 
@@ -161,463 +166,124 @@ describe('PostsListComponent', () => {
     expect(component.showPostForm()).toBe(true);
   });
 
-  it('should open and confirm delete post dialog', () => {
-    const mutate = vi.fn();
-    (component as any).deletePostMutation = { mutate };
+  it('should create post in handleSavePost when not editing', async () => {
+    storeMock.createPost.mockResolvedValue(undefined);
+    component.openPostForm();
+
+    await component.handleSavePost({ title: 'T', content: 'C' });
+
+    expect(storeMock.createPost).toHaveBeenCalledWith({ title: 'T', content: 'C' });
+    expect(storeMock.updatePost).not.toHaveBeenCalled();
+    expect(component.showPostForm()).toBe(false);
+    expect(component.isCreateSyncPending()).toBe(false);
+  });
+
+  it('should update post in handleSavePost when editing', async () => {
+    storeMock.updatePost.mockResolvedValue(undefined);
+    component.handleEditPost(createPost({ id: 'p1' }));
+
+    await component.handleSavePost({ title: 'T2', content: 'C2' });
+
+    expect(storeMock.updatePost).toHaveBeenCalledWith('p1', { title: 'T2', content: 'C2' });
+    expect(storeMock.createPost).not.toHaveBeenCalled();
+    expect(component.editingPost()).toBeNull();
+    expect(component.showPostForm()).toBe(false);
+  });
+
+  it('should reset submitting state when create fails', async () => {
+    storeMock.createPost.mockRejectedValueOnce(new Error('create failed'));
+    component.openPostForm();
+
+    await expect(component.handleSavePost({ title: 'T', content: 'C' })).rejects.toThrow(
+      'create failed',
+    );
+
+    expect(component.isCreateSyncPending()).toBe(false);
+    expect(component.showPostForm()).toBe(true);
+  });
+
+  it('should go to next page when hasNextPage is true', () => {
+    storeMock.hasNextPage.set(true);
+
+    component.goToNextPage();
+
+    expect(storeMock.nextPage).toHaveBeenCalledTimes(1);
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it('should not go to next page when hasNextPage is false', () => {
+    storeMock.hasNextPage.set(false);
+
+    component.goToNextPage();
+
+    expect(storeMock.nextPage).not.toHaveBeenCalled();
+  });
+
+  it('should go to previous page when hasPrevPage is true', () => {
+    storeMock.hasPrevPage.set(true);
+
+    component.goToPreviousPage();
+
+    expect(storeMock.previousPage).toHaveBeenCalledTimes(1);
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it('should not go to previous page when hasPrevPage is false', () => {
+    storeMock.hasPrevPage.set(false);
+
+    component.goToPreviousPage();
+
+    expect(storeMock.previousPage).not.toHaveBeenCalled();
+  });
+
+  it('should tolerate pagination before the posts section is rendered', () => {
+    storeMock.hasNextPage.set(true);
+    storeMock.hasPrevPage.set(true);
+    const isolatedFixture = TestBed.createComponent(PostsListComponent);
+    const isolated = isolatedFixture.componentInstance;
+
+    isolated.goToNextPage();
+    isolated.goToPreviousPage();
+
+    expect(storeMock.nextPage).toHaveBeenCalledTimes(1);
+    expect(storeMock.previousPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('should open delete dialog and confirm deletion', async () => {
+    storeMock.deletePost.mockResolvedValue(undefined);
 
     component.handleDeletePost('p-del');
     expect(component.deleteDialogPostId()).toBe('p-del');
 
-    component.confirmDeletePost();
+    await component.confirmDeletePost();
 
-    expect(mutate).toHaveBeenCalledWith('p-del');
+    expect(storeMock.deletePost).toHaveBeenCalledWith('p-del');
     expect(component.deleteDialogPostId()).toBeNull();
+    expect(component.isDeleting()).toBe(false);
   });
 
-  it('should close delete post dialog without deletion', () => {
-    const mutate = vi.fn();
-    (component as any).deletePostMutation = { mutate };
-
+  it('should close delete dialog without deletion', () => {
     component.handleDeletePost('p-del');
+
     component.closeDeleteDialog();
 
-    expect(mutate).not.toHaveBeenCalled();
+    expect(storeMock.deletePost).not.toHaveBeenCalled();
     expect(component.deleteDialogPostId()).toBeNull();
   });
 
-  it('should ignore confirmDeletePost when dialog is closed', () => {
-    const mutate = vi.fn();
-    (component as any).deletePostMutation = { mutate };
+  it('should ignore confirmDeletePost when dialog is closed', async () => {
+    await component.confirmDeletePost();
 
-    component.confirmDeletePost();
-
-    expect(mutate).not.toHaveBeenCalled();
+    expect(storeMock.deletePost).not.toHaveBeenCalled();
   });
 
-  it('should create posts list query key and options', async () => {
-    const uiStoreMock = {
-      postsPage: vi.fn(() => 2),
-      postsLimit: vi.fn(() => 5),
-    } as any;
-    const postQueryServiceMock = {
-      fetchPosts: vi.fn(async () => ({ posts: [], pagination: { hasNext: false } })),
-    } as any;
+  it('should reflect locally pending state in isPostFormSubmitting', () => {
+    expect(component.isPostFormSubmitting()).toBe(false);
 
-    const key = createPostsListQueryKey(uiStoreMock);
-    expect(key).toEqual(['posts', 'list', { page: 2, limit: 5 }]);
+    component.isCreateSyncPending.set(true);
+    expect(component.isPostFormSubmitting()).toBe(true);
 
-    const options = createPostsListQueryOptions(postQueryServiceMock, uiStoreMock);
-    expect(options.queryKey).toEqual(key);
-    await options.queryFn();
-    expect(postQueryServiceMock.fetchPosts).toHaveBeenCalledWith(2, 5);
-  });
-
-  it('should execute create post mutation options success flow', async () => {
-    const postServiceMock = {
-      createPost: vi.fn(() => of({ post: { id: 'p1' } })),
-    } as any;
-    const postQueryServiceMock = { invalidatePosts: vi.fn() } as any;
-    const showPostForm = { set: vi.fn() } as any;
-    const getPostsQueryKey = () => ['posts', 'list', { page: 1, limit: 3 }] as const;
-    const setIsCreateSyncPending = vi.fn();
-    const updaterResults: any[] = [];
-    const setQueryData = vi.fn((queryKey: unknown, updater: unknown) => {
-      if (typeof updater === 'function') {
-        updaterResults.push(
-          updater({
-            posts: [],
-            pagination: {
-              page: 1,
-              limit: 3,
-              total: 0,
-              totalPages: 1,
-              hasNext: false,
-              hasPrev: false,
-            },
-          }),
-          updater({}),
-        );
-      }
-      return undefined;
-    });
-    const mutationClient = {
-      cancelQueries: vi.fn(async () => {}),
-      getQueryData: vi.fn(() => ({ posts: [], pagination: { total: 0 } })),
-      setQueryData,
-    } as any;
-
-    const options = createCreatePostMutationOptions(
-      postServiceMock,
-      postQueryServiceMock,
-      showPostForm,
-      getPostsQueryKey,
-      () => ({
-        id: 'u1',
-        email: 'u1@test.dev',
-        name: 'User One',
-        avatarUrl: null,
-        provider: 'email',
-        emailVerified: true,
-        role: 'user',
-      }),
-      setIsCreateSyncPending,
-    );
-    await options.mutationFn({ title: 'T', content: 'C' });
-
-    expect(postServiceMock.createPost).toHaveBeenCalledWith({ title: 'T', content: 'C' });
-
-    const onMutateResult = await options.onMutate(
-      { title: 'T', content: 'C' },
-      { client: mutationClient },
-    );
-    expect(mutationClient.cancelQueries).toHaveBeenCalledWith({ queryKey: getPostsQueryKey() });
-    expect(mutationClient.getQueryData).toHaveBeenCalledWith(getPostsQueryKey());
-    expect(showPostForm.set).toHaveBeenCalledWith(false);
-    expect(setIsCreateSyncPending).toHaveBeenCalledWith(true);
-    expect(onMutateResult?.queryKey).toEqual(getPostsQueryKey());
-    expect(updaterResults[0]?.pagination?.total).toBe(1);
-    expect(updaterResults[1]).toEqual({});
-
-    const successUpdaterResults: any[] = [];
-    const successSetQueryData = vi.fn((queryKey: unknown, updater: unknown) => {
-      if (typeof updater === 'function') {
-        successUpdaterResults.push(
-          updater({
-            posts: [{ id: onMutateResult?.optimisticId }, { id: 'p-2' }],
-            pagination: {
-              page: 1,
-              limit: 3,
-              total: 2,
-              totalPages: 1,
-              hasNext: false,
-              hasPrev: false,
-            },
-          }),
-          updater({}),
-        );
-      }
-      return undefined;
-    });
-    options.onSuccess(
-      {
-        post: {
-          id: 'p1',
-          title: 'T',
-          content: 'C',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          author: {
-            id: 'u1',
-            name: 'User One',
-            email: 'u1@test.dev',
-            avatarUrl: null,
-            role: 'user',
-          },
-        },
-      },
-      { title: 'T', content: 'C' },
-      onMutateResult,
-      { client: { setQueryData: successSetQueryData } } as any,
-    );
-    expect(successSetQueryData).toHaveBeenCalled();
-    expect(successUpdaterResults[0].posts[0].id).toBe('p1');
-    expect(successUpdaterResults[1]).toEqual({});
-    expect(postQueryServiceMock.invalidatePosts).toHaveBeenCalled();
-
-    const rollbackSetQueryData = vi.fn();
-    options.onError(new Error('x'), { title: 'T', content: 'C' }, onMutateResult, {
-      client: { setQueryData: rollbackSetQueryData },
-    } as any);
-    expect(rollbackSetQueryData).toHaveBeenCalledWith(
-      getPostsQueryKey(),
-      onMutateResult?.previousPosts,
-    );
-
-    options.onError(new Error('x'), { title: 'T', content: 'C' }, undefined, {
-      client: { setQueryData: rollbackSetQueryData },
-    } as any);
-
-    options.onSuccess(
-      {
-        post: {
-          id: 'p2',
-          title: 'T2',
-          content: 'C2',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          author: {
-            id: 'u2',
-            name: 'User Two',
-            email: 'u2@test.dev',
-            avatarUrl: null,
-            role: 'user',
-          },
-        },
-      },
-      { title: 'T2', content: 'C2' },
-      undefined,
-      { client: { setQueryData: successSetQueryData } } as any,
-    );
-
-    options.onSettled();
-    expect(setIsCreateSyncPending).toHaveBeenCalledWith(false);
-  });
-
-  it('should use fallback optimistic author when current user is missing', async () => {
-    const postServiceMock = {
-      createPost: vi.fn(() => of({ post: { id: 'p1' } })),
-    } as any;
-    const postQueryServiceMock = { invalidatePosts: vi.fn() } as any;
-    const showPostForm = { set: vi.fn() } as any;
-    const getPostsQueryKey = () => ['posts', 'list', { page: 1, limit: 3 }] as const;
-    const setIsCreateSyncPending = vi.fn();
-    let capturedOptimistic: any;
-    const mutationClient = {
-      cancelQueries: vi.fn(async () => {}),
-      getQueryData: vi.fn(() => ({ posts: [], pagination: { total: 0 } })),
-      setQueryData: vi.fn((queryKey: unknown, updater: unknown) => {
-        if (typeof updater === 'function') {
-          capturedOptimistic = updater({
-            posts: [],
-            pagination: {
-              page: 1,
-              limit: 3,
-              total: 0,
-              totalPages: 1,
-              hasNext: false,
-              hasPrev: false,
-            },
-          });
-        }
-        return undefined;
-      }),
-    } as any;
-
-    const options = createCreatePostMutationOptions(
-      postServiceMock,
-      postQueryServiceMock,
-      showPostForm,
-      getPostsQueryKey,
-      () => null,
-      setIsCreateSyncPending,
-    );
-
-    await options.onMutate({ title: 'Fallback', content: 'Post' }, { client: mutationClient });
-
-    expect(capturedOptimistic.posts[0].author.id).toBe('optimistic-user');
-    expect(capturedOptimistic.posts[0].author.name).toBe('You');
-    expect(capturedOptimistic.posts[0].author.role).toBe('user');
-  });
-
-  it('should execute update post mutation options callbacks', async () => {
-    const postServiceMock = {
-      updatePost: vi.fn(() => of({ post: { id: 'p1', title: 'N', content: 'NC' } })),
-    } as any;
-    const postQueryServiceMock = {
-      optimisticUpdatePostInList: vi.fn(() => ({ old: true })),
-      invalidatePosts: vi.fn(),
-    } as any;
-    const showPostForm = { set: vi.fn() } as any;
-    const editingPost = { set: vi.fn() } as any;
-    const getPostsQueryKey = () => ['posts', 'list', { page: 1, limit: 3 }] as const;
-
-    const options = createUpdatePostMutationOptions(
-      postServiceMock,
-      postQueryServiceMock,
-      showPostForm,
-      editingPost,
-      getPostsQueryKey,
-    );
-
-    await options.mutationFn({ id: 'p1', data: { title: 'N', content: 'NC' } });
-    expect(postServiceMock.updatePost).toHaveBeenCalledWith('p1', { title: 'N', content: 'NC' });
-
-    const cancelQueries = vi.fn(async () => {});
-    const onMutateResult = await options.onMutate(
-      { id: 'p1', data: { title: 'N', content: 'NC' } },
-      { client: { cancelQueries } },
-    );
-
-    expect(showPostForm.set).toHaveBeenCalledWith(false);
-    expect(editingPost.set).toHaveBeenCalledWith(null);
-    expect(cancelQueries).toHaveBeenCalledWith({ queryKey: getPostsQueryKey() });
-    expect(onMutateResult).toEqual({ previousPosts: { old: true } });
-
-    const setQueryData = vi.fn();
-    options.onError(
-      new Error('x'),
-      {},
-      { previousPosts: { cached: true } },
-      { client: { setQueryData } },
-    );
-    expect(setQueryData).toHaveBeenCalledWith(getPostsQueryKey(), { cached: true });
-
-    options.onSettled();
-    expect(postQueryServiceMock.invalidatePosts).toHaveBeenCalled();
-
-    const setQueryDataNoPrev = vi.fn();
-    options.onError(new Error('x'), {}, undefined, {
-      client: { setQueryData: setQueryDataNoPrev },
-    });
-    expect(setQueryDataNoPrev).not.toHaveBeenCalled();
-  });
-
-  it('should execute delete post mutation options success flow', async () => {
-    const postServiceMock = { deletePost: vi.fn(() => of(void 0)) } as any;
-    const postQueryServiceMock = { invalidatePosts: vi.fn() } as any;
-    const getPostsQueryKey = () => ['posts', 'list', { page: 1, limit: 3 }] as const;
-    const deleteUpdaterResults: any[] = [];
-    const contextClient = {
-      cancelQueries: vi.fn(async () => {}),
-      getQueryData: vi.fn(() => ({ posts: [{ id: 'p-del' }, { id: 'p-2' }] })),
-      setQueryData: vi.fn((queryKey: unknown, updater: unknown) => {
-        if (typeof updater === 'function') {
-          deleteUpdaterResults.push(
-            updater({ posts: [{ id: 'p-del' }, { id: 'p-2' }] }),
-            updater({}),
-          );
-        }
-        return undefined;
-      }),
-    } as any;
-
-    const options = createDeletePostMutationOptions(
-      postServiceMock,
-      postQueryServiceMock,
-      getPostsQueryKey,
-    );
-    await options.mutationFn('p-del');
-    expect(postServiceMock.deletePost).toHaveBeenCalledWith('p-del');
-
-    const onMutateResult = await options.onMutate('p-del', { client: contextClient });
-    expect(contextClient.cancelQueries).toHaveBeenCalledWith({ queryKey: getPostsQueryKey() });
-    expect(contextClient.getQueryData).toHaveBeenCalledWith(getPostsQueryKey());
-    expect(onMutateResult).toEqual({
-      previousPosts: { posts: [{ id: 'p-del' }, { id: 'p-2' }] },
-      queryKey: getPostsQueryKey(),
-    });
-    expect(deleteUpdaterResults[0]).toEqual({ posts: [{ id: 'p-2' }] });
-    expect(deleteUpdaterResults[1]).toEqual({});
-
-    const rollbackClient = { setQueryData: vi.fn() } as any;
-    options.onError(new Error('x'), 'p-del', onMutateResult, { client: rollbackClient });
-    expect(rollbackClient.setQueryData).toHaveBeenCalledWith(getPostsQueryKey(), {
-      posts: [{ id: 'p-del' }, { id: 'p-2' }],
-    });
-
-    options.onError(new Error('x'), 'p-del', undefined, { client: rollbackClient });
-
-    options.onSettled();
-    expect(postQueryServiceMock.invalidatePosts).toHaveBeenCalled();
-  });
-
-  it('should not go to previous page when already on first page', () => {
-    const prevSpy = vi.spyOn(component.uiStore, 'prevPostsPage');
-    const prefetchSpy = vi.spyOn((component as any).postQueryService, 'prefetchPreviousPage');
-    vi.spyOn(component.uiStore, 'postsPage').mockReturnValue(1);
-
-    component.goToPreviousPage();
-
-    expect(prevSpy).not.toHaveBeenCalled();
-    expect(prefetchSpy).not.toHaveBeenCalled();
-  });
-
-  it('should expose internal posts query key helper', () => {
-    const key = (component as any).getPostsQueryKey();
-    expect(key[0]).toBe('posts');
-    expect(key[1]).toBe('list');
-  });
-
-  it('should create and execute injection factories for query and mutations', () => {
-    const uiStoreMock = { postsPage: vi.fn(() => 1), postsLimit: vi.fn(() => 3) } as any;
-    const postQueryServiceMock = {
-      fetchPosts: vi.fn(async () => ({ posts: [], pagination: { hasNext: false } })),
-      invalidatePosts: vi.fn(),
-      optimisticUpdatePostInList: vi.fn(),
-    } as any;
-    const postServiceMock = {
-      createPost: vi.fn(),
-      updatePost: vi.fn(),
-      deletePost: vi.fn(),
-    } as any;
-    const showPostForm = { set: vi.fn() } as any;
-    const editingPost = { set: vi.fn() } as any;
-    const getPostsQueryKey = () => ['posts', 'list', { page: 1, limit: 3 }] as const;
-    const setIsCreateSyncPending = vi.fn();
-
-    const queryFactory = createPostsListQueryInjectionFactory(postQueryServiceMock, uiStoreMock);
-    const createFactory = createCreatePostMutationInjectionFactory(
-      postServiceMock,
-      postQueryServiceMock,
-      showPostForm,
-      getPostsQueryKey,
-      () => null,
-      setIsCreateSyncPending,
-    );
-    const updateFactory = createUpdatePostMutationInjectionFactory(
-      postServiceMock,
-      postQueryServiceMock,
-      showPostForm,
-      editingPost,
-      getPostsQueryKey,
-    );
-    const deleteFactory = createDeletePostMutationInjectionFactory(
-      postServiceMock,
-      postQueryServiceMock,
-      getPostsQueryKey,
-    );
-
-    expect(queryFactory().queryKey).toEqual(['posts', 'list', { page: 1, limit: 3 }]);
-    expect(typeof createFactory().mutationFn).toBe('function');
-    expect(typeof updateFactory().mutationFn).toBe('function');
-    expect(typeof deleteFactory().mutationFn).toBe('function');
-  });
-
-  it('should run real create mutation and update submitting state', async () => {
-    const postService = (component as any).postService;
-    const postQueryService = (component as any).postQueryService;
-
-    vi.spyOn(postService, 'createPost').mockReturnValueOnce(
-      of({
-        post: {
-          id: 'p-new',
-          title: 'Created',
-          content: 'Content',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          author: {
-            id: 'u1',
-            name: 'User One',
-            email: 'u1@test.dev',
-            avatarUrl: null,
-            role: 'user',
-          },
-        },
-      }),
-    );
-    const invalidateSpy = vi
-      .spyOn(postQueryService, 'invalidatePosts')
-      .mockResolvedValueOnce(undefined);
-
-    const userDataSpy = vi.fn(() => ({
-      id: 'u1',
-      name: 'User One',
-      email: 'u1@test.dev',
-      avatarUrl: null,
-      role: 'user',
-    }));
-    (component as any).currentUserQuery = { data: userDataSpy };
-
-    const pendingSetSpy = vi.spyOn((component as any).isCreateSyncPending, 'set');
-
-    component.handleSavePost({ title: 'Created', content: 'Content' });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(userDataSpy).toHaveBeenCalled();
-    expect(invalidateSpy).toHaveBeenCalled();
-    expect(pendingSetSpy).toHaveBeenCalledWith(true);
-    expect(pendingSetSpy).toHaveBeenCalledWith(false);
+    component.isCreateSyncPending.set(false);
     expect(component.isPostFormSubmitting()).toBe(false);
   });
 });
