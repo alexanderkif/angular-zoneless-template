@@ -22,6 +22,11 @@ export const ssrCookieInterceptor: HttpInterceptorFn = (req, next) => {
       const storage = (globalThis as any).requestStorage;
       const request = storage?.getStore() as IncomingMessage | undefined;
 
+      console.log('[SSR auth]', {
+        hasRequest: Boolean(request),
+        hasCookie: Boolean(request?.headers?.cookie),
+      });
+
       if (request?.headers?.cookie) {
         const cookieHeader = Array.isArray(request.headers.cookie)
           ? request.headers.cookie.join('; ')

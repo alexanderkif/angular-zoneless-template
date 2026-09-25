@@ -64,11 +64,12 @@ import { RouterLink } from '@angular/router';
       /* --- Variant: secondary --- */
       :host([data-variant='secondary']) a {
         background: transparent;
-        color: var(--color-accent);
+        color: var(--primary-contrast);
         border: 1px solid var(--color-accent);
       }
       :host([data-variant='secondary']) a:hover {
-        background: rgba(221, 0, 49, 0.08);
+        background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+        color: var(--primary-contrast);
       }
     `,
   ],

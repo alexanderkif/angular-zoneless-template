@@ -20,7 +20,7 @@
 
   &:focus-visible {
     outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+    outline-offset: 4px;
   }
 
   &:disabled {
@@ -100,14 +100,15 @@
     transition: background-color 0.2s;
 
     &:hover:not(:disabled) {
-      background-color: rgba(221, 0, 49, 0.08);
-      color: var(--color-accent);
+      background-color: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+      color: var(--primary-contrast);
     }
 
     &:focus-visible {
-      background-color: rgba(221, 0, 49, 0.08);
-      outline: 2px solid var(--color-accent);
-      outline-offset: -4px;
+      background-color: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+      color: var(--primary-contrast);
+      outline: none;
+      /* box-shadow: inset 0 0 0 2px var(--color-accent); */
     }
 
     &:disabled {
