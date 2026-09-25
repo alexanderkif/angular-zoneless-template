@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { eq, and } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { db } from '../../server/db';
 import { users, refreshTokens } from '../../server/db/schema';
 import { handleCors } from '../../server/_lib/cors';
@@ -143,9 +143,14 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
       return res.redirect(`${frontendUrl}/login?error=no_user_info`);
     }
 
+    const githubEmail = githubUser.email || `${githubUser.login}@github.com`;
+
     // Check if user exists
     const existingUser = await db.query.users.findFirst({
-      where: and(eq(users.providerId, String(githubUser.id)), eq(users.provider, 'github')),
+      where: or(
+        and(eq(users.providerId, String(githubUser.id)), eq(users.provider, 'github')),
+        eq(users.email, githubEmail),
+      ),
       columns: {
         id: true,
         email: true,
@@ -176,7 +181,7 @@ async function handleCallbackGithub(req: VercelRequest, res: VercelResponse) {
       const [newUser] = await db
         .insert(users)
         .values({
-          email: githubUser.email || `${githubUser.login}@github.com`,
+          email: githubEmail,
           name: githubUser.name || githubUser.login,
           avatarUrl: githubUser.avatar_url,
           provider: 'github',
@@ -303,7 +308,10 @@ async function handleCallbackGoogle(req: VercelRequest, res: VercelResponse) {
 
     // Check if user exists
     const existingUser = await db.query.users.findFirst({
-      where: and(eq(users.providerId, googleUser.id), eq(users.provider, 'google')),
+      where: or(
+        and(eq(users.providerId, googleUser.id), eq(users.provider, 'google')),
+        eq(users.email, googleUser.email),
+      ),
       columns: {
         id: true,
         email: true,

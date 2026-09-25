@@ -92,10 +92,10 @@
 - [ ] Собрать: `npm run build` — сверить набор `*.mjs` с baseline Phase 0
 - [x] **Убрать `patch-server.js` из `build`-скрипта** и заменить хак на официальные механизмы:
   - [x] host-валидация: закрывается `NG_ALLOWED_HOSTS` в `api/index.ts` — regex-патч удалён
-  - [x] `index`: Angular 22 сам генерирует `server/index.server.html` и ссылается на него —
-        подмена `index.csr.html` больше не нужна
+  - [x] `index`: использовать единый `src/index.html`; Angular 22 генерирует
+        `browser/index.csr.html` и `server/index.server.html` для соответствующих runtime
   - [x] `patch-server.js` удалён, `build` = `ng build`
-- [ ] Переименовать CSP nonce `angular-ssr-safe-v21` → `angular-ssr-safe` в `src/index.server.html`, `vercel.json`, `api/index.ts`
+- [ ] Переименовать CSP nonce `angular-ssr-safe-v21` → `angular-ssr-safe` в `src/index.html`, `vercel.json`, `api/index.ts`
 - [ ] Прогнать `npm run lint && npm test && npm run build`
 - [ ] Smoke-проверка SSR: `npm run dev`, открыть `/`, `/posts`, проверить отсутствие ошибок гидратации
 - [ ] **Коммит-чекпоинт:** `chore: upgrade Angular 21 → 22 and align tooling`
@@ -116,7 +116,7 @@
   - [x] метод `verifyEmail(token)` / `resendVerification(payload)`
   - [x] состояния действий `loginState` / `registerState` / `logoutState` / `verifyEmailState` / `resendState`
         (`isPending` + `error`) — замена TanStack `mutation.isPending()` / `mutation.error()`
-  - [x] `reloadCurrentUser()` — замена `refetchUser()` (используется в OAuth-callback)
+  - [x] `reloadCurrentUser()` — асинхронная замена `refetchUser()` (используется в OAuth-callback и ожидается до навигации)
 - [x] Удалить `services/auth-query.service.ts` (и spec)
 - [x] Удалить `services/auth-refresh-coordinator.service.ts` (логика внутри `SessionService`)
 - [x] `guards/auth-guard.ts`: убрать `QueryClient`/`ensureQueryData` → `SessionService.ensureUser()`; убрать `removeQueries`

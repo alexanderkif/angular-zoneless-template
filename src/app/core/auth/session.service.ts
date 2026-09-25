@@ -139,7 +139,11 @@ export class SessionService {
   };
 
   /** Перечитать `/user/me` (например, после OAuth-callback). */
-  reloadCurrentUser = (): boolean => this.currentUser.reload();
+  reloadCurrentUser = async (): Promise<AuthUser | null> => {
+    const user = await this.loadCurrentUser();
+    this.currentUser.value.set(user);
+    return user;
+  };
 
   login = (credentials: LoginCredentials): Promise<AuthUser> =>
     this.run(this.loginState, async () => {

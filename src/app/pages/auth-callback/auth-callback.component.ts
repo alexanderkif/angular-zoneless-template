@@ -19,7 +19,7 @@ export class AuthCallbackComponent implements OnInit {
 
   ngOnInit(): void {
     // Check for errors in query params
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.subscribe(async (params) => {
       if (params['error']) {
         console.error('OAuth error:', this.getErrorMessage(params['error']));
         this.router.navigate(['/login']);
@@ -28,7 +28,7 @@ export class AuthCallbackComponent implements OnInit {
 
       // OAuth successful - cookies are set by backend.
       // Re-fetch current user instead of TanStack refetchUser().
-      this.session.reloadCurrentUser();
+      await this.session.reloadCurrentUser();
 
       // Get returnUrl from sessionStorage (saved before OAuth redirect)
       let returnUrl = '/';
@@ -40,10 +40,7 @@ export class AuthCallbackComponent implements OnInit {
         }
       }
 
-      // Redirect after a short delay
-      setTimeout(() => {
-        this.router.navigate([returnUrl]);
-      }, 100);
+      this.router.navigate([returnUrl]);
     });
   }
 
