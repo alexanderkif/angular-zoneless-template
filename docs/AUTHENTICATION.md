@@ -11,6 +11,16 @@ This project uses JWT + HttpOnly cookies with server-side session control in Pos
 - Session version invalidation on logout
 - Secure SSR compatibility
 
+### OAuth Account Matching
+
+Google and GitHub callbacks first look up an account by the provider-specific ID.
+If the provider ID is not found, they reuse an existing account with the provider's
+verified email address instead of attempting to insert a duplicate `users.email`.
+This keeps OAuth login compatible with accounts created before social login was used.
+
+After the backend sets the HttpOnly cookies, `/auth/callback` waits for
+`SessionService.reloadCurrentUser()` to finish before navigating to the requested page.
+
 ## Demo Account
 
 For product walkthroughs without registration:
@@ -137,7 +147,7 @@ See: [api/db/schema.ts](../api/db/schema.ts)
 
 ---
 
-_Last updated: December 31, 2025 for Angular 21_
+_Last updated: September 25, 2026 for Angular 22_
 
 ## References
 

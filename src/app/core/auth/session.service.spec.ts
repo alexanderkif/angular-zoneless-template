@@ -172,17 +172,18 @@ describe('SessionService', () => {
   });
 
   describe('reloadCurrentUser', () => {
-    it('reloads the user and returns a boolean', async () => {
+    it('reloads the user and returns the updated user', async () => {
       await loadInitialUser(makeUser());
       const updated = makeUser({ id: 'updated' });
 
-      expect(service.reloadCurrentUser()).toBe(true);
-
-      TestBed.tick();
+      const promise = service.reloadCurrentUser();
       const req = httpMock.expectOne('/api/user/me');
+      expect(req.request.method).toBe('GET');
+      expect(req.request.withCredentials).toBe(true);
       req.flush({ user: updated });
 
-      await vi.waitFor(() => expect(service.currentUser.value()).toEqual(updated));
+      await expect(promise).resolves.toEqual(updated);
+      expect(service.currentUser.value()).toEqual(updated);
     });
   });
 
